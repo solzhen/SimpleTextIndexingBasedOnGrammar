@@ -35,5 +35,8 @@
 /src/sdslsrc
 /src/sdsl/*
 /src/sdslsrc/*
-/examples
+examples
 /examples/*
+
+test.integers
+test.*

@@ -12,15 +12,6 @@ using namespace std;
 
 typedef std::pair<int, int> Point;
 
-int count() {
-    return 0;
-}
-
-vector<Point> report() {
-    vector<Point> points;
-    return points;
-}
-
 bool sortByX(const Point& p1, const Point& p2) {
     return p1.first < p2.first;
 }
@@ -132,7 +123,7 @@ vector<Point> readPointsFromFile(const string& filename, int& columns, int& rows
 /// @param points 
 void printPoints(vector<Point> points) {
     for (const auto& point : points) {
-        cout << "{" << point.first << "," << point.second << "}, ";
+        cout << "{" << point.first << "," << point.second << "},";
     }
     cout << endl;
 }
@@ -164,8 +155,100 @@ int readSortAndWriteFromAndToFile(string filename) {
     writePointsToFile(filename, c, r, points);
 }
 
+void print_vb(const bit_vector &b, int n, int c) {
+    for (int i = 0; i < c + n; i++) {
+        cout << b[i] << " ";
+    } cout << endl;
+}
+
+/// @brief A grid representation. Input file is a binary file of a sequence
+/// of 4 bytes integers with the format 
+/// {columns rows x_1 y_1 x_2 y_2 ... x_n y_n}
+struct Grid {
+    string filename; // external file   
+    int c; // number of columns
+    int r; // number of rows
+    int n; // nubmer of points
+    vector<Point> points; // Grid points
+    wt_blcd_int<> wt; // Wavelet tree
+    bit_vector b; // mapping bitvector
+    // Constructor
+    Grid(const string& fn) : filename(fn) {
+        points = readPointsFromFile(filename, c, r);  
+        n = points.size();
+        b = bit_vector(n + c);
+        // We first sort the pairs by increasing x-
+        // coordinate.
+        std::sort(points.begin(), points.end(), sortByX);
+        writePointsToFile(filename, c, r, points);
+        // build map bitvector
+        int last_x_coord = 0;
+        int i = 0;
+        for (const auto& point : points) {        
+            if (point.first > last_x_coord) { // x-coord increases
+                int d = point.first - last_x_coord; // 1, or if we skipped a few columns we gotta add those 1s
+                for (int a=0; a < d; a++) {
+                    b[i + a] = 1;
+                }
+                i = i + d;
+                last_x_coord = point.first;
+            }
+            i++;
+        }
+        //pack Y values, may want to write c and r
+        writeYToFile(filename, points ); 
+        //WT sequence
+        construct(wt, filename, 4);
+    };
+    /// @brief returns the number of points lying on the rectangle
+    /// [x_1 , x_2 ] × [y_1 , y_2 ] of the grid,
+    /// @param x_1 
+    /// @param x_2 
+    /// @param y_1 
+    /// @param y_2 
+    /// @return 
+    int count(int x_1, int x_2, int y_1, int y_2) {
+        return count(x_1, x_2, y_1, y_2, 1, 1, this->r);
+    };
+
+    int count(int x_1, int x_2, int y_1, int y_2, int l, int a, int b) {
+        return 0;
+    }
+    /// @brief reports the (x, y) coordinates of all the points lying on the
+    /// range [x_1 , x_2 ] × [y_1 , y_2 ] of the grid.
+    /// @param x_1 
+    /// @param x_2 
+    /// @param y_1 
+    /// @param y_2 
+    /// @return 
+    vector<Point> report(int x_1, int x_2, int y_1, int y_2) {
+        vector<Point> p;
+        return p;
+    };
+};
 
 int main(int argc, char* argv[]) {
+    if (argc < 2) {
+        cout << "Generating test file test.integers" << endl;
+        int c = 12;
+        int r = 16;
+        vector<Point> points2write = {
+            {11,1},{6,2},{6,3},{4,4},{11,4},{2,5},{1,6},{2,8},{10,8},
+            {5,10},{12,11},{7,12},{4,13},{11,13},{12,13},{6,15}
+        };
+        writePointsToFile("test.integers", c, r, points2write);
+        return 0;
+    }
+    string filename = argv[1];
+    Grid grid(filename);
+    print_vb(grid.b, grid.n, grid.c);
+    cout << endl;
+    printFile(grid.filename);
+    cout << endl;
+}
+
+
+int main2(int argc, char* argv[]) {
 
     if (argc < 2) {
         cout << "Generating test file test.integers" << endl;
@@ -180,6 +263,12 @@ int main(int argc, char* argv[]) {
     }
 
     string filename = argv[1];
+
+    Grid grid(filename);
+    printPoints(grid.points);
+    cout << "cls.:" << grid.c << " rws:" << grid.r << " pts:" << grid.n << endl;
+    cout << "B: ";
+    print_vb(grid.b, grid.n, grid.c);
 
     // vector<int> da_points = {
     //     11,1,6,2,6,3,4,4,11,4,2,5,1,6,2,8,10,8,5,10,12,11,7,12,4,13,11,13,12,13,6,15

@@ -31,6 +31,9 @@
 *.out
 *.app
 
+/src/sdsl
+/src/sdslsrc
 /src/sdsl/*
 /src/sdslsrc/*
+/examples
 /examples/*

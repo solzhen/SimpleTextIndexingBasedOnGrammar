@@ -6,17 +6,19 @@
 #include <sdsl/bit_vectors.hpp>
 #include <algorithm>
 #include <utility> // For using std::pair
+#include <unordered_set>
 
 using namespace sdsl;
 using namespace std;
 
-typedef std::pair<int, int> Point;
+
+typedef std::pair<uint32_t, uint32_t> Point;
 
 bool sortByX(const Point& p1, const Point& p2) {
     return p1.first < p2.first;
 }
 
-void writeYToFile(const string& filename, int n_c, int n_r, const vector<Point>& points) {
+void writeYToFile(const string& filename, uint32_t n_c, uint32_t n_r, const vector<Point>& points) {
     std::ofstream outputFile(filename, std::ios::binary);
     if (!outputFile) {
         std::cerr << "Error opening file: " << filename << std::endl;
@@ -43,7 +45,7 @@ void writeYToFile(const string& filename, const vector<Point>& points) {
 }
 
 // Write integers into a file
-void writeIntegersToFile(const string& filename, int n_c, int n_r, const vector<int>& numbers) {
+void writeIntegersToFile(const string& filename, uint32_t n_c, uint32_t n_r, const vector<uint32_t>& numbers) {
     std::ofstream outputFile(filename, std::ios::binary);
     if (!outputFile) {
         std::cerr << "Error opening file: " << filename << std::endl;
@@ -56,14 +58,14 @@ void writeIntegersToFile(const string& filename, int n_c, int n_r, const vector<
 }
 
 // Read integers from the file into a vector
-vector<int> readIntegersFromFile(const string& filename) {
-    vector<int> numbers;
+vector<uint32_t> readIntegersFromFile(const string& filename) {
+    vector<uint32_t> numbers;
     std::ifstream inputFile(filename, std::ios::binary);
     if (!inputFile) {
         std::cerr << "Error opening file: " << filename << std::endl;
         return numbers; // Return an empty vector
     }
-    int num;
+    uint32_t num;
     while (inputFile.read(reinterpret_cast<char*>(&num), sizeof(num))) {
         numbers.push_back(num);
     }
@@ -78,7 +80,7 @@ vector<int> readIntegersFromFile(const string& filename) {
 /// @param n_c number of columns of the grid
 /// @param n_r number of rows of the grid
 /// @param points a vector of std::pair<int int> elements.
-void writePointsToFile(const string& filename, int n_c, int n_r, const vector<Point>& points) {
+void writePointsToFile(const string& filename, uint32_t n_c, uint32_t n_r, const vector<Point>& points) {
     std::ofstream outputFile(filename, std::ios::binary);
     if (!outputFile) {
         std::cerr << "Error opening file: " << filename << std::endl;
@@ -86,7 +88,6 @@ void writePointsToFile(const string& filename, int n_c, int n_r, const vector<Po
     }
     Point p = {n_c, n_r};
     outputFile.write(reinterpret_cast<const char*>(&p), sizeof(p));
-
     for (const Point& p : points) {
         outputFile.write(reinterpret_cast<const char*>(&p), sizeof(p));
     }
@@ -100,21 +101,43 @@ void writePointsToFile(const string& filename, int n_c, int n_r, const vector<Po
 /// @param columns receives number of columns
 /// @param rows receives number of rows
 /// @return a std::vector<std::pair<int int>> containing the points
-vector<Point> readPointsFromFile(const string& filename, int& columns, int& rows) {
+vector<Point> readPointsFromFile(const string& filename, uint32_t& columns, uint32_t& rows) {
     vector<Point> points;
     std::ifstream inputFile(filename, std::ios::binary);
     if (!inputFile) {
         std::cerr << "Error opening file: " << filename << std::endl;
         return points; // Return an empty vector
     }
-    // Read the dimensions of the grid (first two integers in the file)
     inputFile.read(reinterpret_cast<char*>(&columns), sizeof(columns));
     inputFile.read(reinterpret_cast<char*>(&rows), sizeof(rows));
-
     Point p;
     while (inputFile.read(reinterpret_cast<char*>(&p), sizeof(p))) {
         points.push_back(p);
     }
+    inputFile.close();
+    return points;
+}
+
+/// @deprecated
+vector<Point> readPointsFromFile(const string& filename, uint32_t& columns, uint32_t& rows, vector<uint32_t>& symbols) {
+    vector<Point> points;
+    std::ifstream inputFile(filename, std::ios::binary);
+    if (!inputFile) {
+        std::cerr << "Error opening file: " << filename << std::endl;
+        return points; // Return an empty vector
+    }
+    inputFile.read(reinterpret_cast<char*>(&columns), sizeof(columns));
+    inputFile.read(reinterpret_cast<char*>(&rows), sizeof(rows));
+    unordered_set<uint32_t> uniqueNumbers;
+    Point p;
+    while (inputFile.read(reinterpret_cast<char*>(&p), sizeof(p))) {
+        points.push_back(p);
+        if (uniqueNumbers.find(p.second) == uniqueNumbers.end()) {
+            symbols.push_back(p.second);
+            uniqueNumbers.insert(p.second);
+        }
+    }
+    std::sort(symbols.begin(), symbols.end());
     inputFile.close();
     return points;
 }
@@ -125,15 +148,38 @@ void printPoints(vector<Point> points) {
     for (const auto& point : points) {
         cout << "{" << point.first << "," << point.second << "},";
     }
-    cout << endl;
 }
 
-void printIntegers(vector<int> numbers) {
+void printIntegers(vector<uint32_t> numbers) {
     for (const auto& number : numbers) {
         cout << number << " ";
     }
-    cout << endl;
 }
+
+template <typename T>
+std::string vectorToString(const std::vector<T>& vec, size_t startIndex, size_t endIndex) {
+    if (startIndex >= vec.size() || endIndex > vec.size() || startIndex > endIndex) {
+        return "Invalid indices or empty range.";
+    }
+
+    std::stringstream ss;
+    ss << "[";
+    for (size_t i = startIndex; i < endIndex; ++i) {
+        ss << vec[i];
+        if (i < endIndex - 1) {
+            ss << ",";
+        }
+    }
+    ss << "]";
+    return ss.str();
+}
+
+template <typename T>
+std::string vectorToString(const std::vector<T>& vec) {
+    return vectorToString(vec, 0, vec.size());
+}
+
+
 
 void printFile(string filename) {
     std::ifstream inputFile(filename, std::ios::binary);
@@ -141,24 +187,81 @@ void printFile(string filename) {
         std::cerr << "Error opening file: " << filename << std::endl;
         return;
     }
-    int num;
+    uint32_t num;
     while (inputFile.read(reinterpret_cast<char*>(&num), sizeof(num))) {
         cout << num << " ";
     }
 }
 
-int readSortAndWriteFromAndToFile(string filename) {
-    int c; //columns
-    int r; //rows
+void readSortAndWriteFromAndToFile(string filename) {
+    uint32_t c; //columns
+    uint32_t r; //rows
     vector<Point> points = readPointsFromFile(filename, c, r);
     sort(points.begin(), points.end(), sortByX);
     writePointsToFile(filename, c, r, points);
 }
 
-void print_vb(const bit_vector &b, int n, int c) {
-    for (int i = 0; i < c + n; i++) {
+void print_vb(const bit_vector &b, uint32_t n, uint32_t c) {
+    for (uint32_t i = 0; i < c + n; i++) {
         cout << b[i] << " ";
-    } cout << endl;
+    }
+}
+
+/// @deprecated 
+void printwt(const wt_blcd_int<> &wt, vector<uint32_t> symbols) {
+    vector<string> op(2,""); // at least two levels
+    printwtlevel(wt, wt.root(), 0, op, symbols, 0, symbols.size());
+    for (string lvl : op) {        
+        cout << lvl << endl;
+    }
+}
+/// @deprecated
+void printwtlevel(const wt_blcd_int<> &wt, uint64_t v, size_t level, vector<string>& op, vector<uint32_t> symbols, uint32_t min, uint32_t max) {
+    if (op.size() < level+1) {
+        op.push_back(""); // + 1 level
+    }
+    op[level] += vectorToString(symbols, min, max) + "{";
+    auto seq_vec = wt.seq(v);
+    for (auto it = seq_vec.begin(); it!=seq_vec.end(); ++it) {
+        uint32_t value = *it;
+        op[level] += to_string(value);
+        op[level] += ",";
+    }
+    op[level].pop_back();
+    op[level] += "}   ";
+    if (!wt.is_leaf(v)) {
+        auto vs = wt.expand(v);
+        printwtlevel(wt, vs[0], level + 1, op, symbols, min, (min+max+1)/2);
+        printwtlevel(wt, vs[1], level + 1, op, symbols, (min+max+1)/2, max);
+    }
+}
+
+void printwtlevel(const wt_blcd_int<> &wt, uint64_t v, size_t level, vector<string>& op) {
+    if (op.size() < level+1) {
+        op.push_back(""); // + 1 level
+    }
+    op[level] += "{";
+    auto seq_vec = wt.seq(v);
+    for (auto it = seq_vec.begin(); it!=seq_vec.end(); ++it) {
+        uint32_t value = *it;
+        op[level] += to_string(value);
+        op[level] += ",";
+    }
+    op[level].pop_back();
+    op[level] += "}  ";
+    if (!wt.is_leaf(v)) {
+        auto vs = wt.expand(v);
+        printwtlevel(wt, vs[0], level + 1, op);
+        printwtlevel(wt, vs[1], level + 1, op);
+    }
+}
+
+void printwt(const wt_blcd_int<> &wt) {
+    vector<string> op(2,""); // at least two levels
+    printwtlevel(wt, wt.root(), 0, op);
+    for (string lvl : op) {        
+        cout << lvl << endl;
+    }
 }
 
 /// @brief A grid representation. Input file is a binary file of a sequence
@@ -166,39 +269,36 @@ void print_vb(const bit_vector &b, int n, int c) {
 /// {columns rows x_1 y_1 x_2 y_2 ... x_n y_n}
 struct Grid {
     string filename; // external file   
-    int c; // number of columns
-    int r; // number of rows
-    int n; // nubmer of points
+    uint32_t c; // number of columns
+    uint32_t r; // number of rows
+    uint32_t n; // nubmer of points
+    vector<uint32_t> symbols; // vector of symbols
     vector<Point> points; // Grid points
     wt_blcd_int<> wt; // Wavelet tree
     bit_vector b; // mapping bitvector
     // Constructor
     Grid(const string& fn) : filename(fn) {
-        points = readPointsFromFile(filename, c, r);  
+        points = readPointsFromFile(filename, c, r); // symbol range is = [1, rows]
         n = points.size();
         b = bit_vector(n + c);
-        // We first sort the pairs by increasing x-
-        // coordinate.
+        // We first sort the pairs by x-coord
         std::sort(points.begin(), points.end(), sortByX);
         writePointsToFile(filename, c, r, points);
         // build map bitvector
-        int last_x_coord = 0;
+        uint32_t last_x_coord = 0;
         int i = 0;
         for (const auto& point : points) {        
             if (point.first > last_x_coord) { // x-coord increases
-                int d = point.first - last_x_coord; // 1, or if we skipped a few columns we gotta add those 1s
-                for (int a=0; a < d; a++) {
+                uint32_t d = point.first - last_x_coord; // 1, or if we skipped a few columns we gotta add those 1s
+                for (uint32_t a=0; a < d; a++) {
                     b[i + a] = 1;
                 }
                 i = i + d;
                 last_x_coord = point.first;
-            }
-            i++;
-        }
-        //pack Y values, may want to write c and r
-        writeYToFile(filename, points ); 
-        //WT sequence
-        construct(wt, filename, 4);
+            } i++;            
+        }        
+        writeYToFile(filename, points); //pack Y values, may want to write c and r        
+        construct(wt, filename, 4); //WT sequence
     };
     /// @brief returns the number of points lying on the rectangle
     /// [x_1 , x_2 ] × [y_1 , y_2 ] of the grid,
@@ -207,11 +307,11 @@ struct Grid {
     /// @param y_1 
     /// @param y_2 
     /// @return 
-    int count(int x_1, int x_2, int y_1, int y_2) {
+    int count(uint32_t x_1, uint32_t x_2, uint32_t y_1, uint32_t y_2) {
         return count(x_1, x_2, y_1, y_2, 1, 1, this->r);
     };
 
-    int count(int x_1, int x_2, int y_1, int y_2, int l, int a, int b) {
+    int count(uint32_t x_1, uint32_t x_2, uint32_t y_1, uint32_t y_2, int l, uint32_t a, uint32_t b) {
         return 0;
     }
     /// @brief reports the (x, y) coordinates of all the points lying on the
@@ -221,141 +321,28 @@ struct Grid {
     /// @param y_1 
     /// @param y_2 
     /// @return 
-    vector<Point> report(int x_1, int x_2, int y_1, int y_2) {
+    vector<Point> report(uint32_t x_1, uint32_t x_2, uint32_t y_1, uint32_t y_2) {
         vector<Point> p;
         return p;
     };
 };
 
 int main(int argc, char* argv[]) {
+    string filename = "test.integers";
     if (argc < 2) {
         cout << "Generating test file test.integers" << endl;
-        int c = 12;
-        int r = 16;
+        uint32_t c = 12;
+        uint32_t r = 16;
         vector<Point> points2write = {
             {11,1},{6,2},{6,3},{4,4},{11,4},{2,5},{1,6},{2,8},{10,8},
             {5,10},{12,11},{7,12},{4,13},{11,13},{12,13},{6,15}
         };
         writePointsToFile("test.integers", c, r, points2write);
-        return 0;
+    } else {
+        string filename = argv[1];
     }
-    string filename = argv[1];
+    cout << "Reading " << filename << endl;    
     Grid grid(filename);
-    print_vb(grid.b, grid.n, grid.c);
-    cout << endl;
-    printFile(grid.filename);
-    cout << endl;
-}
-
-
-int main2(int argc, char* argv[]) {
-
-    if (argc < 2) {
-        cout << "Generating test file test.integers" << endl;
-        int c = 12;
-        int r = 16;
-        vector<Point> points2write = {
-            {11,1},{6,2},{6,3},{4,4},{11,4},{2,5},{1,6},{2,8},{10,8},
-            {5,10},{12,11},{7,12},{4,13},{11,13},{12,13},{6,15}
-        };
-        writePointsToFile("test.integers", c, r, points2write);
-        return 0;
-    }
-
-    string filename = argv[1];
-
-    Grid grid(filename);
-    printPoints(grid.points);
-    cout << "cls.:" << grid.c << " rws:" << grid.r << " pts:" << grid.n << endl;
-    cout << "B: ";
-    print_vb(grid.b, grid.n, grid.c);
-
-    // vector<int> da_points = {
-    //     11,1,6,2,6,3,4,4,11,4,2,5,1,6,2,8,10,8,5,10,12,11,7,12,4,13,11,13,12,13,6,15
-    // };
-
-    int c; //columns
-    int r; //rows
-    vector<Point> points = readPointsFromFile(filename, c, r);
-    int n = points.size(); // number of points
-
-    bit_vector b(c + n, 0); // mapping bitvector
-
-    cout << "original file " << filename << endl;
-    printFile(filename);
-    cout << endl;
-
-    // We first sort the pairs by increasing x-
-    // coordinate.
-    std::sort(points.begin(), points.end(), sortByX);
-    writePointsToFile(filename + ".sorted", c, r, points);
-
-    cout << "sorted file " << filename << ".sorted" << endl;
-    printFile(filename + ".sorted");
-    cout << endl;
-
-    //We then traverse them, writing on B[1, c + n] 
-    //a 1 each time the x-coordinate
-    //increases and a 0 each time a new 
-    //point is found with the current x-coordinate.
-
-    int last_x_coord = 0; // could be 0 as coordinates are 1-indexed
-    int i = 0;
-    for (const auto& point : points) {        
-        if (point.first > last_x_coord) { // x-coord increases
-            int d = point.first - last_x_coord; // 1, or if we skipped a few columns we gotta add those 1s
-            for (int a=0; a < d; a++) {
-                b[i + a] = 1;
-            }
-            i = i + d;
-            last_x_coord = point.first;
-        }
-        i++;
-    }
-
-    //Now we pack the y values in the 
-    //first half of the array,
-
-    //writeYToFile(filename + ".sorted.Ypacked", c, r, points );
-    writeYToFile(filename + ".sorted.Ypacked", points );
-
-    cout << "sorted and Y packed file " << filename << ".sorted.Ypacked" << endl;
-    printFile(filename + ".sorted.Ypacked");
-    cout << endl;
-
-    //and use the second half to store the
-    //resulting wavelet matrix.
-
-    vector<int> yvalues = readIntegersFromFile(filename + ".sorted.Ypacked");
-    //yvalues.erase(yvalues.begin(), yvalues.begin() + 2); //erase column row values
-    //cout << yvalues.size() << endl;
-    printIntegers(yvalues);
-
-    //string aux = "fehdmjbcolhadmkm";
-    wt_blcd_int<> wt;
-    construct(wt, filename + ".sorted.Ypacked", 4);
-
-    // for (int i = 0; i < 16; i++) {
-    //     size_t count = wt.rank(16, i);
-    //     cout << i << ": " << count << endl;
-    // }
-
-    // for (int i = 0; i < 16; i++) {
-    //     size_t count = wt.select(1,i);
-    //     cout << i << ": " << count << endl;
-    // }
-
-    //At the end, we free the y i values and build the rank/select structures on B.
-    rank_support_v<> rb(&b); // rank structure
-    rrr_vector<127> rrrb(b); // rank :: rank_rrrb(i) 0-indexed, excludes i-th position
-    rrr_vector<127>::select_1_type select_rrrb(&rrrb); // select :: select_rrrb(i)
-
-    for (int i = 0; i < c + n; i++) {
-        cout << b[i] << " ";
-    }
-    cout << endl;
-
-    string s = "asd";
-
-    
+    printwt(grid.wt);
+    return 0;
 }

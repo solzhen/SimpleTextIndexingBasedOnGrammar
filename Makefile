@@ -7,15 +7,18 @@ SRC_DIR := src
 BUILD_DIR := build
 
 SRC_FILES := $(wildcard $(SRC_DIR)/*.cpp)
-EXECS := $(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/%.x, $(SRC_FILES))
+OBJ_FILES := $(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(SRC_FILES))
+
+EXECS := $(BUILD_DIR)/grid.x
 
 all: $(EXECS)
 
-build-test: $(EXECS)
-	        
-$(BUILD_DIR)/%.x: $(SRC_DIR)/%.cpp 
-	$(MY_CXX) $(CXX_FLAGS) -o $@ $< $(CCLIB) 
+$(EXECS): $(OBJ_FILES)
+	$(MY_CXX) $(CXX_FLAGS) -o $@ $^ $(CCLIB)
+
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
+	$(MY_CXX) $(CXX_FLAGS) -c -o $@ $<
 
 clean:
-	rm -f $(EXECS)
+	rm -f $(EXECS) $(OBJ_FILES)
 	rm -rf *.dSYM

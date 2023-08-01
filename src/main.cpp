@@ -79,7 +79,7 @@ int findEndIndex(const std::string& rules, const std::string& prefix) {
     return left - 1;
 }
 
-int main(int argc, char* argv[]) {
+int notmain(int argc, char* argv[]) {
     std::string P = "bra";
 
     std::cout << "Program name: " << argv[0] << std::endl;

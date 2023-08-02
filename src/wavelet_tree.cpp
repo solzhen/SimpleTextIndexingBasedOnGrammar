@@ -16,6 +16,8 @@ public:
 
     // Query functions: Perform range queries on the wavelet tree matrix
 
+    
+
     // Count occurrences of 'value' in the specified row up to column 'col'
     int rank(int row, int value, int col) {
         return 0;

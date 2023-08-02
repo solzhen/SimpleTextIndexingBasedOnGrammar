@@ -54,3 +54,5 @@ void writePointsToFile(const string& fn, uint32_t nc, uint32_t nr, const vector<
 /// @param rs receives number of rows
 /// @return a std::vector<std::pair<int int>> containing the points
 vector<Point> readPointsFromFile(const string& fn, uint32_t& cs, uint32_t& rs);
+
+vector<Point> readPointsFromFile(const string& fn, uint32_t& cs, uint32_t& rs, vector<uint32_t>& symbols);

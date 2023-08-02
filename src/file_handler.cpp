@@ -1,6 +1,7 @@
 #include <vector>
 #include <iostream>
 #include <cstdint>
+#include <unordered_set>
 #include <sdsl/wavelet_trees.hpp>
 #include <sdsl/bit_vectors.hpp>
 
@@ -87,6 +88,28 @@ vector<Point> readPointsFromFile(const string& filename, uint32_t& columns, uint
     inputFile.read(reinterpret_cast<char*>(&rows), sizeof(rows));
     Point p;
     while (inputFile.read(reinterpret_cast<char*>(&p), sizeof(p))) {
+        points.push_back(p);
+    }
+    inputFile.close();
+    return points;
+}
+
+vector<Point> readPointsFromFile(const string& filename, uint32_t& columns, uint32_t& rows, vector<uint32_t>& symbols) {
+    vector<Point> points;
+    unordered_set<uint32_t> uniqueSymbols;
+    std::ifstream inputFile(filename, std::ios::binary);
+    if (!inputFile) {
+        std::cerr << "Error opening file: " << filename << std::endl;
+        return points; // Return an empty vector
+    }
+    inputFile.read(reinterpret_cast<char*>(&columns), sizeof(columns));
+    inputFile.read(reinterpret_cast<char*>(&rows), sizeof(rows));
+    Point p;
+    while (inputFile.read(reinterpret_cast<char*>(&p), sizeof(p))) {
+        if (uniqueSymbols.find(p.second) == uniqueSymbols.end()) {
+            uniqueSymbols.insert(p.second);
+            symbols.push_back(p.second);
+        }
         points.push_back(p);
     }
     inputFile.close();

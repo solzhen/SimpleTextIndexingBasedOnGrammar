@@ -9,7 +9,7 @@ BUILD_DIR := build
 SRC_FILES := $(wildcard $(SRC_DIR)/*.cpp)
 OBJ_FILES := $(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(SRC_FILES))
 
-EXECS := $(BUILD_DIR)/grid.x
+EXECS := $(BUILD_DIR)/program.x
 
 all: $(EXECS)
 

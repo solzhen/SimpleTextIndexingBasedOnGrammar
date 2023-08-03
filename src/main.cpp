@@ -8,7 +8,7 @@
 #include <sstream>
 #include <sdsl/bit_vectors.hpp>
 
-#include "wavelet_matrix.hpp"
+#include "grid.hpp"
 
 using namespace sdsl;
 using namespace std;
@@ -81,14 +81,32 @@ int findEndIndex(const std::string& rules, const std::string& prefix) {
             right = mid;
         }
     }
-
     return left - 1;
 }
 
-int main() {
-    vector<u32> seq = {2,3,9,7,5, 9,4,2,8,6, 3,7,5,7,7, 1,3,10,6,1, 4,1,3,1,1};
-    vector<u32> seq_c(seq);
-    int s = seq.size();
-    WaveletMatrix wm(seq, 10);
-    wm.printself();
+int main(int argc, char* argv[]) {  
+
+
+    string filename = "test.integers";
+    if (argc < 2) {
+        cout << "Generating test file test.integers" << endl;
+        u32 c = 12;
+        u32 r = 16;
+        vector<Point> points2write = {
+            {6,15},{11,1},{11,13},{4,4},{11,4},{6,3},{6,2},{4,13},
+            {2,5},{2,8},{12,11},{1,6},{10,8},
+            {5,10},{12,13},{7,12}
+        };
+        writePointsToFile("test.integers", c, r, points2write);
+    } else {
+        string filename = argv[1];
+    }
+    cout << "Reading " << filename << endl; 
+    Grid grid(filename);
+    cout << "count(2,11,3,9): " << grid.count(2,11,3,9) << endl;
+    vector<Point> p = grid.report(2,11,3,9);
+    printPoints(p);
+
+
+    return 0;
 }

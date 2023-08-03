@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cstdint>
 #include <sdsl/bit_vectors.hpp>
+#include "ppbv.hpp"
 
 using namespace sdsl;
 using namespace std;
@@ -12,26 +13,6 @@ typedef std::pair<u32, u32> Point;
 #ifndef WAVELETMATRIX_HPP
 #define WAVELETMATRIX_HPP
 
-class preprocessed_bitvector {
-private:     
-    rrr_vector<127> rrrb;
-    rrr_vector<127>::rank_1_type rank_1_;
-    rrr_vector<127>::rank_0_type rank_0_;
-    rrr_vector<127>::select_1_type select_1_;
-    rrr_vector<127>::select_0_type select_0_;
-    bit_vector b;
-public:    
-    preprocessed_bitvector(bit_vector &bv);
-    void preprocess();
-    u32 rank_1(u32 i);
-    u32 rank_0(u32 i);
-    u32 select_1(u32 i);
-    u32 select_0(u32 i);
-    void printself(u32 l, u32 z);
-    void printself();
-    u32 operator[](u32 i);
-};
-using ppbv = preprocessed_bitvector;
 class WaveletMatrix {
 private:    
     u32 sigma; // highest symbol in the alphabet
@@ -44,6 +25,7 @@ public:
     /// @param s 4-byte long unsigned integer vector
     /// @param sigma highest numerical symbol
     WaveletMatrix(vector<u32>& s, u32 sigma);
+    WaveletMatrix();
     /// @brief Access the number in the i-th zero-indexed 
     /// position of the original sequence.
     /// @param i positive 0-indexed position.
@@ -62,6 +44,8 @@ public:
     /// @return the position or the size of the sequence if not found
     u32 select(u32 j, u32 c);
     void printself();
+    ppbv operator[](u32 level);
+    u32 offset(u32 level);
 };
 
 #endif

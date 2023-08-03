@@ -12,84 +12,109 @@ using namespace std;
 typedef uint32_t u32; // this special trick will save us 1% code width bro trust me
 typedef std::pair<u32, u32> Point;
 
-struct preprocessed_bitvector {
-    bit_vector b;
-    rrr_vector<127> rrrb;
-    rrr_vector<127>::rank_1_type rank_1;
-    rrr_vector<127>::rank_0_type rank_0;
-    rrr_vector<127>::select_1_type select_1;
-    rrr_vector<127>::select_0_type select_0;
-    preprocessed_bitvector(bit_vector bv) {
-        b = bv;
-        rrrb = rrr_vector<127>(b);
-        rank_1 = rrr_vector<127>::rank_1_type(&rrrb);
-        rank_0 = rrr_vector<127>::rank_0_type(&rrrb);
-        select_1 = rrr_vector<127>::select_1_type(&rrrb);
-        select_0 = rrr_vector<127>::select_0_type(&rrrb);
-    };
-};
 using ppbv = preprocessed_bitvector;
+
+ppbv::preprocessed_bitvector(bit_vector &bv) {
+    b = bv;
+    rrrb = rrr_vector<127>(b);        
+};
+void ppbv::preprocess() {
+    this->rank_1_ = rrr_vector<127>::rank_1_type(&rrrb);
+    this->rank_0_ = rrr_vector<127>::rank_0_type(&rrrb);
+    this->select_1_ = rrr_vector<127>::select_1_type(&rrrb);
+    this->select_0_ = rrr_vector<127>::select_0_type(&rrrb);
+}
+u32 ppbv::rank_1(u32 i) {
+    return rank_1_(i);
+}
+u32 ppbv::rank_0(u32 i) {
+    return rank_0_(i);
+}
+u32 ppbv::select_1(u32 i) {
+    return select_1_(i);
+}
+u32 ppbv::select_0(u32 i) {
+    return select_0_(i);
+}
+void ppbv::printself(u32 level, u32 z_l) {
+    cout << "l:" << level << " " << this->rrrb << " z_l:" << z_l << endl;
+}
+void ppbv::printself() {
+    cout << this->rrrb << endl;
+}
+u32 ppbv::operator[](u32 index) {
+    return b[index];
+}
 
 void WaveletMatrix::build(vector<u32>& S, u32 n, u32 sigma) {
     vector<u32> S_hat(n);
     bit_vector M(n, 0);
     bit_vector M_hat(n, 0);
     u32 m = sigma;
-    for (u32 l = 1; l <= ceil(log2(sigma)); l++) {
+    //cout << ceil(log2(sigma)) << endl;
+    for (u32 l = 1; l <= ceil(log2(sigma)); l++) {    
+        //cout << m << endl;    
         u32 z_l = 0;
         bit_vector B_l(n, 0);
+        //cout << B_l << endl;
         for (u32 i =0; i < n; i++) {
-            if (S[i] <= ceil((m - M[i]) / 2) ) {
+            //cout << "asd " << ceil((m - M[i]) / 2) << endl;
+            if (S[i] <= ((m-M[i]+1)/2) ) {
                 B_l[i] = 0;
                 z_l++;
             } else {
                 B_l[i] = 1;
-                S[i] = S[i] - ceil((m - M[i]) / 2);
+                S[i] = S[i] - ((m-M[i]+1)/2);
             }
         }
+        //cout << B_l << endl;
         bm.push_back(ppbv(B_l));
         z.push_back(z_l);
         if (l < ceil(log2(sigma))) {
             u32 p_l = 0;
-            u32 p_r = z_l;
+            u32 p_r = z[l-1];
             u32 p;
             for (u32 i = 0; i < n; i++) {
-                if (bm[l - 1].b[i] == 0) {
-                    p = p_l;
-                    p_l ++;                        
-                } else {
-                    p = p_r;
-                    p_r ++;                        
+                u32 b = bm[l-1][i];
+                if (b == 0) {                    
+                    p_l ++;  
+                    p = p_l;                    
+                } else {                    
+                    p_r ++;  
+                    p = p_r;                   
                 }
-                S_hat[p] = S[i];
-                if (m % 2 == bm[l - 1].b[i]) {
-                    M_hat[p] = bm[l - 1].b[i];
+                S_hat[p-1] = S[i];
+                if (m % 2 == bm[l-1][i]) {
+                    M_hat[p-1] = bm[l-1][i];
                 } else {
-                    M_hat[p] = M[i];
+                    M_hat[p-1] = M[i];
                 }
-                if (ceil(m/2)==2 && M_hat[p] == 1) {
+                if ((m+1)/2==2 && M_hat[p-1] == 1) {
                     n = n-1;
                 }
             }
             swap(S, S_hat);
-            m = ceil(m/2);
+            swap(M, M_hat);
+            m = (m+1)/2;
         }
     }
     S.clear();
-    S.shrink_to_fit();       
+    S.shrink_to_fit();
 }
 
 WaveletMatrix::WaveletMatrix(vector<u32>& s, u32 sigma) {
     this->sigma = sigma;
     build(s, s.size(), sigma);
+    for (u32 i = 0; i < bm.size(); i++)
+        bm[i].preprocess();
 };
 u32 WaveletMatrix::access(u32 i_) {
     u32 i = i_;
     u32 l = 1;
-    u32 a = 1;
-    u32 b = sigma;
-    while (a != b) {
-        if (bm[l - 1].b[i] == 0) {
+    u32 a = 0;
+    u32 b = sigma-1;
+    while (a != b) {      
+        if (bm[l-1][i] == 0) {         
             i = bm[l-1].rank_0(i);
             b = floor((a + b) / 2);
         } else {
@@ -98,23 +123,23 @@ u32 WaveletMatrix::access(u32 i_) {
         }
         l++;
     }
-    return a;
+    return a+1;
 }
 u32 WaveletMatrix::rank(u32 i_, u32 c) {
-    u32 i = i_;
     u32 p = 0;
+    u32 i = i_;
     u32 l = 1;
-    u32 a = 1;
-    u32 b = sigma;
-    while (a != b) {
-        if (c <= floor((a+b)/2)) {
+    u32 a = 0;
+    u32 b = sigma-1;
+    while (a != b) {      
+        if (c <= (a+b+1)/2) {
             i = bm[l-1].rank_0(i);
+            b = ((a+b)/2);
             p = bm[l-1].rank_0(p);
-            b = floor((a + b) / 2); 
         } else {
             i = z[l-1] + bm[l-1].rank_1(i);
+            a = (a+b) / 2 + 1;
             p = z[l-1] + bm[l-1].rank_1(p);
-            a = floor((a + b) / 2) + 1;
         }
         l++;
     }
@@ -125,15 +150,28 @@ u32 WaveletMatrix::select(u32 j, u32 c) {
 }
 
 u32 WaveletMatrix::select(u32 l, u32 p, u32 a, u32 b, u32 c, u32 j_) {
+    //cout<<"a:"<<a<<", b:"<<b<<", l:"<<l<<", p:"<<p<<", j:"<<j_<< endl;
     u32 j = j_;
     if (a == b) {
         return p + j;
     }
-    if (c <= floor((a+b)/2)) {
-        j = select(l+1, bm[l-1].rank_0(p), a, floor((a+b)/2), c, j);
-        return bm[l-1].select_0(j);
+    if (c <= ((a+b)/2)) {
+        j = select(l+1, bm[l-1].rank_0(p), a, ((a+b)/2), c, j);
+        //cout << "recursion j: " << j <<endl;
+        //bm[l-1].printself();
+        //cout << "select " <<j<<"_th 0: " << bm[l-1].select_0(j)<<endl;
+        return bm[l-1].select_0(j)+1;
     } else {
-        j = select(l+1, z[l-1]+bm[l-1].rank_1(p), a, floor((a+b)/2)+1, c, j);
-        return bm[l-1].select_1(j-z[l-1]);
+        j = select(l+1, z[l-1]+bm[l-1].rank_1(p), ((a+b)/2)+1, b, c, j);
+        return bm[l-1].select_1(j-z[l-1])+1;
     }
+}
+
+void WaveletMatrix::printself() {
+    int l = 0;
+    for (u32 i = 0; i < this->bm.size(); i++) {
+        bm[i].printself(l, z[l]);
+        l++;
+    }
+
 }

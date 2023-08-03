@@ -8,6 +8,8 @@
 #include <sstream>
 #include <sdsl/bit_vectors.hpp>
 
+#include "wavelet_matrix.hpp"
+
 using namespace sdsl;
 using namespace std;
 
@@ -84,5 +86,9 @@ int findEndIndex(const std::string& rules, const std::string& prefix) {
 }
 
 int main() {
-    cout << "now I'm main :)" << endl;
+    vector<u32> seq = {2,3,9,7,5, 9,4,2,8,6, 3,7,5,7,7, 1,3,10,6,1, 4,1,3,1,1};
+    vector<u32> seq_c(seq);
+    int s = seq.size();
+    WaveletMatrix wm(seq, 10);
+    wm.printself();
 }

@@ -86,7 +86,6 @@ int findEndIndex(const std::string& rules, const std::string& prefix) {
 
 int main(int argc, char* argv[]) {  
 
-
     string filename = "test.integers";
     if (argc < 2) {
         cout << "Generating test file test.integers" << endl;
@@ -107,7 +106,6 @@ int main(int argc, char* argv[]) {
     vector<Point> p = grid.report(2,11,3,9);
     printPoints(p);
     cout << endl;
-
 
     return 0;
 }

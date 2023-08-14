@@ -106,6 +106,7 @@ int main(int argc, char* argv[]) {
     cout << "count(2,11,3,9): " << grid.count(2,11,3,9) << endl;
     vector<Point> p = grid.report(2,11,3,9);
     printPoints(p);
+    cout << endl;
 
 
     return 0;

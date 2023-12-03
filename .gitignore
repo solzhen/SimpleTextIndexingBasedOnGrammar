@@ -32,6 +32,8 @@
 *.out
 *.app
 
+*.bin
+
 /src/sdsl
 /src/sdslsrc
 /src/sdsl/*

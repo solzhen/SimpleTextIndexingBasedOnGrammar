@@ -9,6 +9,7 @@
 #include <sdsl/bit_vectors.hpp>
 
 #include "grid.hpp"
+#include "repair_reader.hpp"
 
 using namespace sdsl;
 using namespace std;
@@ -84,7 +85,7 @@ int findEndIndex(const std::string& rules, const std::string& prefix) {
     return left - 1;
 }
 
-int main(int argc, char* argv[]) {  
+int main(int argc, char* argv[]) {      
 
     string filename = "test.integers";
     if (argc < 2) {
@@ -106,6 +107,11 @@ int main(int argc, char* argv[]) {
     vector<Point> p = grid.report(2,11,3,9);
     printPoints(p);
     cout << endl;
+
+    test();
+
+    Grid test_grid("test_grid.bin");  
+
     
     return 0;
 }

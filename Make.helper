@@ -1,5 +1,5 @@
-LIB_DIR = /home/cfnts/lib
-INC_DIR = /home/cfnts/include
+LIB_DIR = /home/cfuentes/lib
+INC_DIR = /home/cfuentes/include
 MY_CXX_FLAGS= -std=c++17 -Wall -Wextra -DNDEBUG $(CODE_COVER) -Wno-ignored-qualifiers -Wno-deprecated-copy -Wno-unused-parameter
 MY_CXX_OPT_FLAGS= -O3 -ffast-math -funroll-loops -msse4.2 -march=native -msse4.2 -march=native -DHAVE_CXA_DEMANGLE
 MY_CXX=/usr/bin/c++

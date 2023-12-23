@@ -9,7 +9,6 @@
 #include <sdsl/bit_vectors.hpp>
 
 #include "grid.hpp"
-#include "test.h"
 
 using namespace sdsl;
 using namespace std;
@@ -107,9 +106,6 @@ int main(int argc, char* argv[]) {
     vector<Point> p = grid.report(2,11,3,9);
     printPoints(p);
     cout << endl;
-
-    test();
-
     
     return 0;
 }

@@ -4,7 +4,7 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/home/cfuentes/include/**"
+                "/home/cfnts/include/**"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

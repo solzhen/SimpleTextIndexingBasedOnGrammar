@@ -126,6 +126,9 @@ int main(int argc, char* argv[]) {
     std::string decompressed = decompress(compressed.first, compressed.second);
     std::cout << "Decompressed: " << decompressed << std::endl;
 
+    std::string decompressed2 = decompress2(compressed.first, compressed.second);
+    std::cout << "Decompressed2: " << decompressed2 << std::endl;
+
 
     return 0;
 }

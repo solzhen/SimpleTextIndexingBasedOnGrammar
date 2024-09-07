@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <queue>
+#include <stack>
 
 // Find the most frequent pair of characters
 std::pair<std::string, int> findMostFrequentPair(const std::string& input) {
@@ -63,18 +64,66 @@ std::pair<std::string, std::unordered_map<char, std::string>> rePairCompression(
     return { input, dictionary };
 }
 
-// Decompress the string
+// Decompress the string.
+// TODO: Turn this into an iterative function
 std::string decompress(const std::string& compressed, const std::unordered_map<char, std::string>& dictionary) {
-    std::string output = compressed;
+    std::string decompressed;
+    for (char symbol : compressed) {
+        if (dictionary.find(symbol) != dictionary.end()) {
+            std::string decompressedSymbol = dictionary.at(symbol);
+            std::string leftSide = decompressedSymbol.substr(0, 1);
+            std::string rightSide = decompressedSymbol.substr(1, 1);
+            // Recursively decompress the left and right side
+            decompressed += decompress(leftSide, dictionary).append(decompress(rightSide, dictionary));
+        }
+        else {
+            decompressed += symbol;
+        }
+    }
+    return decompressed;
+}
 
-    for (const auto& entry : dictionary) {
-        size_t pos;
-        while ((pos = output.find(entry.first)) != std::string::npos) {
-            output.replace(pos, 1, entry.second);
+std::string decompress2(const std::string& compressed, const std::unordered_map<char, std::string>& dictionary) {
+    std::string decompressed;
+    std::stack<std::string> stack;
+
+    for (char symbol : compressed) {
+        if (dictionary.find(symbol) != dictionary.end()) {
+            stack.push(dictionary.at(symbol));
+        }
+        else {
+            decompressed += symbol;
         }
     }
 
-    return output;
+    while (!stack.empty()) {
+        std::string top = stack.top();
+        stack.pop();
+
+        if (top.size() == 1) {
+            decompressed += top;
+        }
+        else {
+            std::string leftSide = top.substr(0, 1);
+            std::string rightSide = top.substr(1, 1);
+
+            if (dictionary.find(leftSide[0]) != dictionary.end()) {
+                stack.push(dictionary.at(leftSide[0]));
+            }
+            else {
+                decompressed += leftSide;
+            }
+
+            if (dictionary.find(rightSide[0]) != dictionary.end()) {
+                stack.push(dictionary.at(rightSide[0]));
+            }
+            else {
+                decompressed += rightSide;
+            }
+        }
+    }
+
+    return decompressed;
 }
 
 /* int main() {

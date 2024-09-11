@@ -44,11 +44,12 @@ examples
 test.integers
 test.*
 
-./repairs/repair110811/despair
-./repairs/repair110811/repair
-./repairs/repairnavarro/despair
-./repairs/repairnavarro/heap.o
-./repairs/repairnavarro/idespair
-./repairs/repairnavarro/irepair
-./repairs/repairnavarro/repair
-./repairs/repairnavarro/toint
+/repairs/repair110811/despair
+/repairs/repair110811/repair
+/repairs/repairnavarro/despair
+/repairs/repairnavarro/heap.o
+/repairs/repairnavarro/idespair
+/repairs/repairnavarro/irepair
+/repairs/repairnavarro/repair
+/repairs/repairnavarro/toint
+/repairs/repairnavarro/repair.tgz

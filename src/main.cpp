@@ -10,7 +10,7 @@
 
 #include "grid.hpp"
 #include "repair_reader.hpp"
-#include "re-pair.hpp"
+//#include "re-pair.hpp"
 
 using namespace sdsl;
 using namespace std;
@@ -113,21 +113,18 @@ int main(int argc, char* argv[]) {
 
     Grid test_grid("test_grid.bin");
 
-    // Re Pair quick test
-    std::string input;
-    std::cout << "Enter the input string: ";
-    std::cin >> input;
-    auto compressed = rePairCompression(input);
-    std::cout << "Compressed: " << compressed.first << std::endl;
-    std::cout << "Dictionary of Symbols:" << std::endl;
-    for (const auto& entry : compressed.second) {
-        std::cout << entry.first << " -> " << entry.second << std::endl;
-    }
-    std::string decompressed = decompress(compressed.first, compressed.second);
-    std::cout << "Decompressed: " << decompressed << std::endl;
-
-    std::string decompressed2 = decompress2(compressed.first, compressed.second);
-    std::cout << "Decompressed2: " << decompressed2 << std::endl;
+    /*     // Re Pair quick test
+        std::string input;
+        std::cout << "Enter the input string: ";
+        std::cin >> input;
+        auto compressed = rePairCompression(input);
+        std::cout << "Compressed: " << compressed.first << std::endl;
+        std::cout << "Dictionary of Symbols:" << std::endl;
+        for (const auto& entry : compressed.second) {
+            std::cout << entry.first << " -> " << entry.second << std::endl;
+        }
+        std::string decompressed = decompress(compressed.first, compressed.second);
+        std::cout << "Decompressed: " << decompressed << std::endl; */
 
 
     return 0;

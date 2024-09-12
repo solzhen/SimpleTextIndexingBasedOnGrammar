@@ -10,8 +10,8 @@
 #include "grid.hpp"
 
 struct Rule {
-    uint16_t b_i; // prefix of string
-    uint16_t c_i; // suffix of string
+    uint16_t b_i; // prefix of string, if less than 256 then it's a terminal symbol, else it's a rule index
+    uint16_t c_i; // suffix of string, if less than 256 then it's a terminal symbol, else it's a rule index
 };
 
 // Define hash specialization for Rule
@@ -144,16 +144,17 @@ void printVector(const std::vector<int>& vec, bool reverse = false) {
 }
 
 int test() {
+    const uint16_t offset = 256 - 'A';
     // a E+256-A, D+256-A G+256-A, A+256-A E+256-A, C+256-A F+256-A, b H+256-A, c a d C+256-A r a
     std::vector<Rule> testRules = {
-        {'a', 'E' + 256 - 'A'},             // A
-        {'D' + 256 - 'A', 'G' + 256 - 'A'}, // B
-        {'A' + 256 - 'A', 'E' + 256 - 'A'}, // C
-        {'C' + 256 - 'A', 'F' + 256 - 'A'}, // D
-        {'b', 'H' + 256 - 'A'},             // E
-        {'c', 'a'},                         // F
-        {'d', 'C' + 256 - 'A'},             // G
-        {'r', 'a'}                          // H
+        {'a'            , 'E' + offset  }, // A
+        {'D' + offset   , 'G' + offset  }, // B
+        {'A' + offset   , 'E' + offset  }, // C
+        {'C' + offset   , 'F' + offset  }, // D
+        {'b'            , 'H' + offset  }, // E
+        {'c'            , 'a'           }, // F
+        {'d'            , 'C' + offset  }, // G
+        {'r'            , 'a'           }  // H
     };
 
     std::string testFileName = "test_rules.bin";

@@ -53,3 +53,5 @@ test.*
 /repairs/repairnavarro/repair
 /repairs/repairnavarro/toint
 /repairs/repairnavarro/repair.tgz
+
+/.vscode/*

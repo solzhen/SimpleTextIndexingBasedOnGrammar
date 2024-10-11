@@ -55,4 +55,5 @@ test.*
 /repairs/repairnavarro/repair.tgz
 
 #ignore .vscode folder content
+.vscode/
 .vscode/*

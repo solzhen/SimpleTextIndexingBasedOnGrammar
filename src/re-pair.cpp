@@ -6,10 +6,10 @@
 #include <stack>
 #include <fstream>
 
-typedef uint16_t u16;
+typedef u_int16_t u16;
 typedef std::pair<u16, u16> Pair;
 
-bool print = true;
+bool print = false;
 
 // Re-Pair compression
 // we should obtain an encoded string and a dictionary of rules
@@ -45,6 +45,9 @@ std::pair<Pair, int> findMostFrequentPair(const std::vector<u16>& input) {
 }
 
 // Re-Pair compression
+// returns a pair where the first member is a vector of symbols, 
+// and the second a map of rules where each symbol is mapped to a pair of symbols
+// in the form A -> B C.
 std::pair<std::vector<u16>, std::unordered_map<u16, Pair>> rePairCompression(std::vector<u16> input) {
     std::unordered_map<u16, Pair> dictionary; // rules
     u16 newSymbol = (u16)256; // Start new symbols from 256
@@ -142,7 +145,7 @@ std::vector<u16> decompress(const std::vector<u16> compressed, const std::unorde
     return decompressed;
 }
 
-
+/* 
 int main( int argc, char* argv[] ) {
 
     // set print 
@@ -188,4 +191,4 @@ int main( int argc, char* argv[] ) {
 
     return 0;
 
-}
+} */

@@ -6,6 +6,7 @@
 #include <iterator>
 #include <algorithm>
 #include <sstream>
+
 #include <sdsl/bit_vectors.hpp>
 
 #include "grid.hpp"
@@ -88,7 +89,56 @@ int findEndIndex(const std::string& rules, const std::string& prefix) {
     return left - 1;
 }
 
+extern "C" {
+    #include "../repairs/repair110811/repair.h"
+    #include "../repairs/repair110811/encoder.h"
+}
+
+
+typedef struct _IO_FILE FILE;
+
+// write a vector of characters to a file
+void writeCharsToFile(const std::string& filename, const std::vector<uint8_t>& chars) {
+    std::ofstream outfile(filename, std::ios::binary);
+    if (!outfile) {
+        std::cerr << "Error opening file for writing: " << filename << std::endl;
+        return;
+    }
+    outfile.write(reinterpret_cast<const char*>(chars.data()), chars.size());
+    outfile.close();
+    if (!outfile) {
+        std::cerr << "Error writing to file: " << filename << std::endl;
+    }
+}
+
+
+//generate random sequence of chars
+std::vector<uint8_t> generateRandomChars(int n) {
+    std::vector<uint8_t> chars(n);
+    for (int i = 0; i < n; i++) {
+        chars[i] = rand() % 256;
+    }
+    return chars;
+}
+
+
+
+
 int main(int argc, char* argv[]) {
+
+    std::vector<uint8_t> chars = generateRandomChars(100);
+    writeCharsToFile("test_repair.bin", chars);
+
+    FILE *input, *output;
+    DICT *dict;
+    EDICT *edict;
+
+    input  = fopen("test_repair.bin", "r");
+    //output = fopen("test_repair.bout", "wb");
+
+    dict = RunRepair(input);
+    fclose(input);
+
 
     string filename = "test.integers";
     if (argc < 2) {

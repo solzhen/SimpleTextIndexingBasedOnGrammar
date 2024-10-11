@@ -54,4 +54,5 @@ test.*
 /repairs/repairnavarro/toint
 /repairs/repairnavarro/repair.tgz
 
-/.vscode/*
+#ignore .vscode folder content
+.vscode/*

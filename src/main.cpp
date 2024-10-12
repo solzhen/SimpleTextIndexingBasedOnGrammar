@@ -126,7 +126,13 @@ std::vector<uint8_t> generateRandomChars(int n) {
 
 int main(int argc, char* argv[]) {
 
-    std::vector<uint8_t> chars = generateRandomChars(100);
+    //std::vector<uint8_t> chars = generateRandomChars(100);
+
+    std::vector<uint8_t> chars = { 56, 57, 56, 57, 58, 65, 67, 68, 69, 80, 65, 67, 68, 56, 57, 58 };
+    // print out the generated characters
+    for (int i = 0; i < chars.size(); i++) {
+        std::cout << static_cast<int>(chars[i]) << " ";
+    }; std::cout << std::endl;
     writeCharsToFile("test_repair.bin", chars);
 
     FILE *input, *output;
@@ -138,6 +144,22 @@ int main(int argc, char* argv[]) {
 
     dict = RunRepair(input);
     fclose(input);
+
+    // print out elements of dict
+    std::cout << "txt_len: " << dict->txt_len << std::endl;
+    std::cout << "num_rules: " << dict->num_rules << std::endl;
+    std::cout << "seq_len: " << dict->seq_len << std::endl;
+    std::cout << "buff_size: " << dict->buff_size << std::endl;
+
+    RULE *rule = dict->rule;
+    for (int i = 0; i < dict->num_rules; i++) {
+        if (rule[i].right != 256)
+            std::cout << "rule[" << i << "]: " << rule[i].left << " " << rule[i].right << std::endl;
+    }
+    CODE *comp_seq = dict->comp_seq;
+    for (int i = 0; i < dict->seq_len; i++) {
+        std::cout << "comp_seq[" << i << "]: " << comp_seq[i] << std::endl;
+    }
 
 
     string filename = "test.integers";

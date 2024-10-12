@@ -61,6 +61,12 @@
         "thread": "cpp",
         "cinttypes": "cpp",
         "typeinfo": "cpp",
-        "encoder.h": "c"
+        "encoder.h": "c",
+        "charconv": "cpp",
+        "optional": "cpp",
+        "format": "cpp",
+        "span": "cpp",
+        "variant": "cpp",
+        "text_encoding": "cpp"
     }
 }

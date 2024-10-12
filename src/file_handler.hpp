@@ -56,3 +56,6 @@ void writePointsToFile(const string& fn, uint32_t nc, uint32_t nr, const vector<
 vector<Point> readPointsFromFile(const string& fn, uint32_t& cs, uint32_t& rs);
 
 vector<Point> readPointsFromFile(const string& fn, uint32_t& cs, uint32_t& rs, vector<uint32_t>& symbols);
+
+
+void writeCharsToFile(const std::string& filename, const std::vector<uint8_t>& chars);

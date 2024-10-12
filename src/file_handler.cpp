@@ -115,3 +115,18 @@ vector<Point> readPointsFromFile(const string& filename, uint32_t& columns, uint
     inputFile.close();
     return points;
 }
+
+
+// write a vector of characters to a file
+void writeCharsToFile(const std::string& filename, const std::vector<uint8_t>& chars) {
+    std::ofstream outfile(filename, std::ios::binary);
+    if (!outfile) {
+        std::cerr << "Error opening file for writing: " << filename << std::endl;
+        return;
+    }
+    outfile.write(reinterpret_cast<const char*>(chars.data()), chars.size());
+    outfile.close();
+    if (!outfile) {
+        std::cerr << "Error writing to file: " << filename << std::endl;
+    }
+}

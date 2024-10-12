@@ -1,3 +1,4 @@
+
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
@@ -128,7 +129,7 @@ int main(int argc, char* argv[]) {
 
     //std::vector<uint8_t> chars = generateRandomChars(100);
 
-    std::vector<uint8_t> chars = { 56, 57, 56, 57, 58, 65, 67, 68, 69, 80, 65, 67, 68, 56, 57, 58 };
+    std::vector<uint8_t> chars = { 56, 57, 56, 57, 58, 65, 67, 68, 69, 80, 65, 67, 68, 56, 57, 58, 69, 80 };
     // print out the generated characters
     for (int i = 0; i < chars.size(); i++) {
         std::cout << static_cast<int>(chars[i]) << " ";
@@ -137,19 +138,17 @@ int main(int argc, char* argv[]) {
 
     FILE *input, *output;
     DICT *dict;
-    EDICT *edict;
 
     input  = fopen("test_repair.bin", "r");
-    //output = fopen("test_repair.bout", "wb");
 
     dict = RunRepair(input);
     fclose(input);
 
     // print out elements of dict
-    std::cout << "txt_len: " << dict->txt_len << std::endl;
-    std::cout << "num_rules: " << dict->num_rules << std::endl;
-    std::cout << "seq_len: " << dict->seq_len << std::endl;
-    std::cout << "buff_size: " << dict->buff_size << std::endl;
+    std::cout << "original text length: " << dict->txt_len << std::endl;
+    std::cout << "number of rules: " << dict->num_rules - 256 << std::endl;
+    std::cout << "sequence length: " << dict->seq_len << std::endl;
+    //std::cout << "buff_size: " << dict->buff_size << std::endl;
 
     RULE *rule = dict->rule;
     for (int i = 0; i < dict->num_rules; i++) {
@@ -157,10 +156,35 @@ int main(int argc, char* argv[]) {
             std::cout << "rule[" << i << "]: " << rule[i].left << " " << rule[i].right << std::endl;
     }
     CODE *comp_seq = dict->comp_seq;
+    std::cout << "Sequence: ";
     for (int i = 0; i < dict->seq_len; i++) {
-        std::cout << "comp_seq[" << i << "]: " << comp_seq[i] << std::endl;
+        std::cout << comp_seq[i] << " ";
+    }
+    std::cout << std::endl;
+
+    std::cout << "Converting dictionary..." << std::endl;
+
+    EDICT *edict = (EDICT*)malloc(sizeof(EDICT));
+    edict->txt_len = dict->txt_len;
+    edict->seq_len = dict->seq_len;
+    edict->num_rules = dict->num_rules;
+    edict->comp_seq = dict->comp_seq;
+    edict->rule  = dict->rule;
+    edict->tcode = (CODE*)malloc(sizeof(CODE)*dict->num_rules);
+    for (int i = 0; i <= CHAR_SIZE; i++) {
+        edict->tcode[i] = i;
+    }    
+    for (int i = CHAR_SIZE+1; i < dict->num_rules; i++) {
+        edict->tcode[i] = DUMMY_CODE;
     }
 
+    output = fopen("test_repair.bout", "wb");
+
+    std::cout << "Encoding..." << std::endl;
+    EncodeCFG(edict, output);
+    free(dict);
+    free(edict);
+    fclose(output);
 
     string filename = "test.integers";
     if (argc < 2) {

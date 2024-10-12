@@ -33,6 +33,7 @@
 *.app
 
 *.bin
+*.bout
 
 /src/sdsl
 /src/sdslsrc
@@ -54,6 +55,6 @@ test.*
 /repairs/repairnavarro/toint
 /repairs/repairnavarro/repair.tgz
 
-#ignore .vscode folder content
-.vscode/
+
 .vscode/*
+.vscode/settings.json

@@ -24,11 +24,48 @@ extern "C" {
 
 typedef struct _IO_FILE FILE;
 
+
+std::string expandRule(const RULE* rules, int ruleIndex) {
+    //std::cout << "Expanding rule: " << ruleIndex << std::endl;
+    std::string expandedRule = "";
+    if (ruleIndex < 256) { // we're looking at a terminal
+        expandedRule += static_cast<char>(ruleIndex);
+    }
+    else { // we're looking at a non-terminal
+        expandedRule += expandRule(rules, rules[ruleIndex].left);
+        expandedRule += expandRule(rules, rules[ruleIndex].right);
+    }
+    return expandedRule;
+}
+
+std::string expandSequence(const CODE* sequence, const int seq_len, const RULE* rules) {
+    std::string expandedSequence = "";
+    for (int i = 0; i < seq_len; i++) {
+        expandedSequence += expandRule(rules, sequence[i]);
+    }
+    return expandedSequence;
+}
+
+std::vector<uint8_t> convertStringToVector(const std::string& str) {
+    std::vector<uint8_t> vec;
+    for (int i = 0; i < str.size(); i++) {
+        vec.push_back(static_cast<uint8_t>(str[i]));
+    }
+    return vec;
+}
+
 int main(int argc, char* argv[]) {
 
     //std::vector<uint8_t> chars = generateRandomChars(100);
 
-    std::vector<uint8_t> chars = { 56, 57, 56, 57, 58, 65, 67, 68, 69, 80, 65, 67, 68, 56, 57, 58, 69, 80 };
+    //ontain test_str as input
+    std::string test_str;
+    std::cout << "Enter the input string: ";
+    std::getline(std::cin, test_str);   
+    //std::cin >> test_str;    
+    //std:cout << "Input string: " << test_str << std::endl;
+    std::vector<uint8_t> chars = convertStringToVector(test_str);
+    //std::vector<uint8_t> chars = { 56, 57, 56, 57, 58, 65, 67, 68, 69, 80, 65, 67, 68, 56, 57, 58, 69, 80 };
     // print out the generated characters
     for (int i = 0; i < chars.size(); i++) {
         std::cout << static_cast<int>(chars[i]) << " ";
@@ -60,6 +97,9 @@ int main(int argc, char* argv[]) {
         std::cout << comp_seq[i] << " ";
     }
     std::cout << std::endl;
+
+    std::string expandedSequence = expandSequence(comp_seq, dict->seq_len, rule);
+    std::cout << "Expanded sequence: " << expandedSequence << std::endl;
 
     std::cout << "Converting dictionary..." << std::endl;
 
@@ -127,6 +167,8 @@ int main(int argc, char* argv[]) {
 
 /**
  * to be done
+ * Expand any rule on demand
+ * Transform to grid
  * 
  * 
  */

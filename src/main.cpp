@@ -128,14 +128,16 @@ int main(int argc, char* argv[]) {
         edict->tcode[i] = DUMMY_CODE;
     }
 
-    const char *encoded_file = "test_repair.encoded.bin";
-    output = fopen(encoded_file, "wb");
+    std::string encoded_file = input_filename + ".encoded.bin";
+    output = fopen(encoded_file.c_str(), "wb");
 
     std::cout << "Encoding..." << std::endl;
     EncodeCFG(edict, output);
     free(dict);
     free(edict);
     fclose(output);
+
+    /* ------------------- check repair_reader.test() for ideas on converting to grid ------------*/
 
     string filename = "test.integers";
     if (argc < 2) {

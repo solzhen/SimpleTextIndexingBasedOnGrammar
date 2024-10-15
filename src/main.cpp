@@ -56,8 +56,9 @@ std::vector<uint8_t> convertStringToVector(const std::string& str) {
 
 int main(int argc, char* argv[]) {
 
-    //std::vector<uint8_t> chars = generateRandomChars(100);
 
+/*     const char *testing_file = "test_repair.bin";
+    //std::vector<uint8_t> chars = generateRandomChars(100);
     //ontain test_str as input
     std::string test_str;
     std::cout << "Enter the input string: ";
@@ -70,14 +71,18 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i < chars.size(); i++) {
         std::cout << static_cast<int>(chars[i]) << " ";
     }; std::cout << std::endl;
-    
+    const char *testing_file = "test_repair.bin";
+    writeCharsToFile(testing_file, chars); */
+
 
     FILE *input, *output;
     DICT *dict;
 
-    const char *testing_file = "test_repair.bin";
-    writeCharsToFile(testing_file, chars);
-    input  = fopen(testing_file, "r");
+    // get input filename from user
+    std::string input_filename;
+    std::cout << "Enter the input filename: ";
+    std::cin >> input_filename;
+    input  = fopen(input_filename.c_str(), "rb");
 
     dict = RunRepair(input);
     fclose(input);
@@ -89,19 +94,23 @@ int main(int argc, char* argv[]) {
     //std::cout << "buff_size: " << dict->buff_size << std::endl;
 
     RULE *rule = dict->rule;
-    for (int i = 0; i < dict->num_rules; i++) {
+
+/*     for (int i = 0; i < dict->num_rules; i++) {
         if (rule[i].right != 256)
             std::cout << "rule[" << i << "]: " << rule[i].left << " " << rule[i].right << std::endl;
-    }
+    } */
+
     CODE *comp_seq = dict->comp_seq;
-    std::cout << "Sequence: ";
+
+/*     std::cout << "Sequence: ";
     for (int i = 0; i < dict->seq_len; i++) {
         std::cout << comp_seq[i] << " ";
     }
-    std::cout << std::endl;
+    std::cout << std::endl; */
 
     std::string expandedSequence = expandSequence(comp_seq, dict->seq_len, rule);
-    std::cout << "Expanded sequence: " << expandedSequence << std::endl;
+    //std::cout << "Expanded sequence: " << expandedSequence << std::endl;
+    writeCharsToFile(input_filename+".bin", convertStringToVector(expandedSequence));
 
     std::cout << "Converting dictionary..." << std::endl;
 

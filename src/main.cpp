@@ -70,12 +70,14 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i < chars.size(); i++) {
         std::cout << static_cast<int>(chars[i]) << " ";
     }; std::cout << std::endl;
-    writeCharsToFile("test_repair.bin", chars);
+    
 
     FILE *input, *output;
     DICT *dict;
 
-    input  = fopen("test_repair.bin", "r");
+    const char *testing_file = "test_repair.bin";
+    writeCharsToFile(testing_file, chars);
+    input  = fopen(testing_file, "r");
 
     dict = RunRepair(input);
     fclose(input);
@@ -117,7 +119,8 @@ int main(int argc, char* argv[]) {
         edict->tcode[i] = DUMMY_CODE;
     }
 
-    output = fopen("test_repair.bout", "wb");
+    const char *encoded_file = "test_repair.encoded.bin";
+    output = fopen(encoded_file, "wb");
 
     std::cout << "Encoding..." << std::endl;
     EncodeCFG(edict, output);

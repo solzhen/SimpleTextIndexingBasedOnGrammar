@@ -4,3 +4,4 @@
 int isTerminal(char c);
 bool isPrefix(const std::string& str, const std::string& prefix);
 std::vector<uint8_t> generateRandomChars(int n);
+std::vector<uint8_t> convertStringToVector(const std::string& str) ;

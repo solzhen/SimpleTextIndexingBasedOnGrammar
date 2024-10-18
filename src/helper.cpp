@@ -26,6 +26,14 @@ std::vector<uint8_t> generateRandomChars(int n) {
     return chars;
 }
 
+std::vector<uint8_t> convertStringToVector(const std::string& str) {
+    std::vector<uint8_t> vec;
+    for (int i = 0; i < str.size(); i++) {
+        vec.push_back(static_cast<uint8_t>(str[i]));
+    }
+    return vec;
+}
+
 
 
 

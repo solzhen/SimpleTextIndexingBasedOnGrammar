@@ -11,156 +11,229 @@
 #include <sdsl/bit_vectors.hpp>
 
 #include "grid.hpp"
-#include "repair_reader.hpp"
-//#include "re-pair.hpp"
+#include "helper.hpp"
 
 using namespace sdsl;
 using namespace std;
 
-extern "C" {
+extern "C" { // C implementation of repair and encoder
     #include "../repairs/repair110811/repair.h"
     #include "../repairs/repair110811/encoder.h"
 }
 
 typedef struct _IO_FILE FILE;
 
+// Hash specialization for Rule
+namespace std {
+    template <>
+    struct hash<RULE> {
+        size_t operator()(const RULE& r) const {            
+            return hash<uint16_t>()(r.left) ^ hash<uint16_t>()(r.right);// Simple hash b_i and c_i
+        }
+    };
+}
+bool operator==(const RULE& lhs, const RULE& rhs) {
+    return lhs.left == rhs.left && lhs.right == rhs.right;
+}
 
-std::string expandRule(const RULE* rules, int ruleIndex) {
-    //std::cout << "Expanding rule: " << ruleIndex << std::endl;
-    std::string expandedRule = "";
-    if (ruleIndex < 256) { // we're looking at a terminal
-        expandedRule += static_cast<char>(ruleIndex);
+std::unordered_map<RULE, std::string> ruleCache;
+
+std::string expand(const RULE *rules, int index) {
+    RULE rule = rules[index];    
+    auto it = ruleCache.find(rule); // Check if the rule is already in the cache
+    if (it != ruleCache.end()) { 
+        return it->second; // Return the cached result
     }
-    else { // we're looking at a non-terminal
-        expandedRule += expandRule(rules, rules[ruleIndex].left);
-        expandedRule += expandRule(rules, rules[ruleIndex].right);
+    std::string leftstr;
+    std::string rightstr;
+    if (rule.left <= 256) {
+        leftstr += (char)rule.left;
     }
-    return expandedRule;
+    else {
+        leftstr += expand(rules, rule.left);
+    }
+    if (rule.right <= 256) {
+        rightstr = (char)rule.right;
+    }
+    else {
+        rightstr += expand(rules, rule.right);
+    }    
+    ruleCache[rule] = leftstr + rightstr; // Cache the expanded rule for future use
+    return ruleCache[rule];
+}
+
+std::string expand_prefix(RULE *rules, int index) {
+    RULE rule = rules[index];
+    return (rule.left <= 256)? std::string(1, (char)rule.left) : expand(rules, rule.left);
+}
+
+std::string expand_sufix(RULE *rules, int index) {
+    RULE rule = rules[index];
+    return (rule.right <= 256)? std::string(1, (char)rule.right) : expand(rules, rule.right);
+}
+
+bool compareRules(RULE *rules, int a, int b, bool reverse = false) {
+    std::string expanded_rule_a;
+    std::string expanded_rule_b;
+    if (reverse) {
+        expanded_rule_a = expand_prefix(rules, a);
+        expanded_rule_b = expand_prefix(rules, b);
+        expanded_rule_a = std::string(expanded_rule_a.rbegin(), expanded_rule_a.rend());
+        expanded_rule_b = std::string(expanded_rule_b.rbegin(), expanded_rule_b.rend());
+    }
+    else {
+        expanded_rule_a = expand_sufix(rules, a);
+        expanded_rule_b = expand_sufix(rules, b);
+    }
+    return expanded_rule_a < expanded_rule_b;
 }
 
 std::string expandSequence(const CODE* sequence, const int seq_len, const RULE* rules) {
     std::string expandedSequence = "";
     for (int i = 0; i < seq_len; i++) {
-        expandedSequence += expandRule(rules, sequence[i]);
+        expandedSequence += expand(rules, sequence[i]);
     }
     return expandedSequence;
 }
 
-std::vector<uint8_t> convertStringToVector(const std::string& str) {
-    std::vector<uint8_t> vec;
-    for (int i = 0; i < str.size(); i++) {
-        vec.push_back(static_cast<uint8_t>(str[i]));
+EDICT *convertDict(DICT *dict) {
+  EDICT *edict = (EDICT*)malloc(sizeof(EDICT));
+  uint i;
+  edict->txt_len = dict->txt_len;
+  edict->seq_len = dict->seq_len;
+  edict->num_rules = dict->num_rules;
+  edict->comp_seq = dict->comp_seq;
+  edict->rule  = dict->rule;
+  edict->tcode = (CODE*)malloc(sizeof(CODE)*dict->num_rules);
+
+  for (i = 0; i <= CHAR_SIZE; i++) {
+    edict->tcode[i] = i;
+  }
+  for (i = CHAR_SIZE+1; i < dict->num_rules; i++) {
+    edict->tcode[i] = DUMMY_CODE;
+  }
+  return edict;
+}
+
+void rulesprinter(RULE *rules, int num_rules, bool expanded = false) {
+    for (int i = 257; i < num_rules; i++) {
+        std::cout << i << " -> " << rules[i].left << " " << rules[i].right << std::endl;
+        if (expanded) {
+            std::cout << "\t" << expand(rules, rules[i].left) << " " << expand(rules, rules[i].right) << std::endl;
+        }
     }
-    return vec;
 }
 
 int main(int argc, char* argv[]) {
 
-
-/*     const char *testing_file = "test_repair.bin";
-    //std::vector<uint8_t> chars = generateRandomChars(100);
-    //ontain test_str as input
-    std::string test_str;
-    std::cout << "Enter the input string: ";
-    std::getline(std::cin, test_str);   
-    //std::cin >> test_str;    
-    //std:cout << "Input string: " << test_str << std::endl;
-    std::vector<uint8_t> chars = convertStringToVector(test_str);
-    //std::vector<uint8_t> chars = { 56, 57, 56, 57, 58, 65, 67, 68, 69, 80, 65, 67, 68, 56, 57, 58, 69, 80 };
-    // print out the generated characters
-    for (int i = 0; i < chars.size(); i++) {
-        std::cout << static_cast<int>(chars[i]) << " ";
-    }; std::cout << std::endl;
-    const char *testing_file = "test_repair.bin";
-    writeCharsToFile(testing_file, chars); */
-
+    std::string input_filename;
+    if (argc < 2) {
+        std::cout << "Enter the input filename: ";
+        std::cin >> input_filename;
+    }
+    else {
+        input_filename = argv[1];
+    }
 
     FILE *input, *output;
     DICT *dict;
-
-    // get input filename from user
-    std::string input_filename;
-    std::cout << "Enter the input filename: ";
-    std::cin >> input_filename;
     input  = fopen(input_filename.c_str(), "rb");
-
     dict = RunRepair(input);
     fclose(input);
 
-    // print out elements of dict
     std::cout << "original text length: " << dict->txt_len << std::endl;
     std::cout << "number of rules: " << dict->num_rules - 256 << std::endl;
     std::cout << "sequence length: " << dict->seq_len << std::endl;
-    //std::cout << "buff_size: " << dict->buff_size << std::endl;
 
-    RULE *rule = dict->rule;
-
-/*     for (int i = 0; i < dict->num_rules; i++) {
-        if (rule[i].right != 256)
-            std::cout << "rule[" << i << "]: " << rule[i].left << " " << rule[i].right << std::endl;
-    } */
-
-    CODE *comp_seq = dict->comp_seq;
-
-/*     std::cout << "Sequence: ";
-    for (int i = 0; i < dict->seq_len; i++) {
-        std::cout << comp_seq[i] << " ";
-    }
-    std::cout << std::endl; */
-
-    std::string expandedSequence = expandSequence(comp_seq, dict->seq_len, rule);
-    //std::cout << "Expanded sequence: " << expandedSequence << std::endl;
-    writeCharsToFile(input_filename+".bin", convertStringToVector(expandedSequence));
-
-    std::cout << "Converting dictionary..." << std::endl;
-
-    EDICT *edict = (EDICT*)malloc(sizeof(EDICT));
-    edict->txt_len = dict->txt_len;
-    edict->seq_len = dict->seq_len;
-    edict->num_rules = dict->num_rules;
-    edict->comp_seq = dict->comp_seq;
-    edict->rule  = dict->rule;
-    edict->tcode = (CODE*)malloc(sizeof(CODE)*dict->num_rules);
-    for (int i = 0; i <= CHAR_SIZE; i++) {
-        edict->tcode[i] = i;
-    }    
-    for (int i = CHAR_SIZE+1; i < dict->num_rules; i++) {
-        edict->tcode[i] = DUMMY_CODE;
-    }
-
+    // ------ this next part is just to test file size after encoding
+    EDICT *edict = convertDict(dict);
     std::string encoded_file = input_filename + ".encoded.bin";
     output = fopen(encoded_file.c_str(), "wb");
-
-    std::cout << "Encoding..." << std::endl;
+    //std::cout << "Encoding..." << std::endl;
     EncodeCFG(edict, output);
+    fclose(output);
+    // ------
+
+    RULE *rules = dict->rule; // set or rules 
+    CODE *comp_seq = dict->comp_seq; // sequence C
+
+    rulesprinter(rules, dict->num_rules, true);
+
+    dict->seq_len = dict->seq_len - 1; // remove the last element of the sequence (it's special character useless for us)
+    //print sequence C
+    std::cout << "Sequence C: ";
+    for (int i = 0; i < dict->seq_len; i++) { // dict->seq_len is the length of the sequence C
+        std::cout << comp_seq[i] << " ";
+    } std::cout << std::endl;
+
+    //print expanded sequence C
+    std::string expandedSequence = expandSequence(comp_seq, dict->seq_len, rules);
+    std::cout << "Expanded Sequence C: " << expandedSequence << std::endl;
+
+        /*
+        First, we will get rid of sequence C, so as to have a grammar that derives T from
+    a single nonterminal S. This is done by creating new nonterminals N 1 -> C[1]C[2],
+    N2 -> C[3]C[4], and so on. Then we pair again N1 -> N 1 N 2 , N2 -> N 3 N4 , and so on,
+recursively, until having a single nonterminal S.
+        */
+
+    while (dict->seq_len > 1) {
+        for (int i = 0; i < dict->seq_len; i = i+2) {
+            if (i == dict->seq_len - 1) { // if we're at the last element of the sequence, it means the sequence length was odd
+                comp_seq[i/2] = comp_seq[i];
+            }
+            else { // This works, but in the future, I may need to expose the AddNewPair function from repair.c.
+                RULE new_rule;
+                new_rule.left = comp_seq[i];
+                new_rule.right = comp_seq[i+1];
+                rules[dict->num_rules] = new_rule; // append the new rule to the rules
+                comp_seq[i/2] = dict->num_rules; // update the sequence C
+                dict->num_rules++; // increment the number of rules
+            }
+        }
+        dict->seq_len = dict->seq_len % 2 == 0 ? dict->seq_len / 2 : dict->seq_len / 2 + 1; // update the sequence length
+    }
+
+    //print new sequence C
+    std::cout << "New Sequence C: ";
+    for (int i = 0; i < dict->seq_len; i++) {
+        std::cout << comp_seq[i] << " ";
+    } std::cout << std::endl;
+    std::cout << "Number of rules: " << dict->num_rules << std::endl;
+
+    //print new rules
+    rulesprinter(rules, dict->num_rules, true);
+
+    /*
+        The set of r rules will be represented as a sequence R[1, 2r] = B1C1 B2C2 . . . BrCr .
+    */
+    std::vector<CODE> sequenceR((dict->num_rules - 257) * 2);
+    for (int i = 0; i < sequenceR.size(); i = i + 2) {
+        sequenceR[i] = rules[i/2 + 257].left;
+        sequenceR[i + 1] = rules[i/2 + 257].right;
+    }
+    // print sequenceR
+    std::cout << "Sequence R: ";
+    for (int i = 0; i < sequenceR.size(); i++) {
+        std::cout << sequenceR[i] << " ";
+    } std::cout << std::endl;
+    std::cout << "legible Sequence R: ";
+    for (int i = 0; i < sequenceR.size(); i++) {
+        if (sequenceR[i] <= 256) {
+            std::cout << static_cast<char>(sequenceR[i]);
+        }
+        else {
+            std::cout << '<' << static_cast<char>(sequenceR[i] - 257 + 'A') << '>';
+        }
+    } std::cout << std::endl;
+
     free(dict);
     free(edict);
-    fclose(output);
+    
 
     /* ------------------- check repair_reader.test() for ideas on converting to grid ------------*/
 
-    string filename = "test.integers";
-    if (argc < 2) {
-        cout << "Generating test file test.integers" << endl;
-        u32 c = 12;
-        u32 r = 16;
-        vector<Point> points2write = {
-            {6, 15}, {11, 1}, {11, 13}, {4, 4}, {11, 4}, {6, 3}, {6, 2}, {4, 13}, {2, 5}, {2, 8}, {12, 11}, {1, 6}, {10, 8}, {5, 10}, {12, 13}, {7, 12} };
-        writePointsToFile("test.integers", c, r, points2write);
-    }
-    else {
-        string filename = argv[1];
-    }
-    cout << "Reading " << filename << endl;
-    Grid grid(filename);
-    cout << "count(2,11,3,9): " << grid.count(2, 11, 3, 9) << endl;
-    vector<Point> p = grid.report(2, 11, 3, 9);
-    printPoints(p);
-    cout << endl;
 
-    test();
-
-    Grid test_grid("test_grid.bin");
 
     /*     // Re Pair quick test
         std::string input;
@@ -186,3 +259,49 @@ int main(int argc, char* argv[]) {
  * 
  * 
  */
+
+
+
+
+
+/*     const char *testing_file = "test_repair.bin";
+    //std::vector<uint8_t> chars = generateRandomChars(100);
+    //ontain test_str as input
+    std::string test_str;
+    std::cout << "Enter the input string: ";
+    std::getline(std::cin, test_str);   
+    //std::cin >> test_str;    
+    //std:cout << "Input string: " << test_str << std::endl;
+    std::vector<uint8_t> chars = convertStringToVector(test_str);
+    //std::vector<uint8_t> chars = { 56, 57, 56, 57, 58, 65, 67, 68, 69, 80, 65, 67, 68, 56, 57, 58, 69, 80 };
+    // print out the generated characters
+    for (int i = 0; i < chars.size(); i++) {
+        std::cout << static_cast<int>(chars[i]) << " ";
+    }; std::cout << std::endl;
+    const char *testing_file = "test_repair.bin";
+    writeCharsToFile(testing_file, chars); */
+
+
+
+    /*
+        string filename = "test.integers";
+    if (argc < 2) {
+        cout << "Generating test file test.integers" << endl;
+        u32 c = 12;
+        u32 r = 16;
+        vector<Point> points2write = {
+            {6, 15}, {11, 1}, {11, 13}, {4, 4}, {11, 4}, {6, 3}, {6, 2}, {4, 13}, {2, 5}, {2, 8}, {12, 11}, {1, 6}, {10, 8}, {5, 10}, {12, 13}, {7, 12} };
+        writePointsToFile("test.integers", c, r, points2write);
+    }
+    else {
+        string filename = argv[1];
+    }
+    cout << "Reading " << filename << endl;
+    Grid grid(filename);
+    cout << "count(2,11,3,9): " << grid.count(2, 11, 3, 9) << endl;
+    vector<Point> p = grid.report(2, 11, 3, 9);
+    printPoints(p);
+    cout << endl;
+
+    Grid test_grid("test_grid.bin");
+    */

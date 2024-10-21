@@ -65,15 +65,14 @@ public:
         if (i >= this->pi.size()) {
             return -1;
         }
-        int j = i;
-        //cout << "j: " << j << endl;
-        bool s = true;
+        int j = i; bool s = true;
+        int loop=0;
         while (pi[j] != i) {
+            loop++;
             if (s && b[j] == 1) {
                 s = false;
-                //auto rnk = rank_b(j);
-                //cout << "rnk: " << (uint16_t) rnk << endl;
                 j = S[rank_b(j)];
+                //cout << "j: " << j << endl;
             } else {
                 j = pi[j];
             }
@@ -121,26 +120,13 @@ struct power_permutation construct_tau(vector<uint16_t> pi, int t) {
         std::cout << "Success: " << #expr1 << " : " << (expr1) << "  == " << (expr2) << ",\n\t" << __FILE__ << ", line " << __LINE__ << std::endl; \
     }
 
-
-#define POWER(i, k, result) \
-    do { \
-        int j = tau.inverse(i); \
-        cout << "j: " << j << endl; \
-        int rnk = rank(j); \
-        cout << "rnk: " << rnk << endl; \
-        int pred = rnk == 0 ? 0 : select(rnk); \
-        cout << "pred: " << pred << endl; \
-        int succ = select(rnk + 1); \
-        cout << "succ: " << succ << endl; \
-        (result) = tau_pi[ pred + ( (j + k - pred) % (succ - pred + 1) ) ]; \
-    } while (0)
-
 void test_main() {
     
     vector<uint16_t> pi2 = {1, 2, 3, 4, 0};
     vector<uint16_t> pi3 = {4, 3, 2, 1, 0};
     Permutation pi2i = Permutation(pi2, 2);
-    ASSERT_EQUAL(pi2i.get_pi(), pi2);    
+    ASSERT_EQUAL(pi2i.get_pi(), pi2);
+    pi2i.rank_b.set_vector(&pi2i.b);
     ASSERT_EQUAL(pi2i.inverse(0), 4);
     ASSERT_EQUAL(pi2i.inverse(1), 0);
     Permutation pi3i = Permutation(pi3, 3);
@@ -150,9 +136,10 @@ void test_main() {
 
     vector<uint16_t> pi1 = {9, 6, 2, 4, 7, 0, 10, 11, 3, 5, 8, 1};
     Permutation pi1i = Permutation(pi1, 3);
-    ASSERT_EQUAL(pi1i.inverse(0), 5); // test 6
+    ASSERT_EQUAL(pi1i.inverse(0), 5); 
     ASSERT_EQUAL(pi1i.inverse(1), 11);
     ASSERT_EQUAL(pi1i.inverse(2), 2);
+    pi1i.rank_b.set_vector(&pi1i.b); // WHY DO I NEED TO SET THE VECTOR AGAIN?
     ASSERT_EQUAL(pi1i.inverse(3), 8);
 
     power_permutation pp = construct_tau(pi1, 3);
@@ -176,8 +163,39 @@ void test_main() {
     ASSERT_EQUAL(tau_pi.inverse(1), 3);
     ASSERT_EQUAL(tau_pi.inverse(3), 7);
     ASSERT_EQUAL(tau_pi.inverse(4), 8);
-    //ASSERT_EQUAL(tau_pi.inverse(5), 2); // !! INFINITE LOOP; FIX!!!
-    //ASSERT_EQUAL(tau_pi.inverse(2), 11); // !! INFINITE LOOP; FIX!!!
+    tau_pi.rank_b.set_vector(&tau_pi.b);
+    ASSERT_EQUAL(tau_pi.inverse(5), 2);
+    ASSERT_EQUAL(tau_pi.inverse(2), 11); 
+    
+    select_support_mcl<1> select(&pp.D);
+    rank_support_v<1> rank(&pp.D);
+    
+    #define POWER(i, k, result) \
+        do { \
+            int j = tau_pi.inverse(i); \
+            int rnk = rank(j); \
+            int pred = rnk == 0 ? 0 : select(rnk); \
+            int succ = select(rnk + 1); \
+            (result) = tau_pi.pi[ pred + ( (j + k - pred) % (succ - pred + 1) ) ]; \
+        } while (0)
+
+    int result;
+    POWER(0, 1, result);
+    ASSERT_EQUAL(result, 9);
+    POWER(0, 2, result);
+    ASSERT_EQUAL(result, 5);
+    POWER(0, 3, result);
+    ASSERT_EQUAL(result, 0);
+    POWER(1, 1, result);
+    ASSERT_EQUAL(result, 6);
+    POWER(1, 6, result);
+    ASSERT_EQUAL(result, 7);
+    POWER(2, 7, result);
+    ASSERT_EQUAL(result, 11);
+    
+
+
+    //int result = tau_pi.pi[ pred + ( (j + k - pred) % (succ - pred + 1) ) ];
 
     cout << "All tests passed!" << endl;
 }

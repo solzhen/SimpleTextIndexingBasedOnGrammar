@@ -13,9 +13,9 @@ using namespace std;
 using namespace sdsl;
 using namespace std;
 
-// Function declarations or class definitions go here
 class Permutation {
-public:
+    friend class PowerPermutation;
+protected:
     Permutation();
 public:
     vector<uint16_t> pi; // permutation
@@ -26,7 +26,7 @@ public:
     Permutation(vector<uint16_t> pi, int t);
     int operator[](int i);
     int inverse(int i);
-    int rank(int i);
+    int rank_b(int i);
 };
 
 class PowerPermutation: public Permutation {

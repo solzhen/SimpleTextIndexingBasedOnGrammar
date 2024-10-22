@@ -12,6 +12,7 @@
 
 #include "grid.hpp"
 #include "helper.hpp"
+#include "permutations.hpp"
 
 using namespace sdsl;
 using namespace std;

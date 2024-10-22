@@ -5,7 +5,7 @@
 using namespace sdsl;
 using namespace std;
 
-int main() {
+int run() {
     int n = 20; //length of the sequence
     int sigma = 20; //alphabet size
     vector<uint16_t> seq(n);
@@ -104,8 +104,7 @@ int main() {
     vector<select_support_mcl<0, 1>> sel_0_d(noc);
     for (int i = 0; i < noc; i++) {
         sel_0_d[i] = select_support_mcl<0, 1>(&d[i]);
-    }
-    
+    }   
 
 }
 

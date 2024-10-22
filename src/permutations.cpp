@@ -8,18 +8,28 @@ using namespace std;
 #include <iostream>
 #include <cstdlib>
 
+#include "permutations.hpp"
 
-class Permutation {    
+#define ASSERT_EQUAL(expr1, expr2) \
+    if ((expr1) != (expr2)) { \
+        std::cerr << "Assertion failed: (" << #expr1 << " == " << #expr2 << ") evaluated as (" << (expr1) << " != " << (expr2) << ")\n\t" << __FILE__ << ", line " << __LINE__ << std::endl; \
+        std::abort(); \
+    } else { \
+        std::cout << "Success: " << #expr1 << " : " << (expr1) << "  == " << (expr2) << ",\n\t" << __FILE__ << ", line " << __LINE__ << std::endl; \
+    }
+
+class Permutation {
 public:
     vector<uint16_t> pi; // permutation
     vector<uint16_t> S; // shortcuts
     bit_vector b; // bit vector to mark shortcuts
-    rank_support_v<1> rank_b; // rank support for b
+    bit_vector::rank_1_type rank_b_support; // rank support for b
     int t; // parameter t
+    Permutation() {};
     Permutation(vector<uint16_t> pi, int t) {        
         int n = pi.size();
-        bit_vector v(n, 0); 
-        bit_vector b(n, 0);     
+        bit_vector v(n, 0);
+        bit_vector b(n, 0);
         for (int i = 0; i < n; i++) {
             if (v[i] == 0) {
                 v[i] = 1; 
@@ -29,14 +39,15 @@ public:
                         b[j] = 1; 
                     }
                     v[j] = 1; 
-                    j = pi[j]; k++;                
+                    j = pi[j]; k++;
                 }
                 if (k > t) {
                     b[i] = 1;
                 }            
             }
         }
-        rank_support_v<1> b_rank(&b);
+        this->b = b;
+        bit_vector::rank_1_type b_rank(&b);
         int rank = b_rank(n);
         vector<uint16_t> shortcuts(rank);
         for (int i = 0; i <= n; i++) {
@@ -57,11 +68,14 @@ public:
         }        
         this->pi = pi;
         this->S = shortcuts;
-        this->b = b;
-        this->rank_b = b_rank;
+        this->rank_b_support = b_rank;
         this->t = t;
     };
+    int operator[](int i) {
+        return pi[i];
+    }
     int inverse(int i) {
+        rank_b_support.set_vector(&b);
         if (i >= this->pi.size()) {
             return -1;
         }
@@ -71,7 +85,7 @@ public:
             loop++;
             if (s && b[j] == 1) {
                 s = false;
-                j = S[rank_b(j)];
+                j = S[rank_b_support(j)];
                 //cout << "j: " << j << endl;
             } else {
                 j = pi[j];
@@ -79,131 +93,110 @@ public:
         }
         return j;
     }
-    vector<uint16_t> get_pi() {
-        return this->pi;
+    // return number of 1s in b[0..i]
+    int rank_b(int i) {
+        return rank_b_support.rank(i+1);
     }
 };
 
-struct power_permutation {
-    vector<uint16_t> tau;
-    bit_vector D;
-};
-struct power_permutation construct_tau(vector<uint16_t> pi, int t) {
-    int n = pi.size();
-    bit_vector v(n, 0);
-    vector<uint16_t> tau_v(n); 
-    bit_vector  D(n); 
-    int tau_i = 0;
-    for (int i = 0; i < n; i++) {
-        if (v[i] == 0) {
-            v[i] = 1; 
-            int j = pi[i]; int k = 1;
-            tau_v[tau_i] = i; D[tau_i] = 0; tau_i++;
-            while (j != i) {
-                tau_v[tau_i] = j; D[tau_i] = 0; tau_i++;
-                v[j] = 1; 
-                j = pi[j]; k++;                
+class PowerPermutation: public Permutation {
+public:
+    bit_vector D; // bitvector D marks with 1 the end of a chunk (inclusive)
+    bit_vector::rank_1_type rank_D_support;
+    bit_vector::select_1_type select_D_support;
+    Permutation tau; // permutation induced by the cycle decomposition
+    PowerPermutation(vector<uint16_t> pi, int t): Permutation(pi, t) {
+        int n = pi.size();
+        bit_vector v(n, 0);
+        vector<uint16_t> tau_v(n); 
+        bit_vector  D(n); 
+        int tau_i = 0;
+        for (int i = 0; i < n; i++) {
+            if (v[i] == 0) {
+                v[i] = 1; 
+                int j = pi[i]; int k = 1;
+                tau_v[tau_i] = i; D[tau_i] = 0; tau_i++;
+                while (j != i) {
+                    tau_v[tau_i] = j; D[tau_i] = 0; tau_i++;
+                    v[j] = 1; 
+                    j = pi[j]; k++;                
+                }
+                D[tau_i - 1] = 1;
             }
-            D[tau_i - 1] = 1;
         }
+        this->tau = Permutation(tau_v, t);
+        this->D = D;
+        this->rank_D_support = bit_vector::rank_1_type(&D);
+        this->select_D_support = bit_vector::select_1_type(&D);
+        // call the constructor of the base class
     }
-    //auto p = Permutation(tau_v, t);
-    return {tau_v, D};
-}
-
-
-#define ASSERT_EQUAL(expr1, expr2) \
-    if ((expr1) != (expr2)) { \
-        std::cerr << "Assertion failed: (" << #expr1 << " == " << #expr2 << ") evaluated as (" << (expr1) << " != " << (expr2) << ")\n\t" << __FILE__ << ", line " << __LINE__ << std::endl; \
-        std::abort(); \
-    } else { \
-        std::cout << "Success: " << #expr1 << " : " << (expr1) << "  == " << (expr2) << ",\n\t" << __FILE__ << ", line " << __LINE__ << std::endl; \
+    // return the k-th power of pi[i]
+    int power(int i, int k) {
+        select_D_support.set_vector(&D);
+        rank_D_support.set_vector(&D);
+        int j = tau.inverse(i);
+        int chunk_number = this->rank_D(j - 1); //[0..]
+        int pred = this->select_D(chunk_number) + 1; // [0..]
+        int succ = this->select_D(chunk_number + 1);
+        return tau[ pred + ( (j-pred + k) % (succ - pred + 1) ) ];
     }
+    // return number of 1s in D[0..i]
+    int rank_D(int i) {
+        return this->rank_D_support.rank(i+1); //sdsl rank return [0::i) exclusive i
+    }
+    // return the position of the i-th 1 in D
+    int select_D(int i) {
+        select_D_support.set_vector(&D);
+        if (i==0) return -1;
+        return this->select_D_support.select(i);
+    }
+};
 
-void test_main() {
-    
+void test_main() {    
     vector<uint16_t> pi2 = {1, 2, 3, 4, 0};
     vector<uint16_t> pi3 = {4, 3, 2, 1, 0};
     Permutation pi2i = Permutation(pi2, 2);
-    ASSERT_EQUAL(pi2i.get_pi(), pi2);
-    pi2i.rank_b.set_vector(&pi2i.b);
+    ASSERT_EQUAL(pi2i.pi, pi2);
     ASSERT_EQUAL(pi2i.inverse(0), 4);
     ASSERT_EQUAL(pi2i.inverse(1), 0);
     Permutation pi3i = Permutation(pi3, 3);
     ASSERT_EQUAL(pi3i.inverse(0), 4);
     ASSERT_EQUAL(pi3i.inverse(1), 3);
     ASSERT_EQUAL(pi3i.inverse(2), 2);
-
-    vector<uint16_t> pi1 = {9, 6, 2, 4, 7, 0, 10, 11, 3, 5, 8, 1};
+    vector<uint16_t> pi1 = {9, 6, 2, 4, 7, 0, 10, 11, 3, 5, 8, 1, 12};
     Permutation pi1i = Permutation(pi1, 3);
     ASSERT_EQUAL(pi1i.inverse(0), 5); 
     ASSERT_EQUAL(pi1i.inverse(1), 11);
     ASSERT_EQUAL(pi1i.inverse(2), 2);
-    pi1i.rank_b.set_vector(&pi1i.b); // WHY DO I NEED TO SET THE VECTOR AGAIN?
     ASSERT_EQUAL(pi1i.inverse(3), 8);
-
-    power_permutation pp = construct_tau(pi1, 3);
-    auto tau_pi = Permutation(pp.tau, 3);
-
-    ASSERT_EQUAL(
-        tau_pi.b, bit_vector({0,1,1,1,0, 0,0,0,0,0, 0,1})
-        );
-    ASSERT_EQUAL(
-        tau_pi.S, vector<uint16_t>({3, 11, 1, 2})
-        );
-    ASSERT_EQUAL(
-        tau_pi.pi, vector<uint16_t>({0,9,5, 1,6,10,8,3,4,7,11, 2})
-        );
-    ASSERT_EQUAL(
-        pp.D, 
-        bit_vector({0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1})
-        );
-
-    ASSERT_EQUAL(tau_pi.inverse(0), 0);
-    ASSERT_EQUAL(tau_pi.inverse(1), 3);
-    ASSERT_EQUAL(tau_pi.inverse(3), 7);
-    ASSERT_EQUAL(tau_pi.inverse(4), 8);
-    tau_pi.rank_b.set_vector(&tau_pi.b);
-    ASSERT_EQUAL(tau_pi.inverse(5), 2);
-    ASSERT_EQUAL(tau_pi.inverse(2), 11); 
-    
-    select_support_mcl<1> select(&pp.D);
-    rank_support_v<1> rank(&pp.D);
-    
-    #define POWER(i, k, result) \
-        do { \
-            int j = tau_pi.inverse(i); \
-            int rnk = rank(j); \
-            int pred = rnk == 0 ? 0 : select(rnk); \
-            int succ = select(rnk + 1); \
-            (result) = tau_pi.pi[ pred + ( (j + k - pred) % (succ - pred + 1) ) ]; \
-        } while (0)
-
-    int result;
-    POWER(0, 1, result);
-    ASSERT_EQUAL(result, 9);
-    POWER(0, 2, result);
-    ASSERT_EQUAL(result, 5);
-    POWER(0, 3, result);
-    ASSERT_EQUAL(result, 0);
-    POWER(1, 1, result);
-    ASSERT_EQUAL(result, 6);
-    POWER(1, 6, result);
-    ASSERT_EQUAL(result, 7);
-    POWER(2, 7, result);
-    ASSERT_EQUAL(result, 11);
-    
-
-
-    //int result = tau_pi.pi[ pred + ( (j + k - pred) % (succ - pred + 1) ) ];
-
+    ASSERT_EQUAL(pi1i.inverse(1), 11);
+    vector<uint16_t> ppp = {9, 6, 2, 4, 7, 0, 10, 11, 3, 5, 8, 1};
+    PowerPermutation power_perm = PowerPermutation(ppp, 3);
+    ASSERT_EQUAL(power_perm.tau.pi, vector<uint16_t>({0,9,5,1,6,10,8,3,4,7,11,2}));
+    ASSERT_EQUAL(power_perm.D, bit_vector({0,0,1,0,0,0,0,0,0,0,1,1}));
+    ASSERT_EQUAL(power_perm.inverse(0), 5);
+    ASSERT_EQUAL(power_perm.inverse(1), 11);
+    ASSERT_EQUAL(power_perm.inverse(3), 8);
+    ASSERT_EQUAL(power_perm.inverse(4), 3);
+    ASSERT_EQUAL(power_perm.inverse(5), 9);
+    ASSERT_EQUAL(power_perm.inverse(2), 2);
+    ASSERT_EQUAL(power_perm.power(0, 1), 9);
+    ASSERT_EQUAL(power_perm.power(0, 2), 5);
+    ASSERT_EQUAL(power_perm.power(0, 3), 0);
+    ASSERT_EQUAL(power_perm.power(1, 1), 6);
+    ASSERT_EQUAL(power_perm.power(1, 6), 7);
+    ASSERT_EQUAL(power_perm.power(11, 8), 11);
+    ASSERT_EQUAL(power_perm.power(2, 7), 2);
     cout << "All tests passed!" << endl;
 }
 
+/*
 int main() {
     test_main();
     return 0;
 }
+*/
+
 
 
 

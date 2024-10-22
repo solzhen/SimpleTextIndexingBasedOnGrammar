@@ -18,12 +18,12 @@ class Permutation {
 protected:
     Permutation();
 public:
-    vector<uint16_t> pi; // permutation
-    vector<uint16_t> S; // shortcuts
+    int_vector<> pi; // permutation
+    int_vector<> S; // shortcuts
     bit_vector b; // bit vector to mark shortcuts
     bit_vector::rank_1_type rank_b_support; // rank support for b
     int t; // parameter t    
-    Permutation(vector<uint16_t> pi, int t);
+    Permutation(int_vector<> pi, int t);
     int operator[](int i);
     int inverse(int i);
     int rank_b(int i);
@@ -35,7 +35,7 @@ public:
     bit_vector::rank_1_type rank_D_support;
     bit_vector::select_1_type select_D_support;
     Permutation tau; // permutation induced by the cycle decomposition
-    PowerPermutation(vector<uint16_t> pi, int t);
+    PowerPermutation(int_vector<> pi, int t);
     int power(int i, int k);
     int rank_D(int i);
     int select_D(int i);

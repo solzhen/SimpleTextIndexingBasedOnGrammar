@@ -19,7 +19,7 @@ using namespace std;
     }
 
 Permutation::Permutation() : t(0) {}
-Permutation::Permutation(vector<uint16_t> pi, int t) : pi(pi), t(t) {        
+Permutation::Permutation(int_vector<> pi, int t) : pi(pi), t(t) {        
     int n = pi.size();
     bit_vector v(n, 0);
     bit_vector b(n, 0);
@@ -42,7 +42,7 @@ Permutation::Permutation(vector<uint16_t> pi, int t) : pi(pi), t(t) {
     this->b = b;
     bit_vector::rank_1_type b_rank(&b);
     int rank = b_rank(n);
-    vector<uint16_t> shortcuts(rank);
+    int_vector<> shortcuts(rank);
     for (int i = 0; i <= n; i++) {
         if (v[i] == 1) { 
             v[i] = 0; int j = pi[i]; 
@@ -89,10 +89,10 @@ int Permutation::rank_b(int i) {
     return rank_b_support.rank(i+1);
 }
 
-PowerPermutation::PowerPermutation(vector<uint16_t> pi, int t) : Permutation(pi, t) {
+PowerPermutation::PowerPermutation(int_vector<> pi, int t) : Permutation(pi, t) {
     int n = pi.size();
     bit_vector v(n, 0);
-    vector<uint16_t> tau_v(n); 
+    int_vector<> tau_v(n); 
     bit_vector  D(n); 
     int tau_i = 0;
     for (int i = 0; i < n; i++) {
@@ -135,8 +135,8 @@ int PowerPermutation::select_D(int i) {
 }
 
 void test_main() {    
-    vector<uint16_t> pi2 = {1, 2, 3, 4, 0};
-    vector<uint16_t> pi3 = {4, 3, 2, 1, 0};
+    int_vector<> pi2 = {1, 2, 3, 4, 0};
+    int_vector<> pi3 = {4, 3, 2, 1, 0};
     Permutation pi2i = Permutation(pi2, 2);
     ASSERT_EQUAL(pi2i.pi, pi2);
     ASSERT_EQUAL(pi2i.inverse(0), 4);
@@ -145,16 +145,16 @@ void test_main() {
     ASSERT_EQUAL(pi3i.inverse(0), 4);
     ASSERT_EQUAL(pi3i.inverse(1), 3);
     ASSERT_EQUAL(pi3i.inverse(2), 2);
-    vector<uint16_t> pi1 = {9, 6, 2, 4, 7, 0, 10, 11, 3, 5, 8, 1, 12};
+    int_vector<> pi1 = {9, 6, 2, 4, 7, 0, 10, 11, 3, 5, 8, 1, 12};
     Permutation pi1i = Permutation(pi1, 3);
     ASSERT_EQUAL(pi1i.inverse(0), 5); 
     ASSERT_EQUAL(pi1i.inverse(1), 11);
     ASSERT_EQUAL(pi1i.inverse(2), 2);
     ASSERT_EQUAL(pi1i.inverse(3), 8);
     ASSERT_EQUAL(pi1i.inverse(1), 11);
-    vector<uint16_t> ppp = {9, 6, 2, 4, 7, 0, 10, 11, 3, 5, 8, 1};
+    int_vector<> ppp = {9, 6, 2, 4, 7, 0, 10, 11, 3, 5, 8, 1};
     PowerPermutation power_perm = PowerPermutation(ppp, 3);
-    ASSERT_EQUAL(power_perm.tau.pi, vector<uint16_t>({0,9,5,1,6,10,8,3,4,7,11,2}));
+    ASSERT_EQUAL(power_perm.tau.pi, int_vector<>({0,9,5,1,6,10,8,3,4,7,11,2}));
     ASSERT_EQUAL(power_perm.D, bit_vector({0,0,1,0,0,0,0,0,0,0,1,1}));
     ASSERT_EQUAL(power_perm.inverse(0), 5);
     ASSERT_EQUAL(power_perm.inverse(1), 11);
@@ -188,16 +188,16 @@ int main() {
 
 /*
 struct permutation {
-    vector<uint16_t> pi; // permutation
-    vector<uint16_t> S; // shortcuts
+    int_vector<> pi; // permutation
+    int_vector<> S; // shortcuts
     bit_vector b; // bit vector to mark shortcuts
     rank_support_v<1> rank; // rank support for b
     int t; // parameter t
-    vector<uint16_t> tau; // permutation induced by the cycle decomposition
-    vector<uint16_t> D; // bitvector D
+    int_vector<> tau; // permutation induced by the cycle decomposition
+    int_vector<> D; // bitvector D
 };
 
-struct permutation construct(vector<uint16_t> pi, int t) {
+struct permutation construct(int_vector<> pi, int t) {
     int n = pi.size();
     // bit vector to mark visited elements
     bit_vector v(n, 0); 
@@ -209,8 +209,8 @@ struct permutation construct(vector<uint16_t> pi, int t) {
     // let C1, C2, ... Cc be the cycle decomposition of pi, and l_i = |Ci|
     // let tau = C1 C2 ... Cc be the concatenation of the cycles 
     // and a bitvector D = 0^(l_1-1) 1 0^(l_2-1) 1 ... 0^(l_c-1) 1
-    vector<uint16_t> tau(n); // permutation induced by the cycle decomposition
-    vector<uint16_t> D(n); // bitvector D
+    int_vector<> tau(n); // permutation induced by the cycle decomposition
+    int_vector<> D(n); // bitvector D
 
     int tau_i = 0;
 
@@ -238,7 +238,7 @@ struct permutation construct(vector<uint16_t> pi, int t) {
     rank_support_v<1> b_rank(&b);
     int rank = b_rank(n);
     //cout << rank << endl;
-    vector<uint16_t> shortcuts(rank);
+    int_vector<> shortcuts(rank);
 
     // repeat the process of finding the cycles
     for (int i = 0; i <= n; i++) {
@@ -263,8 +263,8 @@ struct permutation construct(vector<uint16_t> pi, int t) {
 
 
 int inverse(permutation p, int i) {
-    vector<uint16_t> pi = p.pi;
-    vector<uint16_t> S = p.S;
+    int_vector<> pi = p.pi;
+    int_vector<> S = p.S;
     bit_vector b = p.b;
     rank_support_v<1> rank = p.rank;
 
@@ -289,10 +289,10 @@ int inverse(permutation p, int i) {
     // Test case 1, book example
     permutation p1 = construct(pi1, 3);
     CUSTOM_ASSERT(p1.pi == pi1);
-    CUSTOM_ASSERT(p1.S == vector<uint16_t>({7,8,1}));
+    CUSTOM_ASSERT(p1.S == int_vector<>({7,8,1}));
     CUSTOM_ASSERT(p1.b == bit_vector({0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0}));
-    CUSTOM_ASSERT(p1.tau == vector<uint16_t>({0, 9, 5,  1, 6, 10, 8, 3, 4, 7, 11,  2}));
-    CUSTOM_ASSERT(p1.D == vector<uint16_t>({0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1}));
+    CUSTOM_ASSERT(p1.tau == int_vector<>({0, 9, 5,  1, 6, 10, 8, 3, 4, 7, 11,  2}));
+    CUSTOM_ASSERT(p1.D == int_vector<>({0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1}));
     CUSTOM_ASSERT(inverse(p1, 0) == 5);
     CUSTOM_ASSERT(inverse(p1, 1) == 11);
     CUSTOM_ASSERT(inverse(p1, 2) == 2);
@@ -303,7 +303,7 @@ int inverse(permutation p, int i) {
     permutation p2 = construct(pi2, 2);
     CUSTOM_ASSERT(p2.pi == pi2);
     CUSTOM_ASSERT(p2.b == bit_vector({1, 0, 1, 0, 1}));
-    CUSTOM_ASSERT(p2.S == vector<uint16_t>({4, 0, 2}));   
+    CUSTOM_ASSERT(p2.S == int_vector<>({4, 0, 2}));   
     CUSTOM_ASSERT(inverse(p2, 0) == 4);
     CUSTOM_ASSERT(inverse(p2, 1) == 0);
 
@@ -311,7 +311,7 @@ int inverse(permutation p, int i) {
     
     permutation p3 = construct(pi3, 3);
     CUSTOM_ASSERT(p3.pi == pi3);
-    CUSTOM_ASSERT(p3.S == vector<uint16_t>({}));
+    CUSTOM_ASSERT(p3.S == int_vector<>({}));
     CUSTOM_ASSERT(p3.b == bit_vector({0,0,0,0,0}));
     CUSTOM_ASSERT(inverse(p3, 0) == 4);
     CUSTOM_ASSERT(inverse(p3, 1) == 3);

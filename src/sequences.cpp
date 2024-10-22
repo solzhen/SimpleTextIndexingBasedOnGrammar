@@ -1,5 +1,7 @@
 #include <sdsl/bit_vectors.hpp>
 
+#include "permutations.hpp"
+
 #include <iostream>
 
 using namespace sdsl;
@@ -105,6 +107,12 @@ int run() {
     for (int i = 0; i < noc; i++) {
         sel_0_d[i] = select_support_mcl<0, 1>(&d[i]);
     }   
+
+    // preprocess all pi for read and inverse queries
+    vector<Permutation *> pi_perm(noc);
+    for (int i = 0; i < noc; i++) {
+        pi_perm[i] = new Permutation(pi[i], 3);
+    }
 
 }
 

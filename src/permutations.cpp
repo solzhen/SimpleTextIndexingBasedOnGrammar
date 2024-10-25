@@ -45,112 +45,124 @@ Permutation::Permutation(int_vector<> pi, int t) : pi(pi), t(t) {
     }    
     int n = pi.size();
     bit_vector v(n, 0);
-    bit_vector b(n, 0);
+    bit_vector bb(n, 0);
     for (int i = 0; i < n; i++) {
         if (v[i] == 0) {
             v[i] = 1; 
             int j = pi[i]; int k = 1;
             while (j != i) {
                 if (k % t == 0) {
-                    b[j] = 1; 
+                    bb[j] = 1; 
                 }
                 v[j] = 1; 
                 j = pi[j]; k++;
             }
             if (k > t) {
-                b[i] = 1;
+                bb[i] = 1;
             }            
         }
     }
-    this->b = b;
-    bit_vector::rank_1_type b_rank(&b);
-    int rank = b_rank(n);
+    this->b = brv();
+    this->b.b = bb;
+    this->b.rank = rank_support_v<1>(&b.b);
+    int rank = b.rank(n);
     int_vector<> shortcuts(rank);
     for (int i = 0; i <= n; i++) {
         if (v[i] == 1) { 
             v[i] = 0; int j = pi[i]; 
             while (v[j] == 1) {
-                if (b[j] == 1) { 
-                    shortcuts[b_rank(j + 1) - 1] = i; 
+                if (bb[j] == 1) { 
+                    shortcuts[b.rank(j + 1) - 1] = i; 
                     i = j; 
                 }                   
                 v[j] = 0; j = pi[j];                
             }
-            if (b[j] == 1) {
-                shortcuts[b_rank(j + 1) - 1] = i;
+            if (bb[j] == 1) {
+                shortcuts[b.rank(j + 1) - 1] = i;
             }
             i = j;
         }
     }
     this->S = shortcuts;
-    this->rank_b_support = b_rank;
 };
 int Permutation::operator[](int i) {
     return pi[i];
 }
 int Permutation::inverse(int i) {
-    rank_b_support.set_vector(&b);
+    // check if b.rank is null
+    if (b.rank.size() != b.b.size()) {
+        cout << "erm" << endl;
+    }
     if (i >= this->pi.size()) {
         return -1;
     }
     int j = i; bool s = true;
-    int loop=0;
+
+    int loop = 0;
+    
     while (pi[j] != i) {
         loop++;
-        if (s && b[j] == 1) {
+        //cout << "j: " << j << endl;
+        if (s && b.b[j] == 1) {
             s = false;
-            j = S[rank_b_support(j)];
+            //int aux = b.rank(j+1);
+            //cout << "aux: " << aux << endl;
+            j = S[b.rank(j+1) - 1];
             //cout << "j: " << j << endl;
         } else {
             j = pi[j];
         }
-    }
+        if (loop > 20) {
+            break;
+        }
+    } //cout << endl;
     return j;
 }
 int Permutation::rank_b(int i) {
-    return rank_b_support.rank(i+1);
+    return b.rank(i+1);
 }
 PowerPermutation::PowerPermutation(int_vector<> pi, int t) : Permutation(pi, t) {
     int n = pi.size();
     bit_vector v(n, 0);
     int_vector<> tau_v(n); 
-    bit_vector  D(n); 
+    bit_vector  DD(n); 
     int tau_i = 0;
     for (int i = 0; i < n; i++) {
         if (v[i] == 0) {
             v[i] = 1; 
             int j = pi[i]; int k = 1;
-            tau_v[tau_i] = i; D[tau_i] = 0; tau_i++;
+            tau_v[tau_i] = i; DD[tau_i] = 0; tau_i++;
             while (j != i) {
-                tau_v[tau_i] = j; D[tau_i] = 0; tau_i++;
+                tau_v[tau_i] = j; DD[tau_i] = 0; tau_i++;
                 v[j] = 1; 
                 j = pi[j]; k++;                
             }
-            D[tau_i - 1] = 1;
+            DD[tau_i - 1] = 1;
         }
     }
     this->tau = Permutation(tau_v, t);
-    this->D = D;
-    this->rank_D_support = bit_vector::rank_1_type(&D);
-    this->select_D_support = bit_vector::select_1_type(&D);
+    this->D.b = DD;
+    this->D.rank = bit_vector::rank_1_type(&D.b);
+    this->D.sel = bit_vector::select_1_type(&D.b);
 }
 int PowerPermutation::power(int i, int k) {
-    select_D_support.set_vector(&D);
-    rank_D_support.set_vector(&D);
+    if (!vectorset) {
+        tau.b.rank.set_vector(&tau.b.b);
+        vectorset = true;
+    }
     int j = tau.inverse(i);
-    int chunk_number = this->rank_D(j - 1); //[0..]
+    int chunk_number = this->rank_D(j - 1); //[0..j-1]
     int pred = this->select_D(chunk_number) + 1; // [0..]
     int succ = this->select_D(chunk_number + 1);
-    return tau[ pred + ( (j-pred + k) % (succ - pred + 1) ) ];
+    int ind = pred + ( (j-pred + k) % (succ - pred + 1) );
+    return tau[ ind ];
 }
 int PowerPermutation::rank_D(int i) {
-    rank_D_support.set_vector(&D);
-    return this->rank_D_support.rank(i+1); //sdsl rank return [0::i) exclusive i
+    return this->D.rank.rank(i+1); //sdsl rank return [0::i) exclusive i
 }
 int PowerPermutation::select_D(int i) {
-    select_D_support.set_vector(&D);
     if (i==0) return -1;
-    return this->select_D_support.select(i);
+    return this->D.sel.select(i);
 }
 
 void test_main() {    
@@ -164,6 +176,7 @@ void test_main() {
     ASSERT_EQUAL(pi3i.inverse(1), 3);
     ASSERT_EQUAL(pi3i.inverse(2), 2);
     int_vector<> ppp = {9, 6, 2, 4, 7, 0, 10, 11, 3, 5, 8, 1};
+    Permutation pppi = Permutation(ppp, 3);
     PowerPermutation power_perm = PowerPermutation(ppp, 3);
     //ASSERT_EQUAL(power_perm.tau.pi, int_vector<>({0,9,5,1,6,10,8,3,4,7,11,2}));
     //ASSERT_EQUAL(power_perm.D, bit_vector({0,0,1,0,0,0,0,0,0,0,1,1}));

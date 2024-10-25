@@ -127,6 +127,10 @@ void rulesprinter(RULE *rules, int num_rules, bool expanded = false) {
 
 int main(int argc, char* argv[]) {
 
+    test_main();
+
+    return 1;
+
     std::string input_filename;
     if (argc < 2) {
         std::cout << "Enter the input filename: ";

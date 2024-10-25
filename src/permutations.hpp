@@ -15,6 +15,17 @@ using namespace std;
 
 bool isPermutation(int_vector<> pi);
 
+typedef struct drsv {
+    bit_vector b;
+    rank_support_v<1> rank; // rank_1
+    select_support_mcl<1, 1> sel; // sel_1
+} drsv;
+
+typedef struct brv {
+    bit_vector b;
+    rank_support_v<1> rank; // rank_1
+} brv;
+
 /// @brief bitvector-based repersentation of a permutation using shortcuts
 class Permutation {
     friend class PowerPermutation;
@@ -22,8 +33,7 @@ protected:
     int rank_b(int i);
     int_vector<> pi; // permutation
     int_vector<> S; // shortcuts
-    bit_vector b; // bit vector to mark shortcuts
-    bit_vector::rank_1_type rank_b_support; // rank support for b
+    brv b; // bit vector to mark shortcuts
 public:    
     Permutation();
     int t; // parameter t    
@@ -46,21 +56,22 @@ public:
 /// @brief bitvector-based repersentation of a permutation using 
 /// shortcuts with power operation support
 class PowerPermutation: public Permutation {
-    friend class PowerPermutationForSequences;
+private:
+    bool vectorset = false;
 protected:
     int rank_D(int i);
     int select_D(int i);
-    bit_vector D; // bitvector D marks with 1 the end of a chunk (inclusive)
-    bit_vector::rank_1_type rank_D_support;
-    bit_vector::select_1_type select_D_support;
+    drsv D;
     Permutation tau; // permutation induced by the cycle decomposition
 public:
     PowerPermutation(int_vector<> pi, int t);
-    /// @brief Return the position of the element i after applying the permutation k times
+    /// @brief Applies the permutation k times
     /// @param i 
     /// @param k 
-    /// @return 
+    /// @return the position of the element i after applying the permutation k times
     int power(int i, int k);
 };
+
+void test_main();
 
 #endif // PERMUTATION_HPP

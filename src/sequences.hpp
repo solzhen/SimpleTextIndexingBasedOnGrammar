@@ -18,7 +18,7 @@ typedef struct dbv {
     select_support_mcl<0, 1> sel_0;
 } dbv;
 
-class Sequence {
+class ARSSequence {
 private:
     vector<abv> A;
     vector<dbv> D;
@@ -34,7 +34,7 @@ public:
     /// @brief Builds structure to support rank, select and access queries
     /// @param S integer vector representing the sequence
     /// @param sigma size of alphabet [0 . . . sigma)
-    Sequence(int_vector<> S, int sigma);
+    ARSSequence(int_vector<> S, int sigma);
     /// @brief Access query
     /// @param i position in the sequence
     /// @return The symbol at position i
@@ -50,4 +50,7 @@ public:
     /// @return The position of the i-th occurrence of c in the sequence
     /// @note Position returned is 0-indexed, while parameter i is 1-indexed as ordinal numbers are.
     int select(int c, int j);
+    int size() { return n; }
 };
+
+void seq_test();

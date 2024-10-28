@@ -13,6 +13,7 @@
 #include "grid.hpp"
 #include "helper.hpp"
 #include "permutations.hpp"
+#include "sequences.hpp"
 
 using namespace sdsl;
 using namespace std;
@@ -127,10 +128,6 @@ void rulesprinter(RULE *rules, int num_rules, bool expanded = false) {
 
 int main(int argc, char* argv[]) {
 
-    test_main();
-
-    return 1;
-
     std::string input_filename;
     if (argc < 2) {
         std::cout << "Enter the input filename: ";
@@ -212,28 +209,85 @@ recursively, until having a single nonterminal S.
     /*
         The set of r rules will be represented as a sequence R[1, 2r] = B1C1 B2C2 . . . BrCr .
     */
-    std::vector<CODE> sequenceR((dict->num_rules - 257) * 2);
+
+    bit_vector bbbb(257, 0);
+
+    int_vector<> sequenceR((dict->num_rules - 257) * 2, 0, sizeof(CODE) * 8);
     for (int i = 0; i < sequenceR.size(); i = i + 2) {
         sequenceR[i] = rules[i/2 + 257].left;
         sequenceR[i + 1] = rules[i/2 + 257].right;
+        if (sequenceR[i] <= 256) {
+            bbbb[sequenceR[i]] = 1;
+        }
+        if (sequenceR[i + 1] <= 256) {
+            bbbb[sequenceR[i + 1]] = 1;
+        }
     }
-    // print sequenceR
+
+    //print sequence R
     std::cout << "Sequence R: ";
     for (int i = 0; i < sequenceR.size(); i++) {
         std::cout << sequenceR[i] << " ";
     } std::cout << std::endl;
-    std::cout << "legible Sequence R: ";
-    for (int i = 0; i < sequenceR.size(); i++) {
-        if (sequenceR[i] <= 256) {
-            std::cout << static_cast<char>(sequenceR[i]);
+
+    cout << bbbb << endl;
+    rank_support_v<1> rank_bbbb(&bbbb);
+    select_support_mcl<1, 1> select_bbbb(&bbbb);
+    int max_terminal = 0;
+    for (int i = 1; i <= rank_bbbb(257); i++) {
+        cout << "select_bbbb(" << i << ") = " << select_bbbb(i) << endl;
+        if (select_bbbb(i) > max_terminal) {
+            max_terminal = select_bbbb(i);
         }
-        else {
-            std::cout << '<' << static_cast<char>(sequenceR[i] - 257 + 'A') << '>';
+    }
+
+    int_vector<> normalized_sequenceR(sequenceR.size(), 0, sizeof(CODE) * 8);
+    cout << normalized_sequenceR << endl;
+
+    cout << rank_bbbb(257) << endl;
+
+    int sz = sequenceR.size();
+    
+    #define seqR2normalized(c, result) \
+        do { \
+            if (c < 256)  \
+                (result) = rank_bbbb(c + 1) - 1; \
+            else\      
+                (result) = c - 257 + rank_bbbb(257); \
+        } while (0)
+    #define normalized2seqR(c, result) \
+        do { \
+            if (c < rank_bbbb(257)) \
+                (result) = select_bbbb(c + 1); \
+            else \
+                (result) = c - rank_bbbb(257) + 257; \
+        } while (0)
+
+    int r;
+    int max_normalized = 0;
+    for (int i = 0; i < sz; i++) {
+        seqR2normalized(sequenceR[i], r);
+        normalized_sequenceR[i] = r;
+        if (r > max_normalized) {
+            max_normalized = r;
         }
-    } std::cout << std::endl;
+    }
+
+    cout << sequenceR << endl;
+    cout << normalized_sequenceR << endl;
+    //cout << max_normalized << endl;
+
 
     free(dict);
     free(edict);
+
+    ARSSequence arsSequence(normalized_sequenceR, max_normalized + 1);
+    
+    for (int i = 0; i < normalized_sequenceR.size(); i++) {
+        cout << "access(" << i << ") = " << arsSequence.access(i) << endl;
+    }
+
+
     
 
     /* ------------------- check repair_reader.test() for ideas on converting to grid ------------*/

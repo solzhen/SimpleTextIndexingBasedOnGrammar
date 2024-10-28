@@ -90,11 +90,12 @@ int Permutation::operator[](int i) {
 }
 int Permutation::inverse(int i) {
     // check if b.rank is null
-    if (b.rank.size() != b.b.size()) {
-        cout << "erm" << endl;
-    }
     if (i >= this->pi.size()) {
         return -1;
+    }
+    // Check if b.rank is valid
+    if (b.rank.size() != b.b.size()) { 
+        b.rank = rank_support_v<1>(&b.b);  // Re-initialize if needed
     }
     int j = i; bool s = true;
 
@@ -102,20 +103,19 @@ int Permutation::inverse(int i) {
     
     while (pi[j] != i) {
         loop++;
-        //cout << "j: " << j << endl;
+        //cout << "j = " << j << endl;
         if (s && b.b[j] == 1) {
             s = false;
-            //int aux = b.rank(j+1);
-            //cout << "aux: " << aux << endl;
+            int aux = b.rank(j+1);
+            //cout << "aux = " << aux << endl;
             j = S[b.rank(j+1) - 1];
-            //cout << "j: " << j << endl;
         } else {
             j = pi[j];
         }
         if (loop > 20) {
             break;
         }
-    } //cout << endl;
+    } 
     return j;
 }
 int Permutation::rank_b(int i) {

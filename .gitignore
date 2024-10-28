@@ -58,3 +58,7 @@ test.*
 
 .vscode/*
 .vscode/settings.json
+
+.vscode
+
+.vs

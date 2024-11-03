@@ -1,6 +1,6 @@
 include ./Make.helper
 
-CXX_FLAGS=$(MY_CXX_FLAGS) $(MY_CXX_OPT_FLAGS) -I$(INC_DIR) -L$(LIB_DIR)
+CXX_FLAGS=$(MY_CXX_FLAGS) $(MY_CXX_OPT_FLAGS) -I$(INC_DIR) -L$(LIB_DIR) -I$(BOOST_INC)
 CCLIB=-lsdsl -ldivsufsort -ldivsufsort64 
 REPAIR_DIR = repairs/repair110811/
 LDFLAGS = $(REPAIR_DIR)/repair.o $(REPAIR_DIR)/encoder.o $(REPAIR_DIR)/bits.o

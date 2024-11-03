@@ -5,8 +5,9 @@
 #include <queue>
 #include <stack>
 #include <fstream>
+#include <cstdint>
 
-typedef u_int16_t u16;
+typedef uint16_t u16;
 typedef std::pair<u16, u16> Pair;
 
 bool print = false;

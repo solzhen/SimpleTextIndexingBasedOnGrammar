@@ -6,8 +6,18 @@
 #include <iterator>
 #include <algorithm>
 #include <sstream>
+#include <unordered_map>
 
 #include "helper.hpp"
+
+
+using namespace std;
+
+extern "C" { // C implementation of repair and encoder
+    #include "../repairs/repair110811/repair.h"
+    #include "../repairs/repair110811/encoder.h"
+}
+
 
 int isTerminal(char c) {
     return std::islower(c);
@@ -37,77 +47,86 @@ std::vector<uint8_t> convertStringToVector(const std::string& str) {
 
 
 
+// Hash specialization for Rule
+namespace std {
+    template <>
+    struct hash<RULE> {
+        size_t operator()(const RULE& r) const {            
+            return hash<uint16_t>()(r.left) ^ hash<uint16_t>()(r.right);// Simple hash b_i and c_i
+        }
+    };
+}
+bool operator==(const RULE& lhs, const RULE& rhs) {
+    return lhs.left == rhs.left && lhs.right == rhs.right;
+}
 
+std::unordered_map<RULE, std::string> ruleCache;
 
-
-
-
-
-/* OUTDATED */
-
-/// @brief given a set of rules A -> BC represented by the
-/// string of concatenated BC pairs, expands component pointed at
-/// by the index given
-/// @param rules string of pairs of symbols
-/// @param index 0-indexed index pointing at the rule
-/// @return
-std::string expandRule(const std::string& rules, int index) {
-
-    std::stringstream expandedString;
-
-    char currentSymbol = rules[index];
-    if (isTerminal(currentSymbol)) {
-        expandedString << currentSymbol;
+std::string expand(const RULE *rules, int index) {
+    RULE rule = rules[index];    
+    auto it = ruleCache.find(rule); // Check if the rule is already in the cache
+    if (it != ruleCache.end()) { 
+        return it->second; // Return the cached result
+    }
+    std::string leftstr;
+    std::string rightstr;
+    if (rule.left <= 256) {
+        leftstr += (char)rule.left;
     }
     else {
-        int nextRuleIndexB = (currentSymbol - '0') * 2 - 2;
-        int nextRuleIndexC = (currentSymbol - '0') * 2 - 1;
-        expandedString << expandRule(rules, nextRuleIndexB);
-        expandedString << expandRule(rules, nextRuleIndexC);
+        leftstr += expand(rules, rule.left);
     }
-    return expandedString.str();
+    if (rule.right <= 256) {
+        rightstr = (char)rule.right;
+    }
+    else {
+        rightstr += expand(rules, rule.right);
+    }    
+    ruleCache[rule] = leftstr + rightstr; // Cache the expanded rule for future use
+    return ruleCache[rule];
 }
 
-// Find the starting index of the range of rows with prefix given
-int findStartIndex(const std::string& rules, const std::string& prefix) {
-    int left = 0;
-    int right = rules.length() / 2;
-    while (left < right) {
 
-        int mid = left + (right - left) / 2;
-        std::string rev_rule = expandRule(rules, mid * 2);
-
-        if (rev_rule.compare(0, prefix.length(), prefix) < 0) {
-            // The prefix is after the mid element, search in the right half
-            left = mid + 1;
-        }
-        else {
-            // The prefix is at or before the mid element, search in the left half
-            right = mid;
-        }
-    }
-    return left;
+std::string expand_prefix(RULE *rules, int index) {
+    RULE rule = rules[index];
+    return (rule.left <= 256)? std::string(1, (char)rule.left) : expand(rules, rule.left);
 }
 
-// Find the ending index of the range of rows with given prefix
-int findEndIndex(const std::string& rules, const std::string& prefix) {
-    int left = 0;
-    int right = rules.length() / 2;
-
-    while (left < right) {
-        int mid = left + (right - left) / 2;
-        std::string rev_rule = expandRule(rules, mid * 2);
-
-        if (rev_rule.compare(0, prefix.length(), prefix) <= 0) {
-            // The prefix is before or at the mid element, search in the right half
-            left = mid + 1;
-        }
-        else {
-            // The prefix is after the mid element, search in the left half
-            right = mid;
-        }
-    }
-    return left - 1;
+std::string expand_sufix(RULE *rules, int index) {
+    RULE rule = rules[index];
+    return (rule.right <= 256)? std::string(1, (char)rule.right) : expand(rules, rule.right);
 }
 
+bool compareRules(RULE *rules, int a, int b, bool reverse = false) {
+    std::string expanded_rule_a;
+    std::string expanded_rule_b;
+    if (reverse) {
+        expanded_rule_a = expand_prefix(rules, a);
+        expanded_rule_b = expand_prefix(rules, b);
+        expanded_rule_a = std::string(expanded_rule_a.rbegin(), expanded_rule_a.rend());
+        expanded_rule_b = std::string(expanded_rule_b.rbegin(), expanded_rule_b.rend());
+    }
+    else {
+        expanded_rule_a = expand_sufix(rules, a);
+        expanded_rule_b = expand_sufix(rules, b);
+    }
+    return expanded_rule_a < expanded_rule_b;
+}
+
+std::string expandSequence(const CODE* sequence, const int seq_len, const RULE* rules) {
+    std::string expandedSequence = "";
+    for (int i = 0; i < seq_len; i++) {
+        expandedSequence += expand(rules, sequence[i]);
+    }
+    return expandedSequence;
+}
+
+void rulesprinter(RULE *rules, int num_rules, bool expanded = false) {
+    for (int i = 257; i < num_rules; i++) {
+        std::cout << i << " -> " << rules[i].left << " " << rules[i].right << std::endl;
+        if (expanded) {
+            std::cout << "\t" << expand(rules, rules[i].left) << " " << expand(rules, rules[i].right) << std::endl;
+        }
+    }
+}
 

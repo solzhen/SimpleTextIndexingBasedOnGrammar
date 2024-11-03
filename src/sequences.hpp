@@ -39,10 +39,11 @@ public:
     /// @param i position in the sequence
     /// @return The symbol at position i
     int access(int i);
+    int operator[](int i) { return access(i); };
     /// @brief Rank query
     /// @param c symbol in the alphabet
     /// @param i position in the sequence
-    /// @return The number of occurrences of c in the sequence up to and including position i
+    /// @return The number of occurrences of c in the sequence up to and including position i    
     int rank(int c, int i);
     /// @brief Select query
     /// @param c symbol in the alphabet 
@@ -50,7 +51,7 @@ public:
     /// @return The position of the i-th occurrence of c in the sequence
     /// @note Position returned is 0-indexed, while parameter i is 1-indexed as ordinal numbers are.
     int select(int c, int j);
-    int size() { return n; }
+    u_int size() { return n; }
 };
 
 void seq_test();

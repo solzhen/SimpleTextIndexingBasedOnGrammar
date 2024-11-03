@@ -86,7 +86,7 @@ vector<Point> readPointsFromFile(const string& filename, uint32_t& columns, uint
     }
     inputFile.read(reinterpret_cast<char*>(&columns), sizeof(columns));
     inputFile.read(reinterpret_cast<char*>(&rows), sizeof(rows));
-    Point p;
+    Point p; // typedef std::pair<uint32_t, uint32_t> Point
     while (inputFile.read(reinterpret_cast<char*>(&p), sizeof(p))) {
         points.push_back(p);
     }

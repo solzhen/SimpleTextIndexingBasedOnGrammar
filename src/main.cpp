@@ -47,24 +47,6 @@ extern "C" { // C implementation of repair and encoder
             (result) = c - rank_bbbb(257) + 257; \
     } while (0)
 
-
-void expand(
-        vector<char>* seq,
-        ARSSequence arrs, 
-        int i, 
-        int n_terminals
-    )
-{
-    if (arrs[i] < n_terminals) {
-        seq->push_back(arrs[i]);
-    } else {
-        int rule_index = (arrs[i] - n_terminals) * 2;
-        expand(seq, arrs, rule_index, n_terminals);
-        //cout << ";;" << endl;
-        expand(seq, arrs, rule_index + 1, n_terminals);
-    }
-}
-
 /// @brief Expands a non terminal rule
 /// @param arrs ARS sequence
 /// @param i index of the rule in arrs
@@ -200,7 +182,8 @@ int main(int argc, char* argv[]) {
     rulesprinter(rules, dict->num_rules, true);
     cout << "------------------------" << endl;
 
-    cout << "Text length: " << dict->txt_len << endl;
+    int len = dict->txt_len - 1; // length of the text
+    cout << "Text length: " << len << endl;
 
     dict->seq_len = dict->seq_len - 1; // remove the last element of the sequence (it's special character useless for us)
     std::cout << "Sequence C: ";
@@ -208,7 +191,7 @@ int main(int argc, char* argv[]) {
         std::cout << comp_seq[i] << " ";
     } std::cout << std::endl;
     
-    int len = dict->txt_len - 1; // length of the text
+    
 
     std::string expandedSequence = expandSequence(comp_seq, dict->seq_len, rules);
     std::cout << "Expanded Sequence C: " << expandedSequence << std::endl;
@@ -328,20 +311,6 @@ recursively, until having a single nonterminal S.
     cout << "------------------------" << endl;
     cout << "Expanding Sequence. . ." << endl;
 
-    vector<char> seq; // normalized sequence
-    seq.reserve(len);
-    int a_l = arsSequence.size();
-    cout << "Size: " << a_l << endl;    
-    cout << "Total seq. length: " << len << endl;
-    expand(&seq, arsSequence, a_l - 2, n_terminals);
-    expand(&seq, arsSequence, a_l - 1, n_terminals);
-    // print seq
-    cout << "Expanded Sequence: ";
-    for (u_int i = 0; i < seq.size(); i++) cout << seq[i] << " "; 
-    cout << endl;
-    for (u_int i = 0; i < seq.size(); i++) cout << (char) select_bbbb(seq[i]+1); 
-    cout << endl;
-
     cout << "------------------------" << endl;
     int_vector indexMap(n_non_terminals);
     int_vector reverseIndexMap(n_non_terminals);
@@ -365,7 +334,6 @@ recursively, until having a single nonterminal S.
         cout << expandRightSideRule(arsSequence, indexMap[i]*2, n_terminals, select) << ", ";
     } cout << endl;
 
-
     sort(
         reverseIndexMap.begin(), 
         reverseIndexMap.end(), 
@@ -382,28 +350,25 @@ recursively, until having a single nonterminal S.
     } cout << endl;
 
 
+    std::vector<Point> points(n_non_terminals);
+    u_int j, k;
+    for (u_int i = 0; i < indexMap.size(); i++) {
+        j = indexMap[i]; // rule index
+        //std::cout << "j: " << j << std::endl;
+        k = std::distance(reverseIndexMap.begin(), std::find(reverseIndexMap.begin(), reverseIndexMap.end(), j));
+        points[i] = Point(i, k);
+    }
+    cout << "Points: ";
+    printPoints(points); cout << endl;
+
+    writePointsToFile("test_grid.bin", n_non_terminals, n_non_terminals, points);
 
     
-
-
-    
-
-    
-    
-
-    /* ------------------- check repair_reader.test() for ideas on converting to grid ------------*/
 
 
     return 0;
 }
 
-/**
- * to be done
- * Expand any rule on demand
- * Transform to grid
- * 
- * 
- */
 
 
 
@@ -424,11 +389,9 @@ recursively, until having a single nonterminal S.
         std::cout << static_cast<int>(chars[i]) << " ";
     }; std::cout << std::endl;
     const char *testing_file = "test_repair.bin";
-    writeCharsToFile(testing_file, chars); */
+    writeCharsToFile(testing_file, chars); 
 
 
-
-    /*
         string filename = "test.integers";
     if (argc < 2) {
         cout << "Generating test file test.integers" << endl;
@@ -449,4 +412,23 @@ recursively, until having a single nonterminal S.
     cout << endl;
 
     Grid test_grid("test_grid.bin");
+
+}
+
+void expand(
+        vector<char>* seq,
+        ARSSequence arrs, 
+        int i, 
+        int n_terminals
+    )
+{
+    if (arrs[i] < n_terminals) {
+        seq->push_back(arrs[i]);
+    } else {
+        int rule_index = (arrs[i] - n_terminals) * 2;
+        expand(seq, arrs, rule_index, n_terminals);
+        //cout << ";;" << endl;
+        expand(seq, arrs, rule_index + 1, n_terminals);
+    }
+}
     */

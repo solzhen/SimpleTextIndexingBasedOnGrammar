@@ -23,8 +23,17 @@ bool sortByX(const Point& p1, const Point& p2) {
 }
 
 u32 Grid::count(u32 x_1, u32 x_2, u32 y_1, u32 y_2, u32 l, u32 a, u32 b) {
+    // boundaries
+    if (x_1 <= 0) x_1 = 1;
+    if (x_2 > c) x_2 = c;
+    if (y_1 <= 0) y_1 = 1;
+    if (y_2 > r) y_2 = r;
+    // negatively sized ranges
     if (x_1 > x_2) return 0;
+    if (y_1 > y_2) return 0;
+    // empty intersection of [a,b] and [y_1, y_2]
     if (b < y_1 || a > y_2) return 0;
+    // [a,b] is a subset of [y_1,y_2]
     if (a >= y_1 && b <= y_2) return x_2 - x_1 + 1;
     u32 xl_1 = wt[l-1].rank_0(x_1 - 1) + 1;
     u32 xl_2 = wt[l-1].rank_0(x_2);
@@ -35,6 +44,7 @@ u32 Grid::count(u32 x_1, u32 x_2, u32 y_1, u32 y_2, u32 l, u32 a, u32 b) {
             count(xr_1, xr_2, y_1, y_2, l+1, m+1, b);
 }
 vector<Point> Grid::report(u32 x_1, u32 x_2, u32 y_1, u32 y_2, u32 l, u32 a, u32 b) {
+    //std::cout << "report(" << x_1 << "," << x_2 << "," << y_1 << "," << y_2 << "," << l << "," << a << "," << b << ")" << endl;
     std::vector<Point> emptyVec;
     if (x_1 > x_2) {return emptyVec ;}
     if (b < y_1 || a > y_2) {return emptyVec ;}
@@ -63,17 +73,20 @@ vector<Point> Grid::report(u32 x_1, u32 x_2, u32 y_1, u32 y_2, u32 l, u32 a, u32
     return v3;
 }
 u32 Grid::outputx(u32 l, u32 i) {
+    //cout << "outputx(" << l << "," << i << ")" << endl;
     while (l>1) {
+        //wt[l-1].printself();
         l = l-1;
-        if (i < wt.offset(l-1)) {
-            i = wt[l-1].select_0(i) + 1;
+        if (i <= wt.offset(l-1)) {
+            i = wt[l-1].select_0(i) +1;
         } else {
-            i = wt[l-1].select_1(i - wt.offset(l-1)) + 1;
+            i = wt[l-1].select_1(i - wt.offset(l-1)) +1;
         }
     }
     return i;
 }
 u32 Grid::outputy(u32 l, u32 a, u32 b, u32 i) {
+    //std::cout << "outputy(" << l << "," << a << "," << b << "," << i << ")" << endl;
     while (a != b) {
         if (wt[l-1][i-1] == 0) {            
             i = wt[l-1].rank_0(i);

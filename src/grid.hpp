@@ -37,9 +37,30 @@ private:
     u32 outputx(u32 level, u32 x);
     u32 outputy(u32 level, u32 a, u32 b, u32 i);
 public:
-    // Constructor
+    /// @brief Construct a grid from a binary file
+    /// @param fn Filename of the binary file
+    /// @note The binary file should contain the dimensions of the grid first 
+    /// (columns, rows), followed by the points as pairs of integers. Every integer
+    /// in the file should be a 4-byte long unsigned integer (uint32_t).
+    /// The coordinates should be 0-indexed.
     Grid(const string& fn);
+    /// @brief Count the number of points in the grid that are within the rectangle
+    /// @param x_1 1-indexed column range start
+    /// @param x_2 1-indexed column range end
+    /// @param y_1 1-indexed row range start
+    /// @param y_2 1-indexed row range end
+    /// @return The number of points in the grid that are
+    /// within the rectangle as an integer
     u32 count(u32 x_1, u32 x_2, u32 y_1, u32 y_2);
+    /// @brief Report the points in the grid that are within the rectangle
+    /// @param x_1 1-indexed column range start
+    /// @param x_2 1-indexed column range end
+    /// @param y_1 1-indexed row range start
+    /// @param y_2 1-indexed row range end
+    /// @return A vector of points that are within the rectangle
     vector<Point> report(u32 x_1, u32 x_2, u32 y_1, u32 y_2);
     void printself();
+    u32 getColumns() { return c; }
+    u32 getRows() { return r; }
+    WaveletMatrix getWaveletMatrix() { return wt; }
 };

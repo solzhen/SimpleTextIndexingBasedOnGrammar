@@ -1,4 +1,3 @@
-
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
@@ -16,15 +15,9 @@
 #include "helper.hpp"
 #include "permutations.hpp"
 #include "sequences.hpp"
-#include <functional>
-#include <boost/functional/hash.hpp>
 
 using namespace sdsl;
 using namespace std;
-
-using CacheKey = std::pair<int, int>;
-using Cache = std::unordered_map<CacheKey, std::string, boost::hash<CacheKey>>;
-
 
 extern "C" { // C implementation of repair and encoder
     #include "../repairs/repair110811/repair.h"
@@ -184,10 +177,14 @@ void secondaries(vector<int> *occurences, ARSSequence R,
         int D_i = k / 2; // Rule index that derives the symbol at position k
         int offset_prime = offset;
         if (k % 2 == 1) { // if k is odd, then the symbol at position k is the right side of the rule D
-            offset_prime += l[R[k-1] - nt]; // we add the length of the left side of the rule D            
+            if ((u_int)R[k-1] < nt) 
+                offset_prime += 1; // we add 1 if the left side of the rule D is a terminal
+            else
+                offset_prime += l[R[k-1] - nt]; // we add the length of the left side of the rule D
+            //offset_prime += l[R[k-1] - nt]; // we add the length of the left side of the rule D            
         }
         //cout << "D_i: " << D_i << " offset_prime: " << offset_prime << endl;
-        secondaries(occurences, R, D_i, nt, l, offset_prime);
+        secondaries(occurences, R, D_i, nt, l, offset_prime, false);
     }
 };
 
@@ -198,16 +195,20 @@ void secondaries(vector<int> *occurences, ARSSequence R,
 /// @param l lengths of the expanded rules
 /// @param P pattern to search
 /// @param sl de-normalized alphabet select
+/// @param rk de-normalized alphabet rank
 /// @param nt number of terminals
+/// @param mp map of the normalized alphabet
+/// @param rmp reverse map of the normalized alphabet
 void search(vector<int> *occurences, Grid G, ARSSequence R, int_vector<> l, string P,
-vector<char> sl, uint nt) {
+vector<char> sl, vector<char> rk, uint nt, int_vector<> mp, int_vector<> rmp) {
     u_int m = P.size();
     if (m == 1) {
-        secondaries(occurences, R, P.at(0)-'0', 0, l, 0, true);
+        secondaries(occurences, R, rk[P.at(0)], nt, l, 0, true);
     } else {
         for (u_int t = 0; t < m-1; t++) {
             string P_left = P.substr(0, t+1); // P_<
             string P_right = P.substr(t+1, m-t-1); // P_>
+            //cout << "P_left: " << P_left << " P_right: " << P_right << endl;
             uint s_x, e_x, s_y, e_y;   
 
 
@@ -223,8 +224,11 @@ vector<char> sl, uint nt) {
             int result = -1;
             while (left <= right) {
                 int mid = left + (right - left) / 2;
-                string str = expandLeftSideRule(R, mid*2, nt, sl);
-                
+                //cout << "mid: " << mid << endl;
+                int r_i = rmp[mid]; // rule index
+                string str = expandLeftSideRule(R, r_i*2, nt, sl);                
+                //cout << "str: " << str << endl;     
+                reverse(str.begin(), str.end());   
                 if (str.substr(0, P_left.size()) >= P_left) {
                     if (str.substr(0, P_left.size()) == P_left) {
                         result = mid;  // potential match, move left to find the first occurrence
@@ -235,13 +239,18 @@ vector<char> sl, uint nt) {
                 }
             }
             s_y = result + 1; //we add 1 since the grid is 1-indexed
+            //cout << "s_y: " << s_y << endl;
 
             // Binary search to find the last index of a string that starts with P_<_reversed
             left = 0, right = G.getRows() - 1;
             result = -1;
             while (left <= right) {
                 int mid = left + (right - left) / 2;
-                string str = expandLeftSideRule(R, mid*2, nt, sl);
+                //cout << "mid: " << mid << endl;
+                int r_i = rmp[mid]; // rule index
+                string str = expandLeftSideRule(R, r_i*2, nt, sl);                
+                //cout << "str: " << str << endl;
+                reverse(str.begin(), str.end());
                 if (str.substr(0, P_left.size()) <= P_left) {
                     if (str.substr(0, P_left.size()) == P_left) {
                         result = mid;  // potential match, move right to find the last occurrence
@@ -252,6 +261,7 @@ vector<char> sl, uint nt) {
                 }
             }
             e_y = result + 1;
+            //cout << "e_y: " << e_y << endl;
 
             // find the range of columns [s_x, e_x] that start with P_>,
             // these form a range because they are sorted in lexicographic order
@@ -261,8 +271,10 @@ vector<char> sl, uint nt) {
             result = -1;
             while (left <= right) {
                 int mid = left + (right - left) / 2;
-                int r_i = G.getWaveletMatrix().access(mid); // rule index
+                //cout << "mid: " << mid << endl;
+                int r_i = mp[mid]; // rule index
                 string str = expandRightSideRule(R, r_i*2, nt, sl);
+                //cout << "str: " << str << endl;
                 if (str.substr(0, P_right.size()) >= P_right) {
                     if (str.substr(0, P_right.size()) == P_right) {
                         result = mid;  // potential match, move left to find the first occurrence
@@ -273,14 +285,17 @@ vector<char> sl, uint nt) {
                 }
             }
             s_x = result + 1; 
+            //cout << "s_x: " << s_x << endl;
 
             // Binary search to find the last index of a string that starts with P_>
             left = 0, right = G.getColumns() - 1;
             result = -1;
             while (left <= right) {
                 int mid = left + (right - left) / 2;
-                int r_i = G.getWaveletMatrix().access(mid); // rule index
+                //cout << "mid: " << mid << endl;
+                int r_i = mp[mid]; // rule index
                 string str = expandRightSideRule(R, r_i*2, nt, sl);
+                //cout << "str: " << str << endl;
                 if (str.substr(0, P_right.size()) <= P_right) {
                     if (str.substr(0, P_right.size()) == P_right) {
                         result = mid;  // potential match, move right to find the last occurrence
@@ -290,11 +305,24 @@ vector<char> sl, uint nt) {
                     right = mid - 1;
                 }
             }
+            e_x = result + 1;
+            //cout << "e_x: " << e_x << endl;
 
-
-            for (Point p: G.report(s_x, e_x, s_y, e_y)) {
-                int y = p.second;
-                // obtain secondaries
+            //cout << "s_x: " << s_x << " e_x: " << e_x << " s_y: " << s_y << " e_y: " << e_y << endl;
+            vector<Point> points = G.report(s_x, e_x, s_y, e_y);
+            
+            //printPoints(points);
+            //cout << endl;
+            for (Point p: points) {
+                int r_i = mp[p.first-1]; // rule index
+                //cout << "r_i: " << r_i << endl;
+                //cout << "R: " << R[r_i*2] << " " << R[r_i*2+1] << endl;
+                if ((u_int)R[r_i*2] < nt) {
+                    secondaries(occurences, R, r_i, nt, l, 0);
+                } else {
+                    //cout << l << endl;
+                    secondaries(occurences, R, r_i, nt, l, l[R[r_i*2] - nt] -t-1);
+                }
             }
         }
     }
@@ -404,13 +432,7 @@ recursively, until having a single nonterminal S.
         }
     }
 
-    //print sequence R
-    std::cout << "Sequence R: ";
-    for (u_int i = 0; i < sequenceR.size(); i++) {
-        std::cout << sequenceR[i] << " ";
-    } std::cout << std::endl;
-
-    cout << "Alphabet marker vector: " << bbbb << endl;
+    //cout << "Alphabet marker vector: " << bbbb << endl;
     rank_support_v<1> rank_bbbb(&bbbb);
     select_support_mcl<1, 1> select_bbbb(&bbbb);
     vector<char> rank(257, 0);
@@ -459,19 +481,13 @@ recursively, until having a single nonterminal S.
 
     ARSSequence arsSequence(normalized_sequenceR, max_normalized + 1); 
 
-    cout << "arrs: ";
-    for (u_int i = 0; i < arsSequence.size(); i++) {
-        cout << arsSequence[i] << " ";
-    } cout << endl;
-
 
     
     cout << "------------------------" << endl;
-    cout << "Expanding Sequence. . ." << endl;
 
-    for (int i = 0; i < n_non_terminals; i++) {
-        cout << i << ":" << i+n_terminals << "\t->\t" << arsSequence[i*2] << '\t' << arsSequence[i*2+1] << endl;
-    } 
+    //for (int i = 0; i < n_non_terminals; i++) {
+    //    cout << i << ":" << i+n_terminals << "\t->\t" << arsSequence[i*2] << '\t' << arsSequence[i*2+1] << endl;
+    //} 
     cout << "------------------------" << endl;
     int_vector indexMap(n_non_terminals);
     int_vector reverseIndexMap(n_non_terminals);
@@ -488,12 +504,12 @@ recursively, until having a single nonterminal S.
             return compareRules(arsSequence, a, b, n_terminals, select); 
         }
     );
-    cout << "Index Map: " << endl;
-    for (u_int i = 0; i < indexMap.size(); i++) cout << indexMap[i] << " "; 
-    cout << endl;
-    for (u_int i = 0; i < indexMap.size(); i++) {
-        cout << expandRightSideRule(arsSequence, indexMap[i]*2, n_terminals, select) << ", ";
-    } cout << endl;
+    //cout << "Index Map: " << endl;
+    //for (u_int i = 0; i < indexMap.size(); i++) cout << indexMap[i] << " "; 
+    //cout << endl;
+    //for (u_int i = 0; i < indexMap.size(); i++) {
+    //    cout << expandRightSideRule(arsSequence, indexMap[i]*2, n_terminals, select) << ", ";
+    //} cout << endl;
 
     sort(
         reverseIndexMap.begin(), 
@@ -502,14 +518,14 @@ recursively, until having a single nonterminal S.
             return compareRules(arsSequence, a, b, n_terminals, select, true); 
         }
     );
-    cout << "Reverse Index Map: " << endl;
-    for (u_int i = 0; i < reverseIndexMap.size(); i++) cout << reverseIndexMap[i] << " ";
-    cout << endl;
+    //cout << "Reverse Index Map: " << endl;
+    //for (u_int i = 0; i < reverseIndexMap.size(); i++) cout << reverseIndexMap[i] << " ";
+    //cout << endl;
     
-    for (u_int i = 0; i < reverseIndexMap.size(); i++) {
-        cout << expandLeftSideRule(arsSequence, reverseIndexMap[i]*2, n_terminals, select) << ", ";
-    } cout << endl;
-    cout << "------------------------" << endl;
+    //for (u_int i = 0; i < reverseIndexMap.size(); i++) {
+    //    cout << expandLeftSideRule(arsSequence, reverseIndexMap[i]*2, n_terminals, select) << ", ";
+    //} cout << endl;
+    //cout << "------------------------" << endl;
 
 
     std::vector<Point> points(n_non_terminals);
@@ -520,8 +536,8 @@ recursively, until having a single nonterminal S.
         k = std::distance(reverseIndexMap.begin(), std::find(reverseIndexMap.begin(), reverseIndexMap.end(), j));
         points[i] = Point(i, k);
     }
-    cout << "Points: ";
-    printPoints(points); cout << endl;
+    //cout << "Points: ";
+    //printPoints(points); cout << endl;
 
     //change points from 0-indexed to 1-indexed, 
     //neccesary for our waveletmatrix implementation
@@ -529,8 +545,8 @@ recursively, until having a single nonterminal S.
         points[i].first++;
         points[i].second++;
     }
-    cout << "1-indexed Points: ";
-    printPoints(points); cout << endl;
+    //cout << "1-indexed Points: ";
+    //printPoints(points); cout << endl;
 
     writePointsToFile("test_grid.bin", n_non_terminals, n_non_terminals, points);
 
@@ -566,6 +582,35 @@ recursively, until having a single nonterminal S.
 
     cout << "------------------------" << endl;    
 
+    while (true) {
+        cout << "Enter the pattern to search (or exit): ";
+        string pattern;
+        cin >> pattern;
+        if (pattern == "exit") break;
+        vector<int> occurences;
+        search(&occurences, test_grid, arsSequence, lens, pattern, select, rank, n_terminals, indexMap, reverseIndexMap);
+        cout << "Occurences: ";
+        sort(occurences.begin(), occurences.end());
+        for (u_int i = 0; i < occurences.size(); i++) {
+            cout << occurences[i] << " ";
+        } cout << endl;
+    }
+
+/*
+    cout << "Searching for pattern 'bra' in the text" << endl;
+    vector<int> occurences2;
+    search(&occurences2, test_grid, arsSequence, lens, "bra", select, rank, n_terminals, indexMap, reverseIndexMap);
+    cout << "Occurences: ";
+    for (u_int i = 0; i < occurences2.size(); i++) {
+        cout << occurences2[i] << " ";
+    } cout << endl;
+    cout << "Searching for pattern 'a' in the text" << endl;
+    vector<int> occurences3;
+    search(&occurences3, test_grid, arsSequence, lens, "a", select, rank, n_terminals, indexMap, reverseIndexMap);
+    cout << "Occurences: ";
+    for (u_int i = 0; i < occurences3.size(); i++) {
+        cout << occurences3[i] << " ";
+    } cout << endl;*/
 
     /*
     vector<u_int> wmtest = { 1, 0, 3, 4, 5, 6, 7, 8, 9, 10 };

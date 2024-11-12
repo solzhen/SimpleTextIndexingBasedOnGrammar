@@ -23,17 +23,11 @@ ARSSequence::ARSSequence(int_vector<> S, int sigma) : sigma(sigma) {
         F[S[i]]++; // count the number of occurrences of each symbol
     }
 
-    std::cout << "F = "; for (int i = 0; i < sigma; i++) std::cout << F[i] << " "; std::cout << endl;
+    //std::cout << "F = "; for (int i = 0; i < sigma; i++) std::cout << F[i] << " "; std::cout << endl;
 
     int noc = ceil(static_cast<double>(n) / sigma); // number of chunks to divide the sequence into
 
-    cout << "sigma = " << sigma << ", n = " << n << ", noc = " << noc << endl;
-    cout << "chunks = ";    
-    for (int i = 0; i < noc; i++) {
-        for (int j = i * sigma; j < min((i+1) * sigma, n); j++) {
-            cout << S[j] << " ";
-        } cout << ", ";
-    } cout << endl;
+    //cout << "sigma = " << sigma << ", n = " << n << ", noc = " << noc << endl;
 
 
     A = vector<abv>(sigma);
@@ -52,7 +46,7 @@ ARSSequence::ARSSequence(int_vector<> S, int sigma) : sigma(sigma) {
         }
     }
     
-    cout << "A = "; for (int i = 0; i < sigma; i++) cout << A[i].b << " "; cout << endl;
+    //cout << "A = "; for (int i = 0; i < sigma; i++) cout << A[i].b << " "; cout << endl;
 
     vector<int_vector<>> pi_v(noc);
     D = vector<dbv>(noc);
@@ -81,8 +75,8 @@ ARSSequence::ARSSequence(int_vector<> S, int sigma) : sigma(sigma) {
         }
     }
 
-    cout << "D = "; for (int i = 0; i < noc; i++) cout << D[i].b << " "; cout << endl;
-    cout << "pi = "; for (int i = 0; i < noc; i++) cout << pi_v[i] << " "; cout << endl;
+    //cout << "D = "; for (int i = 0; i < noc; i++) cout << D[i].b << " "; cout << endl;
+    //cout << "pi = "; for (int i = 0; i < noc; i++) cout << pi_v[i] << " "; cout << endl;
 
     for (int i = 0; i < sigma; i++) {
         A[i].rank = rank_support_v<0>(&A[i].b);

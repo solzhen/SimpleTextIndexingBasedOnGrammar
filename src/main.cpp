@@ -40,6 +40,25 @@ extern "C" { // C implementation of repair and encoder
             (result) = c - rank_bbbb(257) + 257; \
     } while (0)
 
+void saveIntVector(const sdsl::int_vector<>& iv, const std::string& filename) {
+    std::ofstream out(filename, std::ios::binary);
+    if (out.is_open()) {
+        iv.serialize(out);
+        out.close();
+    } else {
+        std::cerr << "Failed to open file for writing: " << filename << std::endl;
+    }
+}
+void loadIntVector(sdsl::int_vector<>& iv, const std::string& filename) {
+    std::ifstream in(filename, std::ios::binary);
+    if (in.is_open()) {
+        iv.load(in);
+        in.close();
+    } else {
+        std::cerr << "Failed to open file for reading: " << filename << std::endl;
+    }
+}
+
 /// @brief Expands a non terminal rule
 /// @param arrs ARS sequence
 /// @param i index of the rule in arrs
@@ -112,6 +131,7 @@ string expandLeftSideRule(
 bool compareRules(ARSSequence arrs, int i, int j, int nt, 
     vector<char> sl, bool rev = false) 
 {
+    cout << "Comparing rules " << i << " and " << j << " rev: " << rev << endl;
     string s_i, s_j;
     if (rev) {
         s_i = expandLeftSideRule(arrs, i*2, nt, sl);
@@ -238,6 +258,7 @@ vector<char> sl, vector<char> rk, uint nt, int_vector<> mp, int_vector<> rmp) {
                     left = mid + 1;
                 }
             }
+            if (result == -1) continue;
             s_y = result + 1; //we add 1 since the grid is 1-indexed
             //cout << "s_y: " << s_y << endl;
 
@@ -260,6 +281,7 @@ vector<char> sl, vector<char> rk, uint nt, int_vector<> mp, int_vector<> rmp) {
                     right = mid - 1;
                 }
             }
+            if (result == -1) continue;
             e_y = result + 1;
             //cout << "e_y: " << e_y << endl;
 
@@ -284,6 +306,7 @@ vector<char> sl, vector<char> rk, uint nt, int_vector<> mp, int_vector<> rmp) {
                     left = mid + 1;
                 }
             }
+            if (result == -1) continue;
             s_x = result + 1; 
             //cout << "s_x: " << s_x << endl;
 
@@ -305,6 +328,7 @@ vector<char> sl, vector<char> rk, uint nt, int_vector<> mp, int_vector<> rmp) {
                     right = mid - 1;
                 }
             }
+            if (result == -1) continue;
             e_x = result + 1;
             //cout << "e_x: " << e_x << endl;
 
@@ -485,10 +509,10 @@ recursively, until having a single nonterminal S.
     
     cout << "------------------------" << endl;
 
-    //for (int i = 0; i < n_non_terminals; i++) {
-    //    cout << i << ":" << i+n_terminals << "\t->\t" << arsSequence[i*2] << '\t' << arsSequence[i*2+1] << endl;
-    //} 
-    cout << "------------------------" << endl;
+    for (int i = 0; i < n_non_terminals; i++) {
+        cout << i << ":" << i+n_terminals << "\t->\t" << arsSequence[i*2] << '\t' << arsSequence[i*2+1] << endl;
+    } 
+    cout << ". . . sorting rules" << endl;
     int_vector indexMap(n_non_terminals);
     int_vector reverseIndexMap(n_non_terminals);
 
@@ -504,13 +528,6 @@ recursively, until having a single nonterminal S.
             return compareRules(arsSequence, a, b, n_terminals, select); 
         }
     );
-    //cout << "Index Map: " << endl;
-    //for (u_int i = 0; i < indexMap.size(); i++) cout << indexMap[i] << " "; 
-    //cout << endl;
-    //for (u_int i = 0; i < indexMap.size(); i++) {
-    //    cout << expandRightSideRule(arsSequence, indexMap[i]*2, n_terminals, select) << ", ";
-    //} cout << endl;
-
     sort(
         reverseIndexMap.begin(), 
         reverseIndexMap.end(), 
@@ -518,51 +535,42 @@ recursively, until having a single nonterminal S.
             return compareRules(arsSequence, a, b, n_terminals, select, true); 
         }
     );
-    //cout << "Reverse Index Map: " << endl;
-    //for (u_int i = 0; i < reverseIndexMap.size(); i++) cout << reverseIndexMap[i] << " ";
-    //cout << endl;
-    
-    //for (u_int i = 0; i < reverseIndexMap.size(); i++) {
-    //    cout << expandLeftSideRule(arsSequence, reverseIndexMap[i]*2, n_terminals, select) << ", ";
-    //} cout << endl;
-    //cout << "------------------------" << endl;
-
-
     std::vector<Point> points(n_non_terminals);
     u_int j, k;
     for (u_int i = 0; i < indexMap.size(); i++) {
         j = indexMap[i]; // rule index
-        //std::cout << "j: " << j << std::endl;
         k = std::distance(reverseIndexMap.begin(), std::find(reverseIndexMap.begin(), reverseIndexMap.end(), j));
         points[i] = Point(i, k);
     }
-    //cout << "Points: ";
-    //printPoints(points); cout << endl;
 
-    //change points from 0-indexed to 1-indexed, 
-    //neccesary for our waveletmatrix implementation
+    saveIntVector(indexMap, input_filename+".im.bin");
+    saveIntVector(reverseIndexMap, input_filename+"im.bin");
+
+    // 0-indexed to 1-indexed
     for (u_int i = 0; i < points.size(); i++) {
         points[i].first++;
         points[i].second++;
     }
-    //cout << "1-indexed Points: ";
-    //printPoints(points); cout << endl;
 
-    writePointsToFile("test_grid.bin", n_non_terminals, n_non_terminals, points);
+    cout << ". . . Writing grid to file" << endl;
 
-    Grid test_grid = Grid("test_grid.bin");
-    test_grid.printself(); 
+    string grid_filename = input_filename + ".grid.bin";
 
-    int c = test_grid.count(1, 8, 1, 8);
-    cout << "count(1, 8, 1, 8): " << c << endl;
+    writePointsToFile(grid_filename, n_non_terminals, n_non_terminals, points);
+    Grid test_grid = Grid(grid_filename);
 
-    cout << "report(1, 8, 1, 4): ";
-    vector<Point> p = test_grid.report(1, 8, 1, 4);
-    printPoints(p); cout << endl;
+    //test_grid.printself(); 
 
-    cout << "report(1, 4, 1, 4): ";
-    p = test_grid.report(1, 4, 1, 4);
-    printPoints(p); cout << endl;
+    //int c = test_grid.count(1, 8, 1, 8);
+    //cout << "count(1, 8, 1, 8): " << c << endl;
+
+    //cout << "report(1, 8, 1, 4): ";
+    //vector<Point> p = test_grid.report(1, 8, 1, 4);
+    //printPoints(p); cout << endl;
+
+    //cout << "report(1, 4, 1, 4): ";
+    //p = test_grid.report(1, 4, 1, 4);
+    //printPoints(p); cout << endl;
 
     int_vector lens(n_non_terminals);
     for (int i = 0; i < n_non_terminals; i++) {
@@ -572,13 +580,6 @@ recursively, until having a single nonterminal S.
     for (u_int i = 0; i < lens.size(); i++) {
         cout << lens[i] << " ";
     } cout << endl;   
-
-    vector<int> occurences;
-    secondaries(&occurences, arsSequence, 3, n_terminals, lens, 0);
-    cout << "Occurences: ";
-    for (u_int i = 0; i < occurences.size(); i++) {
-        cout << occurences[i] << " ";
-    } cout << endl;
 
     cout << "------------------------" << endl;    
 

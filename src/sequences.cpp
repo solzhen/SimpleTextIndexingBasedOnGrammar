@@ -17,6 +17,7 @@ using namespace std;
     }
 
 ARSSequence::ARSSequence(int_vector<> S, int sigma) : sigma(sigma) {
+    assert(sigma > 0 && "sigma must be greater than zero");
     int_vector<> F(sigma + 1, 0); // array F[0, sigma] of integers/symbols in the alphabet
     n = S.size(); // length of the sequence
     for (int i = 0; i < n; i++) {

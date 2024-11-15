@@ -1,7 +1,7 @@
 LIB_DIR = /home/cfnts/lib
 INC_DIR = /home/cfnts/include
 BOOST_INC = /mnt/d/Home/Documents/WS/boost_1_86_0
-MY_CXX_FLAGS= -std=c++17 -Wall -Wextra -DNDEBUG $(CODE_COVER) -Wno-ignored-qualifiers -Wno-deprecated-copy -Wno-unused-parameter
+MY_CXX_FLAGS= -std=c++20 -Wall -Wextra -DNDEBUG $(CODE_COVER) -Wno-ignored-qualifiers -Wno-deprecated-copy -Wno-unused-parameter
 MY_CXX_OPT_FLAGS= -O3 -ffast-math -funroll-loops -msse4.2 -march=native -msse4.2 -march=native -DHAVE_CXA_DEMANGLE
 MY_CXX=/usr/bin/c++
 MY_CC=/usr/bin/cc

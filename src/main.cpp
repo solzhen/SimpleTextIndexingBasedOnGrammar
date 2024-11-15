@@ -8,6 +8,7 @@
 #include <sstream>
 #include <tuple>
 #include <unordered_map>
+#include <coroutine>
 
 #include <sdsl/bit_vectors.hpp>
 
@@ -22,6 +23,7 @@ using namespace std;
 extern "C" { // C implementation of repair and encoder
     #include "../repairs/repair110811/repair.h"
     #include "../repairs/repair110811/encoder.h"
+#include <optional>
 }
 
 // MACROS
@@ -149,6 +151,119 @@ bool compareRules(ARSSequence arrs, int i, int j, int nt,
     }
     return s_i < s_j;
 }
+
+template <typename T>
+struct Generator {
+    struct promise_type {
+        T current_value;
+        auto get_return_object() { return Generator{this}; }
+        std::suspend_always initial_suspend() { return {}; }
+        std::suspend_always final_suspend() noexcept { return {}; }
+        std::suspend_always yield_value(T value) {
+            current_value = value;
+            return {};
+        }
+        void return_void() {}
+        void unhandled_exception() { std::terminate(); }
+    };
+
+    struct iterator {
+        std::coroutine_handle<promise_type> coro;
+
+        iterator& operator++() {
+            coro.resume();
+            if (coro.done()) coro = nullptr;
+            return *this;
+        }
+        T operator*() const { return coro.promise().current_value; }
+        bool operator!=(const iterator& other) const { return coro != other.coro; }
+        bool operator==(const iterator& other) const { return coro == other.coro; }
+    };
+
+    iterator begin() {
+        if (coro) coro.resume();
+        return iterator{coro};
+    }
+    iterator end() { return iterator{nullptr}; }
+
+    explicit Generator(promise_type* p) : coro(std::coroutine_handle<promise_type>::from_promise(*p)) {}
+    ~Generator() {
+        if (coro) coro.destroy();
+    }
+
+    std::coroutine_handle<promise_type> coro;
+};
+
+/// @brief Lazily expands a non-terminal rule and yields one character at a time. If
+/// the reverse flag is set, the expansion is done in reverse order.
+/// @param arrs ARS sequence
+/// @param i index of the rule in arrs
+/// @param nt number of terminals
+/// @param sl de-normalized alphabet
+/// @param rev reverse flag
+Generator<char> expandRuleLazy(
+    ARSSequence& arrs, int i, int nt,
+    std::vector<char>& sl, bool rev = false)
+{
+    int f,s;
+    f = rev? i+1: i;
+    s = rev? i: i+1;    
+    // expand left side if not reverse, otherwise expand right side
+    if (arrs[f] < nt) { 
+        co_yield sl[arrs[f] + 1];
+    } else {
+        auto first_gen = expandRuleLazy(arrs, 2*(arrs[f]-nt), nt, sl, rev);
+        for (char c : first_gen) {
+            co_yield c;
+        }
+    }
+    // expand right side if not reverse, otherwise expand left side
+    if (arrs[s] < nt) {
+        co_yield sl[arrs[s] + 1];
+    } else {
+        auto second_gen = expandRuleLazy(arrs, 2*(arrs[s]-nt), nt, sl, rev);
+        for (char c : second_gen) {
+            co_yield c;
+        }
+    }
+}
+Generator<char> expandRuleLazyHelper(
+    ARSSequence& arrs, int i, int nt,
+    std::vector<char>& sl, bool rev = false)
+{    
+    int lr_i = rev? i: i+1;
+    if (arrs[lr_i] < nt) {
+        co_yield sl[arrs[lr_i] + 1];
+    } else {
+        auto gen = expandRuleLazy(arrs, 2*(arrs[lr_i]-nt), nt, sl, rev);
+        for (char c : gen) {
+            co_yield c;
+        }
+    }
+}
+
+bool compareRulesLazy(ARSSequence& arrs, int i, int j, int nt, std::vector<char>& sl, bool rev = false) 
+{
+    // Set up generators for each rule's expansion
+    auto gen_i = expandRuleLazyHelper(arrs, 2 * i, nt, sl, rev);
+    auto gen_j = expandRuleLazyHelper(arrs, 2 * j, nt, sl, rev);
+    // Create iterators to lazily consume characters from both expansions
+    auto it_i = gen_i.begin();
+    auto it_j = gen_j.begin();
+    // Compare characters from both sequences one by one
+    while (it_i != gen_i.end() && it_j != gen_j.end()) {
+        char char_i = *it_i;
+        char char_j = *it_j;
+        if (char_i != char_j) {
+            return char_i < char_j;
+        }
+        ++it_i;
+        ++it_j;
+    }
+    // If one sequence is shorter, the shorter one is considered "less"
+    return (it_i == gen_i.end()) && (it_j != gen_j.end());
+}
+
 
 EDICT *convertDict(DICT *dict) {
   EDICT *edict = (EDICT*)malloc(sizeof(EDICT));
@@ -525,14 +640,14 @@ recursively, until having a single nonterminal S.
         indexMap.begin(), 
         indexMap.end(), 
         [&](int a, int b) { 
-            return compareRules(arsSequence, a, b, n_terminals, select); 
+            return compareRulesLazy(arsSequence, a, b, n_terminals, select); 
         }
     );
     sort(
         reverseIndexMap.begin(), 
         reverseIndexMap.end(), 
         [&](int a, int b) { 
-            return compareRules(arsSequence, a, b, n_terminals, select, true); 
+            return compareRulesLazy(arsSequence, a, b, n_terminals, select, true); 
         }
     );
     std::vector<Point> points(n_non_terminals);

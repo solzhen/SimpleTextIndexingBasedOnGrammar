@@ -408,7 +408,7 @@ vector<char> sl, vector<char> rk, uint nt, int_vector<> mp, int_vector<> rmp) {
                 // Compare the expansion with the pattern lazily
                 int compare = compareRuleWithPatternLazy(R, r_i, nt, sl, P_left, true);
                 if (compare >= 0) { // if the expansion is greater or equal to the pattern
-                    if (compare == 0) { // if the expansion is equal to the pattern
+                    if (compare == 0) { // if the expansion is equal to the pattern or the pattern is a prefix of the expansion
                         result = mid;  // potential match, move left to find the first occurrence
                     }
                     right = mid - 1;
@@ -429,7 +429,7 @@ vector<char> sl, vector<char> rk, uint nt, int_vector<> mp, int_vector<> rmp) {
                 int r_i = rmp[mid]; // rule index
                 int compare = compareRuleWithPatternLazy(R, r_i, nt, sl, P_left, true);
                 if (compare <= 0) { // if the expansion is less or equal to the pattern
-                    if (compare == 0) { // if the expansion is equal to the pattern
+                    if (compare == 0) { // if the expansion is equal to the pattern or the pattern is a prefix of the expansion
                         result = mid;  // potential match, move right to find the last occurrence
                     }
                     left = mid + 1;
@@ -450,10 +450,9 @@ vector<char> sl, vector<char> rk, uint nt, int_vector<> mp, int_vector<> rmp) {
                 int mid = left + (right - left) / 2;
                 //cout << "mid: " << mid << endl;
                 int r_i = mp[mid]; // rule index
-                string str = expandRightSideRule(R, r_i*2, nt, sl);
-                //cout << "str: " << str << endl;
-                if (str.substr(0, P_right.size()) >= P_right) {
-                    if (str.substr(0, P_right.size()) == P_right) {
+                int compare = compareRuleWithPatternLazy(R, r_i, nt, sl, P_right);
+                if (compare >= 0) { // if the expansion is greater or equal to the pattern
+                    if (compare == 0) { // if the expansion is equal to the pattern or the pattern is a prefix of the expansion
                         result = mid;  // potential match, move left to find the first occurrence
                     }
                     right = mid - 1;
@@ -472,10 +471,9 @@ vector<char> sl, vector<char> rk, uint nt, int_vector<> mp, int_vector<> rmp) {
                 int mid = left + (right - left) / 2;
                 //cout << "mid: " << mid << endl;
                 int r_i = mp[mid]; // rule index
-                string str = expandRightSideRule(R, r_i*2, nt, sl);
-                //cout << "str: " << str << endl;
-                if (str.substr(0, P_right.size()) <= P_right) {
-                    if (str.substr(0, P_right.size()) == P_right) {
+                int compare = compareRuleWithPatternLazy(R, r_i, nt, sl, P_right);
+                if (compare <= 0) { // if the expansion is less or equal to the pattern
+                    if (compare == 0) { // if the expansion is equal to the pattern or the pattern is a prefix of the expansion
                         result = mid;  // potential match, move right to find the last occurrence
                     }
                     left = mid + 1;
@@ -542,13 +540,13 @@ int main(int argc, char* argv[]) {
     CODE *comp_seq = dict->comp_seq; // sequence C
 
     cout << "------------------------" << endl;
-    rulesprinter(rules, dict->num_rules, true);
+    //rulesprinter(rules, dict->num_rules, true);
     cout << "------------------------" << endl;
 
-    int len = dict->txt_len - 1; // length of the text
+    int len = dict->txt_len; // length of the text
     cout << "Text length: " << len << endl;
 
-    dict->seq_len = dict->seq_len - 1; // remove the last element of the sequence (it's special character useless for us)
+    dict->seq_len = dict->seq_len;
     std::cout << "Sequence C: ";
     for (u_int i = 0; i < dict->seq_len; i++) { // dict->seq_len is the length of the sequence C
         std::cout << comp_seq[i] << " ";
@@ -590,7 +588,7 @@ recursively, until having a single nonterminal S.
     std::cout << "Number of rules: " << dict->num_rules << std::endl;
 
     cout << "------------------------" << endl;
-    rulesprinter(rules, dict->num_rules, true);
+    //rulesprinter(rules, dict->num_rules, true);
     cout << "------------------------" << endl;
 
     /*
@@ -664,9 +662,9 @@ recursively, until having a single nonterminal S.
     
     cout << "------------------------" << endl;
 
-    for (int i = 0; i < n_non_terminals; i++) {
-        cout << i << ":" << i+n_terminals << "\t->\t" << arsSequence[i*2] << '\t' << arsSequence[i*2+1] << endl;
-    } 
+    //for (int i = 0; i < n_non_terminals; i++) {
+    //    cout << i << ":" << i+n_terminals << "\t->\t" << arsSequence[i*2] << '\t' << arsSequence[i*2+1] << endl;
+    //} 
     cout << ". . . sorting rules" << endl;
     int_vector indexMap(n_non_terminals);
     int_vector reverseIndexMap(n_non_terminals);
@@ -699,7 +697,7 @@ recursively, until having a single nonterminal S.
     }
 
     saveIntVector(indexMap, input_filename+".im.bin");
-    saveIntVector(reverseIndexMap, input_filename+"im.bin");
+    saveIntVector(reverseIndexMap, input_filename+"rim.bin");
 
     // 0-indexed to 1-indexed
     for (u_int i = 0; i < points.size(); i++) {
@@ -737,6 +735,8 @@ recursively, until having a single nonterminal S.
     } cout << endl;   
 
     cout << "------------------------" << endl;    
+    
+    expandedSequence = expandRule(arsSequence, (n_non_terminals-1)*2, n_terminals, select);
 
     while (true) {
         cout << "Enter the pattern to search (or exit): ";
@@ -745,35 +745,18 @@ recursively, until having a single nonterminal S.
         if (pattern == "exit") break;
         vector<int> occurences;
         search(&occurences, test_grid, arsSequence, lens, pattern, select, rank, n_terminals, indexMap, reverseIndexMap);
-        cout << "Occurences: ";
+        cout << "Occurences Found: \t";
         sort(occurences.begin(), occurences.end());
         for (u_int i = 0; i < occurences.size(); i++) {
             cout << occurences[i] << " ";
         } cout << endl;
+        cout << "Expected Occurences: \t";
+        for (u_int i = 0; i < expandedSequence.size(); i++) {
+            if (expandedSequence.substr(i, pattern.length()) == pattern) {
+                cout << i << " ";
+            }
+        } cout << endl;
     }
-
-/*
-    cout << "Searching for pattern 'bra' in the text" << endl;
-    vector<int> occurences2;
-    search(&occurences2, test_grid, arsSequence, lens, "bra", select, rank, n_terminals, indexMap, reverseIndexMap);
-    cout << "Occurences: ";
-    for (u_int i = 0; i < occurences2.size(); i++) {
-        cout << occurences2[i] << " ";
-    } cout << endl;
-    cout << "Searching for pattern 'a' in the text" << endl;
-    vector<int> occurences3;
-    search(&occurences3, test_grid, arsSequence, lens, "a", select, rank, n_terminals, indexMap, reverseIndexMap);
-    cout << "Occurences: ";
-    for (u_int i = 0; i < occurences3.size(); i++) {
-        cout << occurences3[i] << " ";
-    } cout << endl;*/
-
-    /*
-    vector<u_int> wmtest = { 1, 0, 3, 4, 5, 6, 7, 8, 9, 10 };
-    WaveletMatrix wm(wmtest, 10);
-    for (int i = 0; i < 10; i++) {
-        cout << "wm " << i << "," << wm.access(i) << endl;
-    }*/
     return 0;
 }
 

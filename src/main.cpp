@@ -227,15 +227,24 @@ Generator<char> expandRuleLazy(
         }
     }
 }
-Generator<char> expandRuleLazyHelper(
+/// @brief Lazily expands one of the sides of a non-terminal rule and yields one character at a time.
+/// If the left flag is set, the left side is expanded, otherwise the right side is expanded.
+/// The left side expansion is done in reverse order.
+/// @param arrs 
+/// @param i 
+/// @param nt 
+/// @param sl 
+/// @param left 
+/// @return 
+Generator<char> expandRuleSideLazy(
     ARSSequence& arrs, int i, int nt,
-    std::vector<char>& sl, bool rev = false)
+    std::vector<char>& sl, bool left = false)
 {    
-    int lr_i = rev? i: i+1;
+    int lr_i = left? i: i+1;
     if (arrs[lr_i] < nt) {
         co_yield sl[arrs[lr_i] + 1];
     } else {
-        auto gen = expandRuleLazy(arrs, 2*(arrs[lr_i]-nt), nt, sl, rev);
+        auto gen = expandRuleLazy(arrs, 2*(arrs[lr_i]-nt), nt, sl, left);
         for (char c : gen) {
             co_yield c;
         }
@@ -245,8 +254,8 @@ Generator<char> expandRuleLazyHelper(
 bool compareRulesLazy(ARSSequence& arrs, int i, int j, int nt, std::vector<char>& sl, bool rev = false) 
 {
     // Set up generators for each rule's expansion
-    auto gen_i = expandRuleLazyHelper(arrs, 2 * i, nt, sl, rev);
-    auto gen_j = expandRuleLazyHelper(arrs, 2 * j, nt, sl, rev);
+    auto gen_i = expandRuleSideLazy(arrs, 2 * i, nt, sl, rev);
+    auto gen_j = expandRuleSideLazy(arrs, 2 * j, nt, sl, rev);
     // Create iterators to lazily consume characters from both expansions
     auto it_i = gen_i.begin();
     auto it_j = gen_j.begin();
@@ -262,6 +271,44 @@ bool compareRulesLazy(ARSSequence& arrs, int i, int j, int nt, std::vector<char>
     }
     // If one sequence is shorter, the shorter one is considered "less"
     return (it_i == gen_i.end()) && (it_j != gen_j.end());
+}
+
+template <typename Iterator>
+int compareRuleWithPatternLazyImpl(
+    ARSSequence& arrs, int i, int nt, std::vector<char>& sl, Iterator pattern_begin, Iterator pattern_end,
+    bool rev = false) 
+{      
+    auto gen = expandRuleSideLazy(arrs, 2*i, nt, sl, rev);
+    auto it = gen.begin();
+    while (it != gen.end() && pattern_begin != pattern_end) {
+        char c = *it;
+        char p = *pattern_begin;
+        //cout << "c: " << c << " p: " << p << endl;
+        if (c < p) return -1; // if the character in the expansion is less than the pattern character
+        if (c > p) return 1;  // if the character in the expansion is greater than the pattern character        
+        ++it;
+        ++pattern_begin;
+    }
+    if (it == gen.end() && pattern_begin != pattern_end) return -1;  // Expansion ended first
+    return 0;  // if the expansion is equal to the pattern or the pattern is a prefix of the expansion
+}
+
+/// @brief Compare the expansion of a rule with a pattern lazily
+/// @param arrs Access, Rank, Select supporting sequence
+/// @param i Rule index
+/// @param nt Number of terminals
+/// @param sl Select vector
+/// @param pattern 
+/// @param rev 
+/// @return 0 if the pattern is a prefix of the expanded rule, 1 if the rule expansion is bigger than the pattern, -1 if less, 
+int compareRuleWithPatternLazy(ARSSequence& arrs, int i, int nt, std::vector<char>& sl, std::string pattern, bool rev = false) 
+{  
+    //cout << "Comparing rule " << i << " with pattern " << pattern << " rev: " << rev << endl; 
+    if (rev) {
+        return compareRuleWithPatternLazyImpl(arrs, i, nt, sl, pattern.rbegin(), pattern.rend(), rev);
+    } else {
+        return compareRuleWithPatternLazyImpl(arrs, i, nt, sl, pattern.begin(), pattern.end(), rev);
+    }
 }
 
 
@@ -341,19 +388,16 @@ vector<char> sl, vector<char> rk, uint nt, int_vector<> mp, int_vector<> rmp) {
         secondaries(occurences, R, rk[P.at(0)], nt, l, 0, true);
     } else {
         for (u_int t = 0; t < m-1; t++) {
+            // First we cut P into two parts P_< and P_>
             string P_left = P.substr(0, t+1); // P_<
             string P_right = P.substr(t+1, m-t-1); // P_>
             //cout << "P_left: " << P_left << " P_right: " << P_right << endl;
-            uint s_x, e_x, s_y, e_y;   
-
-
+            uint s_x, e_x, s_y, e_y;
             // find the range of rows [s_y, e_y] that finish with P_<,
             // these form a range because they are sorted in lexicographic order of
             // the reverse string, and the range can be found using binary search of 
             // the reversed prefix of P (P_<_reversed)
-
-            reverse(P_left.begin(), P_left.end());// P_<_reversed
-
+            
             // Binary search to find the first index of a string that starts with P_<_reversed
             int left = 0, right = G.getRows() - 1;
             int result = -1;
@@ -361,11 +405,10 @@ vector<char> sl, vector<char> rk, uint nt, int_vector<> mp, int_vector<> rmp) {
                 int mid = left + (right - left) / 2;
                 //cout << "mid: " << mid << endl;
                 int r_i = rmp[mid]; // rule index
-                string str = expandLeftSideRule(R, r_i*2, nt, sl);                
-                //cout << "str: " << str << endl;     
-                reverse(str.begin(), str.end());   
-                if (str.substr(0, P_left.size()) >= P_left) {
-                    if (str.substr(0, P_left.size()) == P_left) {
+                // Compare the expansion with the pattern lazily
+                int compare = compareRuleWithPatternLazy(R, r_i, nt, sl, P_left, true);
+                if (compare >= 0) { // if the expansion is greater or equal to the pattern
+                    if (compare == 0) { // if the expansion is equal to the pattern
                         result = mid;  // potential match, move left to find the first occurrence
                     }
                     right = mid - 1;
@@ -384,11 +427,9 @@ vector<char> sl, vector<char> rk, uint nt, int_vector<> mp, int_vector<> rmp) {
                 int mid = left + (right - left) / 2;
                 //cout << "mid: " << mid << endl;
                 int r_i = rmp[mid]; // rule index
-                string str = expandLeftSideRule(R, r_i*2, nt, sl);                
-                //cout << "str: " << str << endl;
-                reverse(str.begin(), str.end());
-                if (str.substr(0, P_left.size()) <= P_left) {
-                    if (str.substr(0, P_left.size()) == P_left) {
+                int compare = compareRuleWithPatternLazy(R, r_i, nt, sl, P_left, true);
+                if (compare <= 0) { // if the expansion is less or equal to the pattern
+                    if (compare == 0) { // if the expansion is equal to the pattern
                         result = mid;  // potential match, move right to find the last occurrence
                     }
                     left = mid + 1;
@@ -399,7 +440,6 @@ vector<char> sl, vector<char> rk, uint nt, int_vector<> mp, int_vector<> rmp) {
             if (result == -1) continue;
             e_y = result + 1;
             //cout << "e_y: " << e_y << endl;
-
             // find the range of columns [s_x, e_x] that start with P_>,
             // these form a range because they are sorted in lexicographic order
             // and the range can be found using binary search of the prefix of P (P_>)

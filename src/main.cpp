@@ -333,7 +333,7 @@ vector<char> sl, vector<char> rk, uint nt) {
         for (t = 0; t < m-1; t++) {
             string P_left = P.substr(0, t+1); // P_<
             string P_right = P.substr(t+1, m-t-1); // P_>
-            cout << "P_left: " << P_left << " P_right: " << P_right << endl;
+            //cout << "P_left: " << P_left << " P_right: " << P_right << endl;
             uint s_x, e_x, s_y, e_y;
             int left = 0, right = G.getRows() - 1;
             int result = -1;

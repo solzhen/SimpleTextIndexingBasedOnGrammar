@@ -42,24 +42,6 @@ extern "C" { // C implementation of repair and encoder
             (result) = c - rank_bbbb(257) + 257; \
     } while (0)
 
-void saveIntVector(const sdsl::int_vector<>& iv, const std::string& filename) {
-    std::ofstream out(filename, std::ios::binary);
-    if (out.is_open()) {
-        iv.serialize(out);
-        out.close();
-    } else {
-        std::cerr << "Failed to open file for writing: " << filename << std::endl;
-    }
-}
-void loadIntVector(sdsl::int_vector<>& iv, const std::string& filename) {
-    std::ifstream in(filename, std::ios::binary);
-    if (in.is_open()) {
-        iv.load(in);
-        in.close();
-    } else {
-        std::cerr << "Failed to open file for reading: " << filename << std::endl;
-    }
-}
 
 /// @brief Expands a non terminal rule
 /// @param arrs ARS sequence
@@ -120,38 +102,6 @@ string expandLeftSideRule(
         left = expandRule(arrs, 2*(arrs[i]-nt), nt, sl);
     }
     return left;
-}
-
-/// @brief Compare two non-terminal rules
-/// @param arrs 
-/// @param i First rule index 
-/// @param j Second rule index
-/// @param nt number of non terminals
-/// @param sl select vector
-/// @param rev reverse flag
-/// @return If reverse is set to false, comparison result between the rules' 
-/// right side expansions, otherwise the comparison is 
-/// done between the rules' left side reverse expansion.
-bool compareRules(ARSSequence arrs, int i, int j, int nt, 
-    vector<char> sl, bool rev = false) 
-{
-    cout << "Comparing rules " << i << " and " << j << " rev: " << rev << endl;
-    string s_i, s_j;
-    if (rev) {
-        s_i = expandLeftSideRule(arrs, i*2, nt, sl);
-    } else {
-        s_i = expandRightSideRule(arrs, i*2, nt, sl);
-    }
-    if (rev) {
-        s_j = expandLeftSideRule(arrs, j*2, nt, sl);
-    } else {
-        s_j = expandRightSideRule(arrs, j*2, nt, sl);
-    }
-    if (rev) {
-        std::reverse(s_i.begin(), s_i.end());
-        std::reverse(s_j.begin(), s_j.end());
-    }
-    return s_i < s_j;
 }
 
 template <typename T>
@@ -313,26 +263,6 @@ int compareRuleWithPatternLazy(ARSSequence& arrs, int i, int nt, std::vector<cha
     }
 }
 
-
-EDICT *convertDict(DICT *dict) {
-  EDICT *edict = (EDICT*)malloc(sizeof(EDICT));
-  uint i;
-  edict->txt_len = dict->txt_len;
-  edict->seq_len = dict->seq_len;
-  edict->num_rules = dict->num_rules;
-  edict->comp_seq = dict->comp_seq;
-  edict->rule  = dict->rule;
-  edict->tcode = (CODE*)malloc(sizeof(CODE)*dict->num_rules);
-
-  for (i = 0; i <= CHAR_SIZE; i++) {
-    edict->tcode[i] = i;
-  }
-  for (i = CHAR_SIZE+1; i < dict->num_rules; i++) {
-    edict->tcode[i] = DUMMY_CODE;
-  }
-  return edict;
-}
-
 /// @brief reports all occurences of pattern P in the initial symbol derived from this occurence
 /// @param occurences integer vector to hold the occurences of the pattern P
 /// @param R ARSSequence of normalized rules
@@ -348,19 +278,13 @@ void secondaries(vector<int> *occurences, ARSSequence R, u_int S,
     u_int A_i, u_int nt, int_vector<> l, u_int offset=0,
     bool terminal = false)
 {
-    //cout << "secondaries A_i: " << A_i << " offset: " << offset << endl;
     if (!terminal && A_i == S) { // append the occurence to the report
-        //cout << "appending offset: " << offset << endl;
         occurences->push_back(offset);
         return;
     }
     int c = terminal? A_i: A_i + nt; // symbol representing the rule
-    //cout << "c: " << c << endl;
-    //R.printself();
-    //cout << "number of occurences of " << c << ": " << R.rank(c, R.size()-1-1) << endl;
     for (int j=1; j <= R.rank(c, R.size()-1-1); j++) { // for each j-th occurence of c
         int k = R.select(c, j); // position of the j-th occurence of c
-        //cout << "j: " << j << ", k: " << k << endl;
         int D_i = k / 2; // Rule index that derives the symbol at position k
         int offset_prime = offset;
         if (k % 2 == 1) { // if k is odd, then the symbol at position k is the right side of the rule D
@@ -370,7 +294,6 @@ void secondaries(vector<int> *occurences, ARSSequence R, u_int S,
                 offset_prime += l[R[k-1] - nt]; // we add the length of the left side of the rule D
             //offset_prime += l[R[k-1] - nt]; // we add the length of the left side of the rule D            
         }
-        //cout << "D_i: " << D_i << " offset_prime: " << offset_prime << endl;
         secondaries(occurences, R, S, D_i, nt, l, offset_prime, false);
     }
 };
@@ -395,24 +318,14 @@ vector<char> sl, vector<char> rk, uint nt) {
     } else {
         u_int t; // length of the prefix P_< - 1
         for (t = 0; t < m-1; t++) {
-            // First we cut P into two parts P_< and P_>
             string P_left = P.substr(0, t+1); // P_<
             string P_right = P.substr(t+1, m-t-1); // P_>
-            //cout << "P_left: " << P_left << " P_right: " << P_right << endl;
             uint s_x, e_x, s_y, e_y;
-            // find the range of rows [s_y, e_y] that finish with P_<,
-            // these form a range because they are sorted in lexicographic order of
-            // the reverse string, and the range can be found using binary search of 
-            // the reversed prefix of P (P_<_reversed)
-            
-            // Binary search to find the first index of a string that starts with P_<_reversed
             int left = 0, right = G.getRows() - 1;
             int result = -1;
             while (left <= right) {
                 int mid = left + (right - left) / 2;
-                //cout << "mid: " << mid << endl;
-                int r_i = mid; //rmp[mid]; // rule index
-                //cout << "mid: " << mid << ", r_i: " << r_i << endl;
+                int r_i = mid;
                 // Compare the expansion with the pattern lazily
                 int compare = compareRuleWithPatternLazy(R, r_i, nt, sl, P_left, true);
                 if (compare >= 0) { // if the expansion is greater or equal to the pattern
@@ -426,16 +339,12 @@ vector<char> sl, vector<char> rk, uint nt) {
             }
             if (result == -1) continue;
             s_y = result + 1; //we add 1 since the grid is 1-indexed
-            //cout << "s_y: " << s_y << endl;
 
-            // Binary search to find the last index of a string that starts with P_<_reversed
             left = 0, right = G.getRows() - 1;
             result = -1;
             while (left <= right) {
                 int mid = left + (right - left) / 2;
-                //cout << "mid: " << mid << endl;
-                int r_i = mid;//rmp[mid]; // rule index
-                //cout << "mid: " << mid << ", r_i: " << r_i << endl;
+                int r_i = mid;
                 int compare = compareRuleWithPatternLazy(R, r_i, nt, sl, P_left, true);
                 if (compare <= 0) { // if the expansion is less or equal to the pattern
                     if (compare == 0) { // if the expansion is equal to the pattern or the pattern is a prefix of the expansion
@@ -448,20 +357,13 @@ vector<char> sl, vector<char> rk, uint nt) {
             }
             if (result == -1) continue;
             e_y = result + 1;
-            //cout << "e_y: " << e_y << endl;
-            // find the range of columns [s_x, e_x] that start with P_>,
-            // these form a range because they are sorted in lexicographic order
-            // and the range can be found using binary search of the prefix of P (P_>)
-            // Binary search to find the first index of a string that starts with P_>
+
             left = 0, right = G.getColumns() - 1;
             result = -1;
             while (left <= right) {
                 int mid = left + (right - left) / 2;
-                //cout << "mid: " << mid << endl;
                 int r_i = G.access(mid+1)-1; // rule index
-                //cout << "mid: " << mid << ", r_i: " << r_i << endl;
                 int compare = compareRuleWithPatternLazy(R, r_i, nt, sl, P_right);
-                //cout << "compare: " << compare << endl;
                 if (compare >= 0) { // if the expansion is greater or equal to the pattern
                     if (compare == 0) { // if the expansion is equal to the pattern or the pattern is a prefix of the expansion
                         result = mid;  // potential match, move left to find the first occurrence
@@ -473,16 +375,12 @@ vector<char> sl, vector<char> rk, uint nt) {
             }
             if (result == -1) continue;
             s_x = result + 1; 
-            //cout << "s_x: " << s_x << endl;
 
-            // Binary search to find the last index of a string that starts with P_>
             left = 0, right = G.getColumns() - 1;
             result = -1;
             while (left <= right) {
                 int mid = left + (right - left) / 2;
-                //cout << "mid: " << mid << endl;
                 int r_i = G.access(mid+1)-1; // rule index 
-                //cout << "mid: " << mid << ", r_i: " << r_i << endl;
                 int compare = compareRuleWithPatternLazy(R, r_i, nt, sl, P_right);
                 if (compare <= 0) { // if the expansion is less or equal to the pattern
                     if (compare == 0) { // if the expansion is equal to the pattern or the pattern is a prefix of the expansion
@@ -495,18 +393,13 @@ vector<char> sl, vector<char> rk, uint nt) {
             }
             if (result == -1) continue;
             e_x = result + 1;
-            //cout << "e_x: " << e_x << endl;
-            //cout << "s_x: " << s_x << " e_x: " << e_x << " s_y: " << s_y << " e_y: " << e_y << endl;
-            vector<Point> points = G.report(s_x, e_x, s_y, e_y);            
-            //printPoints(points);cout<<endl;
+
+            vector<Point> points = G.report(s_x, e_x, s_y, e_y); 
             for (Point p: points) {
                 int r_i = p.second-1; // rule index
-                //cout << "r_i: " << r_i << endl;
-                //cout << "R: " << R[r_i*2] << " " << R[r_i*2+1] << endl;
                 if ((u_int)R[r_i*2] < nt) {
                     secondaries(occurences, R, S, r_i, nt, l, 0);
                 } else {
-                    //cout << l << endl;
                     secondaries(occurences, R, S, r_i, nt, l, l[R[r_i*2] - nt]-(t+1));
                 }
             }
@@ -527,6 +420,8 @@ int main(int argc, char* argv[]) {
         input_filename = argv[1];
     }
 
+    cout << "Running Re-Pair on " << input_filename << endl;
+
     FILE *input;
     DICT *dict;
     input  = fopen(input_filename.c_str(), "rb");
@@ -537,34 +432,19 @@ int main(int argc, char* argv[]) {
     std::cout << "number of rules: " << dict->num_rules - 256 << std::endl;
     std::cout << "sequence length: " << dict->seq_len << std::endl;
 
-
     RULE *rules = dict->rule; // set or rules 
     CODE *comp_seq = dict->comp_seq; // sequence C
-
-    cout << "------------------------" << endl;
-    //rulesprinter(rules, dict->num_rules, true);
     cout << "------------------------" << endl;
 
     int len = dict->txt_len; // length of the text
     cout << "Text length: " << len << endl;
 
-    dict->seq_len = dict->seq_len;
     std::cout << "Sequence C: ";
     for (u_int i = 0; i < dict->seq_len; i++) { // dict->seq_len is the length of the sequence C
         std::cout << comp_seq[i] << " ";
     } std::cout << std::endl;
-    
-    
 
-    std::string expandedSequence = expandSequence(comp_seq, dict->seq_len, rules);
-    std::cout << "Expanded Sequence C: " << expandedSequence << std::endl;
-
-        /*
-        First, we will get rid of sequence C, so as to have a grammar that derives T from
-    a single nonterminal S. This is done by creating new nonterminals N 1 -> C[1]C[2],
-    N2 -> C[3]C[4], and so on. Then we pair again N1 -> N 1 N 2 , N2 -> N 3 N4 , and so on,
-recursively, until having a single nonterminal S.
-        */
+    cout << ". . .Adding extra rules to get rid of sequence C" << endl;
 
     while (dict->seq_len > 1) {
         for (u_int i = 0; i < dict->seq_len; i = i+2) {
@@ -587,18 +467,11 @@ recursively, until having a single nonterminal S.
     for (u_int i = 0; i < dict->seq_len; i++) {
         std::cout << comp_seq[i] << " ";
     } std::cout << std::endl;
-    std::cout << "Number of rules: " << dict->num_rules << std::endl;
+    std::cout << "Number of rules: " << dict->num_rules - 256 << std::endl;
 
     cout << "------------------------" << endl;
-    //rulesprinter(rules, dict->num_rules, true);
-    cout << "------------------------" << endl;
-
-    /*
-        The set of r rules will be represented as a sequence R[1, 2r] = B1C1 B2C2 . . . BrCr .
-    */
 
     bit_vector bbbb(257, 0); // bit vector to mark which symbols are in the alphabet used by text
-
     int_vector<> sequenceR((dict->num_rules - 257) * 2, 0, sizeof(CODE) * 8);
     for (u_int i = 0; i < sequenceR.size(); i = i + 2) {
         sequenceR[i] = rules[i/2 + 257].left;
@@ -610,8 +483,6 @@ recursively, until having a single nonterminal S.
             bbbb[sequenceR[i + 1]] = 1;
         }
     }
-
-    //cout << "Alphabet marker vector: " << bbbb << endl;
     rank_support_v<1> rank_bbbb(&bbbb);
     select_support_mcl<1, 1> select_bbbb(&bbbb);
     vector<char> rank(257, 0);
@@ -623,7 +494,6 @@ recursively, until having a single nonterminal S.
     }
     u_int max_terminal = 0;    
     for (u_int i = 1; i <= rank_bbbb(257); i++) {
-        //cout << "select_bbbb(" << i << ") = " << select_bbbb(i) << endl;
         if (select_bbbb(i) > max_terminal) {
             max_terminal = select_bbbb(i);
         }
@@ -632,12 +502,10 @@ recursively, until having a single nonterminal S.
     // vector to store the new normalized alphabet
     int_vector<> normalized_sequenceR(sequenceR.size(), 0, sizeof(CODE) * 8);
 
-    cout << rank_bbbb(257) << endl;
-
     int sz = sequenceR.size(); // size of the sequence R
 
     int r;
-    int max_normalized = 0;
+    int max_normalized = 0; // maximum symbol in the normalized alphabet
     for (int i = 0; i < sz; i++) {
         seqR2normalized(sequenceR[i], r);
         normalized_sequenceR[i] = r;
@@ -660,11 +528,7 @@ recursively, until having a single nonterminal S.
     ARSSequence arsSequence(normalized_sequenceR, max_normalized + 1); 
     
     cout << "------------------------" << endl;
-
-    //for (int i = 0; i < n_non_terminals; i++) {
-    //    cout << i << ":" << i+n_terminals << "\t->\t" << arsSequence[i*2] << '\t' << arsSequence[i*2+1] << endl;
-    //} 
-    cout << ". . . sorting rules" << endl;
+    cout << ". . . Sorting rules" << endl;
     int_vector indexMap(n_non_terminals);
     int_vector reverseIndexMap(n_non_terminals);
 
@@ -687,10 +551,6 @@ recursively, until having a single nonterminal S.
             return compareRulesLazy(arsSequence, a, b, n_terminals, select, true); 
         }
     );
-    cout << "Index Map: " << indexMap << endl;
-    cout << "Reverse Index Map: " << reverseIndexMap << endl;    
-    
-    cout << "------------------------" << endl;
 
     int_vector<> sortedSequenceR = int_vector(n_non_terminals * 2 + 1, 0);
     for (u_int i = 0; i < reverseIndexMap.size(); i++) {
@@ -712,10 +572,12 @@ recursively, until having a single nonterminal S.
         sortedSequenceR[i*2+1] = n_c_i; // update the right side of the rule
     }
     int S_i = distance(reverseIndexMap.begin(), find(reverseIndexMap.begin(), reverseIndexMap.end(), n_non_terminals-1)); // index of the initial symbol in the sorted sequence   
-    cout << "S: " << S_i << endl;
+    cout << "Initial rule S: " << S_i << endl;
     sortedSequenceR[n_non_terminals*2] = S_i; // update the initial symbol
     cout << sortedSequenceR << endl;
     ARSSequence sortedARS(sortedSequenceR, max_normalized + 1 + 1);
+
+    cout << "------------------------" << endl;
 
 
     for (int i = 0; i < n_non_terminals; i++) {
@@ -737,8 +599,7 @@ recursively, until having a single nonterminal S.
             return compareRulesLazy(sortedARS, a, b, n_terminals, select, true); 
         }
     );
-    cout << "New Index Map: " << indexMap << endl;
-    cout << "New Reverse Index Map: " << reverseIndexMap << endl; 
+    cout << "Rules Sorted" << endl;
     cout << "------------------------" << endl;
 
     std::vector<Point> points(n_non_terminals);
@@ -768,21 +629,10 @@ recursively, until having a single nonterminal S.
     cout << "Lengths: ";
     for (u_int i = 0; i < lens.size(); i++) {
         cout << lens[i] << " ";
-    } cout << endl;   
+    } cout << endl;
 
-    cout << "------------------------" << endl;        
-    // expand all rules
-    for (int i = 0; i < n_non_terminals; i++) {
-        cout << i << ": \t";
-        cout << arsSequence[i*2] << " ";
-        cout << arsSequence[i*2+1] << "\t : \t";
-        cout << expandLeftSideRule(arsSequence, i*2, n_terminals, select) << " ";
-        cout << expandRightSideRule(arsSequence, i*2, n_terminals, select) << endl;
-    }
     cout << "------------------------" << endl;
-
-    expandedSequence = expandRule(arsSequence, S_i*2, n_terminals, select);
-
+    string expandedSequence = expandRule(arsSequence, S_i*2, n_terminals, select);
     while (true) {
         cout << "Enter the pattern to search (or exit): ";
         string pattern;

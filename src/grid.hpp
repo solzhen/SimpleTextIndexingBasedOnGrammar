@@ -29,7 +29,7 @@ private:
     u32 c; // number of columns
     u32 r; // number of rows
     u32 n; // nubmer of points
-    vector<Point> points; // Grid points
+    //vector<Point> points; // Grid points
     WaveletMatrix wt; // Wavelet tree
     PreprocessedBitvector bv;
     u32 count(u32 x_1, u32 x_2, u32 y_1, u32 y_2, u32 l, u32 a, u32 b);
@@ -44,6 +44,7 @@ public:
     /// in the file should be a 4-byte long unsigned integer (uint32_t).
     /// The coordinates should be 0-indexed.
     Grid(const string& fn);
+    Grid(std::vector<Point>& points, u32 columns, u32 rows);
     /// @brief Count the number of points in the grid that are within the rectangle
     /// @param x_1 1-indexed column range start
     /// @param x_2 1-indexed column range end
@@ -63,4 +64,13 @@ public:
     u32 getColumns() { return c; }
     u32 getRows() { return r; }
     WaveletMatrix getWaveletMatrix() { return wt; }
+    /// @brief Access the number in the i-th 1-indexed position
+    /// @param i 
+    /// @return 
+    u32 access(u32 i) {return wt.access(i-1);};
+    /// @brief Returns the 1-indexed position of the j-th occurrence of c
+    /// @param j 
+    /// @param c 
+    /// @return 
+    u32 select(u32 j, u32 c) {return wt.select(j, c);};
 };

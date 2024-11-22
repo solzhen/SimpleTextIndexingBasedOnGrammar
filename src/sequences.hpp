@@ -52,6 +52,12 @@ public:
     /// @note Position returned is 0-indexed, while parameter i is 1-indexed as ordinal numbers are.
     int select(int c, int j);
     u_int size() { return n; }
+    // add printable
+    void printself() {
+        for (int i = 0; i < n; i++) {
+            cout << access(i) << " ";
+        } cout << endl;
+    }
 };
 
 void seq_test();

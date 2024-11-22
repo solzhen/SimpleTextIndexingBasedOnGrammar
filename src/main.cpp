@@ -48,24 +48,33 @@ extern "C" { // C implementation of repair and encoder
 /// @param i index of the rule in arrs
 /// @param nt number of terminals
 /// @param sl de-normalized alphabet
+/// @param memo memoization table
 string expandRule(
     ARSSequence arrs, int i, int nt,
-    vector<char> sl)
+    vector<char> sl,
+    std::unordered_map<int, string>& memo)
 {
+    // Check if the result for this index is already computed
+    if (memo.find(i) != memo.end()) {
+        return memo[i];
+    }
+
     string left, right;
     //cout << "Expanding rule " << i << endl;
     //cout << "arrs[i]: " << arrs[i] << " arrs[i+1]: " << arrs[i+1] << endl;
     if (arrs[i] < nt) {
         left = string(1, sl[ arrs[i] + 1 ]);
     } else {        
-        left = expandRule(arrs, 2*(arrs[i]-nt), nt, sl);
+        left = expandRule(arrs, 2*(arrs[i]-nt), nt, sl, memo);
     }
     if (arrs[i + 1] < nt) {
         right = string(1, sl[ arrs[i+1] + 1 ]);
     } else {
-        right = expandRule(arrs, 2*(arrs[i+1]-nt), nt, sl);
+        right = expandRule(arrs, 2*(arrs[i+1]-nt), nt, sl, memo);
     }
-    return left + right;
+    string result = left + right;
+    memo[i] = result;
+    return result;
 }
 
 /// @brief Expands the right side of a non terminal rule
@@ -73,15 +82,17 @@ string expandRule(
 /// @param i index of the rule in arrs
 /// @param nt number of terminals
 /// @param sl select vector
+/// @param memo memoization table
 string expandRightSideRule(
     ARSSequence arrs, int i, int nt,
-    vector<char> sl) 
+    vector<char> sl,
+    std::unordered_map<int, string>& memo) 
 {
     string right;
     if (arrs[i+1] < nt) {
         right = string(1, sl[ arrs[i+1] + 1 ]);
     } else {
-        right = expandRule(arrs, 2*(arrs[i+1]-nt), nt, sl);
+        right = expandRule(arrs, 2*(arrs[i+1]-nt), nt, sl, memo);
     }
     return right;
 }
@@ -91,15 +102,17 @@ string expandRightSideRule(
 /// @param i index of the rule in arrs
 /// @param nt number of terminals
 /// @param sl select vector
+/// @param memo memoization table
 string expandLeftSideRule(
     ARSSequence arrs, int i, int nt,
-    vector<char> sl) 
+    vector<char> sl,
+    std::unordered_map<int, string>& memo) 
 {
     string left;
     if (arrs[i] < nt) {
         left = string(1, sl[arrs[i] +1 ]);
     } else {
-        left = expandRule(arrs, 2*(arrs[i]-nt), nt, sl);
+        left = expandRule(arrs, 2*(arrs[i]-nt), nt, sl, memo);
     }
     return left;
 }
@@ -320,11 +333,13 @@ vector<char> sl, vector<char> rk, uint nt) {
         for (t = 0; t < m-1; t++) {
             string P_left = P.substr(0, t+1); // P_<
             string P_right = P.substr(t+1, m-t-1); // P_>
+            cout << "P_left: " << P_left << " P_right: " << P_right << endl;
             uint s_x, e_x, s_y, e_y;
             int left = 0, right = G.getRows() - 1;
             int result = -1;
             while (left <= right) {
                 int mid = left + (right - left) / 2;
+                //cout << "r_i: " << mid << endl;
                 int r_i = mid;
                 // Compare the expansion with the pattern lazily
                 int compare = compareRuleWithPatternLazy(R, r_i, nt, sl, P_left, true);
@@ -339,12 +354,14 @@ vector<char> sl, vector<char> rk, uint nt) {
             }
             if (result == -1) continue;
             s_y = result + 1; //we add 1 since the grid is 1-indexed
+            //cout << "s_y: " << s_y << endl;
 
             left = 0, right = G.getRows() - 1;
             result = -1;
             while (left <= right) {
                 int mid = left + (right - left) / 2;
                 int r_i = mid;
+                //cout << "r_i: " << mid << endl;
                 int compare = compareRuleWithPatternLazy(R, r_i, nt, sl, P_left, true);
                 if (compare <= 0) { // if the expansion is less or equal to the pattern
                     if (compare == 0) { // if the expansion is equal to the pattern or the pattern is a prefix of the expansion
@@ -357,12 +374,15 @@ vector<char> sl, vector<char> rk, uint nt) {
             }
             if (result == -1) continue;
             e_y = result + 1;
+            //cout << "e_y: " << e_y << endl;
 
             left = 0, right = G.getColumns() - 1;
             result = -1;
             while (left <= right) {
                 int mid = left + (right - left) / 2;
                 int r_i = G.access(mid+1)-1; // rule index
+                //cout << "mid: " << mid << endl;
+                //cout << "r_i: " << r_i << endl;
                 int compare = compareRuleWithPatternLazy(R, r_i, nt, sl, P_right);
                 if (compare >= 0) { // if the expansion is greater or equal to the pattern
                     if (compare == 0) { // if the expansion is equal to the pattern or the pattern is a prefix of the expansion
@@ -375,12 +395,15 @@ vector<char> sl, vector<char> rk, uint nt) {
             }
             if (result == -1) continue;
             s_x = result + 1; 
+            //cout << "s_x: " << s_x << endl;
 
             left = 0, right = G.getColumns() - 1;
             result = -1;
             while (left <= right) {
                 int mid = left + (right - left) / 2;
                 int r_i = G.access(mid+1)-1; // rule index 
+                //cout << "mid: " << mid << endl;
+                //cout << "r_i: " << r_i << endl;
                 int compare = compareRuleWithPatternLazy(R, r_i, nt, sl, P_right);
                 if (compare <= 0) { // if the expansion is less or equal to the pattern
                     if (compare == 0) { // if the expansion is equal to the pattern or the pattern is a prefix of the expansion
@@ -393,6 +416,7 @@ vector<char> sl, vector<char> rk, uint nt) {
             }
             if (result == -1) continue;
             e_x = result + 1;
+            //cout << "e_x: " << e_x << endl;
 
             vector<Point> points = G.report(s_x, e_x, s_y, e_y); 
             for (Point p: points) {
@@ -406,8 +430,6 @@ vector<char> sl, vector<char> rk, uint nt) {
         }
     }
 };
-
-
 
 int main(int argc, char* argv[]) {
 
@@ -439,10 +461,7 @@ int main(int argc, char* argv[]) {
     int len = dict->txt_len; // length of the text
     cout << "Text length: " << len << endl;
 
-    std::cout << "Sequence C: ";
-    for (u_int i = 0; i < dict->seq_len; i++) { // dict->seq_len is the length of the sequence C
-        std::cout << comp_seq[i] << " ";
-    } std::cout << std::endl;
+    //std::cout << "Sequence C: "; for (u_int i = 0; i < dict->seq_len; i++) std::cout << comp_seq[i] << " "; std::cout << std::endl;
 
     cout << ". . .Adding extra rules to get rid of sequence C" << endl;
 
@@ -463,10 +482,7 @@ int main(int argc, char* argv[]) {
         dict->seq_len = dict->seq_len % 2 == 0 ? dict->seq_len / 2 : dict->seq_len / 2 + 1; // update the sequence length
     }
 
-    std::cout << "New Sequence C: ";
-    for (u_int i = 0; i < dict->seq_len; i++) {
-        std::cout << comp_seq[i] << " ";
-    } std::cout << std::endl;
+    //std::cout << "New Sequence C: "; for (u_int i = 0; i < dict->seq_len; i++) std::cout << comp_seq[i] << " "; std::cout << std::endl;
     std::cout << "Number of rules: " << dict->num_rules - 256 << std::endl;
 
     cout << "------------------------" << endl;
@@ -517,8 +533,8 @@ int main(int argc, char* argv[]) {
     int n_terminals = rank_bbbb(257);
     int n_non_terminals = sz / 2;
 
-    cout << "Sequence: " << sequenceR << endl;
-    cout << "Normalized Sequence: " << normalized_sequenceR << endl;
+    //cout << "Sequence: " << sequenceR << endl;
+    //cout << "Normalized Sequence: " << normalized_sequenceR << endl;
     cout << "Max Symbol: " << max_normalized << endl;
     cout << "N. of Terminals: " << n_terminals << endl;
     cout << "N. of Non-terminals: " << n_non_terminals << endl;
@@ -536,7 +552,6 @@ int main(int argc, char* argv[]) {
         indexMap[i] = i;
         reverseIndexMap[i] = i;
     }
-
     sort(
         indexMap.begin(), 
         indexMap.end(), 
@@ -574,17 +589,14 @@ int main(int argc, char* argv[]) {
     int S_i = distance(reverseIndexMap.begin(), find(reverseIndexMap.begin(), reverseIndexMap.end(), n_non_terminals-1)); // index of the initial symbol in the sorted sequence   
     cout << "Initial rule S: " << S_i << endl;
     sortedSequenceR[n_non_terminals*2] = S_i; // update the initial symbol
-    cout << sortedSequenceR << endl;
     ARSSequence sortedARS(sortedSequenceR, max_normalized + 1 + 1);
 
     cout << "------------------------" << endl;
-
 
     for (int i = 0; i < n_non_terminals; i++) {
         indexMap[i] = i;
         reverseIndexMap[i] = i;
     }
-
     sort(
         indexMap.begin(), 
         indexMap.end(), 
@@ -605,9 +617,8 @@ int main(int argc, char* argv[]) {
     std::vector<Point> points(n_non_terminals);
     u_int j, k;
     for (u_int i = 0; i < indexMap.size(); i++) {
-        j = indexMap[i]; // rule index
-        k = std::distance(reverseIndexMap.begin(), std::find(reverseIndexMap.begin(), reverseIndexMap.end(), j));
-        points[i] = Point(i, k);
+        k = std::distance(indexMap.begin(), std::find(indexMap.begin(), indexMap.end(), i));
+        points[i] = Point(k, i);
     }
 
     // 0-indexed to 1-indexed
@@ -615,24 +626,43 @@ int main(int argc, char* argv[]) {
         points[i].first++;
         points[i].second++;
     }
-    printPoints(points); cout << endl;
+    //printPoints(points); cout << endl;
 
     cout << ". . . Creating Grid" << endl;
     Grid test_grid = Grid(points, n_non_terminals, n_non_terminals);
 
     arsSequence = sortedARS;
+    cout << ". . . Precalculating lengths" << endl;
 
+    std::unordered_map<int, string> memo;
+    
     int_vector lens(n_non_terminals);
     for (int i = 0; i < n_non_terminals; i++) {
-        lens[i] = expandRule(arsSequence, i*2, n_terminals, select).length();
+        lens[i] = expandRule(arsSequence, i*2, n_terminals, select, memo).length();
     }
-    cout << "Lengths: ";
-    for (u_int i = 0; i < lens.size(); i++) {
-        cout << lens[i] << " ";
-    } cout << endl;
+    //cout << "Lengths: "; for (u_int i = 0; i < lens.size(); i++) cout << lens[i] << " "; cout << endl;
 
     cout << "------------------------" << endl;
-    string expandedSequence = expandRule(arsSequence, S_i*2, n_terminals, select);
+/*     cout << "Rules: " << endl;
+    for (int i = 0; i < n_non_terminals; i++) {
+        cout << i << "-> " << arsSequence[i*2] << " " << arsSequence[i*2+1] << " -> ";
+        string left = expandLeftSideRule(arsSequence, i*2, n_terminals, select, memo);
+        if (left.size() < 10) cout << "<" << left << ">\t";
+        else cout << "<(...)" << left.substr(left.size() - 10, 10) << ">\t";
+        string right = expandRightSideRule(arsSequence, i*2, n_terminals, select, memo);
+        if (right.size() < 10) cout << "<" << right << ">\t";
+        else cout << "<" << right.substr(0, 10) << "(...)>";
+        cout << endl;
+    } */
+/*     cout << "Grid:" << endl;
+    for (int i = 1; i <= test_grid.getRows(); i++) {
+        int j = test_grid.access(i);
+        cout << i << ", " << j << " -> ";
+        cout << expandLeftSideRule(arsSequence, 2*(j-1), n_terminals, select, memo) << "\t\t";
+        cout << expandRightSideRule(arsSequence, 2*(j-1), n_terminals, select, memo) << endl;
+    } */
+    cout << "------------------------" << endl;
+    string expandedSequence = expandRule(arsSequence, S_i*2, n_terminals, select, memo);
     while (true) {
         cout << "Enter the pattern to search (or exit): ";
         string pattern;
@@ -654,67 +684,3 @@ int main(int argc, char* argv[]) {
     }
     return 0;
 }
-
-
-
-
-
-
-/*     const char *testing_file = "test_repair.bin";
-    //std::vector<uint8_t> chars = generateRandomChars(100);
-    //ontain test_str as input
-    std::string test_str;
-    std::cout << "Enter the input string: ";
-    std::getline(std::cin, test_str);   
-    //std::cin >> test_str;    
-    //std:cout << "Input string: " << test_str << std::endl;
-    std::vector<uint8_t> chars = convertStringToVector(test_str);
-    //std::vector<uint8_t> chars = { 56, 57, 56, 57, 58, 65, 67, 68, 69, 80, 65, 67, 68, 56, 57, 58, 69, 80 };
-    // print out the generated characters
-    for (int i = 0; i < chars.size(); i++) {
-        std::cout << static_cast<int>(chars[i]) << " ";
-    }; std::cout << std::endl;
-    const char *testing_file = "test_repair.bin";
-    writeCharsToFile(testing_file, chars); 
-
-
-        string filename = "test.integers";
-    if (argc < 2) {
-        cout << "Generating test file test.integers" << endl;
-        u32 c = 12;
-        u32 r = 16;
-        vector<Point> points2write = {
-            {6, 15}, {11, 1}, {11, 13}, {4, 4}, {11, 4}, {6, 3}, {6, 2}, {4, 13}, {2, 5}, {2, 8}, {12, 11}, {1, 6}, {10, 8}, {5, 10}, {12, 13}, {7, 12} };
-        writePointsToFile("test.integers", c, r, points2write);
-    }
-    else {
-        string filename = argv[1];
-    }
-    cout << "Reading " << filename << endl;
-    Grid grid(filename);
-    cout << "count(2,11,3,9): " << grid.count(2, 11, 3, 9) << endl;
-    vector<Point> p = grid.report(2, 11, 3, 9);
-    printPoints(p);
-    cout << endl;
-
-    Grid test_grid("test_grid.bin");
-
-}
-
-void expand(
-        vector<char>* seq,
-        ARSSequence arrs, 
-        int i, 
-        int n_terminals
-    )
-{
-    if (arrs[i] < n_terminals) {
-        seq->push_back(arrs[i]);
-    } else {
-        int rule_index = (arrs[i] - n_terminals) * 2;
-        expand(seq, arrs, rule_index, n_terminals);
-        //cout << ";;" << endl;
-        expand(seq, arrs, rule_index + 1, n_terminals);
-    }
-}
-    */

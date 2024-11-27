@@ -17,13 +17,6 @@
             (result) = c - rank_bbbb(257) + 257; \
     } while (0)
 
-PatternSearcher::PatternSearcher() {
-    cout << "Enter the input filename: ";
-    string input_filename;
-    cin >> input_filename;
-    PatternSearcher( input_filename );
-}
-
 PatternSearcher::PatternSearcher(string input_filename) {
     FILE *input;
     DICT *dict;

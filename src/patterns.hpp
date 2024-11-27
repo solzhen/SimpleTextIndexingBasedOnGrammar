@@ -5,6 +5,7 @@
 #include "helper.hpp"
 #include "permutations.hpp"
 #include "sequences.hpp"
+#include "debug_config.hpp"
 using namespace sdsl;
 using namespace std;
 extern "C" { // C implementation of repair and encoder
@@ -12,7 +13,7 @@ extern "C" { // C implementation of repair and encoder
     #include "../repairs/repair110811/encoder.h"
 #include <optional>
 }
-bool DEBUG = false;
+
 template <typename T>
 struct Generator {
     struct promise_type {
@@ -76,7 +77,7 @@ private:
     int compareRuleWithPatternLazy(int i, string pattern, bool rev = false);
     void secondaries(vector<int> *occurences, u_int A_i, u_int offset=0, bool terminal = false);
 public:
-    PatternSearcher();    
+    PatternSearcher(){};    
     /// @brief Construct a pattern searcher from a text file
     /// @param input_filename 
     PatternSearcher(string input_filename);

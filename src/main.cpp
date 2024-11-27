@@ -26,6 +26,16 @@ int main(int argc, char* argv[]) {
     }
     PatternSearcher PS(input_filename);
 
+    FILE *input  = fopen(input_filename.c_str(), "rb");
+    string filecontent = "";
+    char c;
+    while (fread(&c, 1, 1, input) == 1) {
+        filecontent += c;
+    }
+    fclose(input);
+    cout << "File content: " << filecontent << endl;
+
+
     while (true) {
         cout << "Enter the pattern to search: ";
         string pattern;
@@ -36,6 +46,12 @@ int main(int argc, char* argv[]) {
         sort(occurences.begin(), occurences.end());
         for (u_int i = 0; i < occurences.size(); i++) {
             cout << occurences[i] << " ";
+        } cout << endl;
+        cout << "Expected Occurences: \t";
+        for (u_int i = 0; i < filecontent.size(); i++) {
+            if (filecontent.substr(i, pattern.length()) == pattern) {
+                cout << i << " ";
+            }
         } cout << endl;
     }
 

@@ -180,7 +180,13 @@ int ARSSequence::pred_0_A(int c, int s) {
     int r = rank_A(c, s+1); // rank_0
     return select_0_A(c, r);
 }
-int ARSSequence::select(int c, int j) {
+ARSSequence::ARSSequence() {
+    int_vector<> S = {0,1};
+    sigma = 2;
+    ARSSequence(S, sigma);
+}
+int ARSSequence::select(int c, int j)
+{
     if (j == 0) return -1;
     int s = select_1_A(c, j);
     if (s > A[c].b.size()) return n;
@@ -189,7 +195,6 @@ int ARSSequence::select(int c, int j) {
     int sL = select_1_D(s+1-j, c ) - (c); // s-j :: which chunk
     return (s+1-j)*sigma + pi[s+1-j].permute(j_prime + sL);
 };
-
 
 void seq_test() {       //0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18
     int_vector<> S = {1, 2, 1, 2, 0, 3, 5, 6, 1, 3, 4, 1, 2, 0, 6, 2, 4, 4, 0};

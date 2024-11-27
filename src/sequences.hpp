@@ -31,6 +31,7 @@ private:
     int rank_A(int c, int i);
     int pred_0_A(int c, int s);
 public:
+    ARSSequence();
     /// @brief Builds structure to support rank, select and access queries
     /// @param S integer vector representing the sequence
     /// @param sigma size of alphabet [0 . . . sigma)

@@ -37,6 +37,7 @@ private:
     u32 outputx(u32 level, u32 x);
     u32 outputy(u32 level, u32 a, u32 b, u32 i);
 public:
+    Grid();
     /// @brief Construct a grid from a binary file
     /// @param fn Filename of the binary file
     /// @note The binary file should contain the dimensions of the grid first 

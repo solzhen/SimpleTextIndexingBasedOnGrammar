@@ -99,7 +99,14 @@ u32 Grid::outputy(u32 l, u32 a, u32 b, u32 i) {
     }
     return a;
 }
-Grid::Grid(const string& fn) : filename(fn) {
+Grid::Grid() {
+    c = 0;
+    r = 0;
+    n = 0;
+    filename = "";
+}
+Grid::Grid(const string &fn) : filename(fn)
+{
     vector<Point> points = readPointsFromFile(filename, c, r); // symbol range is = [1, rows]
     n = points.size();
     bit_vector b(n+c);

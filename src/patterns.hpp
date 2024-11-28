@@ -11,7 +11,6 @@ using namespace std;
 extern "C" { // C implementation of repair and encoder
     #include "../repairs/repair110811/repair.h"
     #include "../repairs/repair110811/encoder.h"
-#include <optional>
 }
 
 template <typename T>

@@ -13,6 +13,7 @@ typedef std::pair<u32, u32> Point;
 #ifndef WAVELETMATRIX_HPP
 #define WAVELETMATRIX_HPP
 
+/// @brief A wavelet matrix using bit_vectors over an alphabet [1, sigma].
 class WaveletMatrix {
 private:    
     u32 sigma; // highest symbol in the alphabet

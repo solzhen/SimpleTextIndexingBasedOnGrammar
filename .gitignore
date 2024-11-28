@@ -62,3 +62,13 @@ test.*
 .vscode
 
 .vs
+
+# CMake files
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+CTestTestfile.cmake
+Makefile
+cmake_install.cmake
+*.cmake
+*.tcl

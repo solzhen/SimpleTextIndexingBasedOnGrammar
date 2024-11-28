@@ -32,13 +32,13 @@ public:
     /// @param i positive 0-indexed position.
     /// @return The number or NULL if out of bounds
     u32 access(u32 i);
-    /// @brief Counts the occurences of number c up until the given 
-    /// zero-indexed position
+    /// @brief Counts the occurences of number c up until yet excluding the given 
+    /// zero-indexed position i
     /// @param i the zero-indexed position
-    /// @param c the number (may not be in sequence)
-    /// @return the number of occurences
-    u32 rank(u32 i, u32 c);
-    /// @brief Returns the zero-indexed position of the j-th occurence
+    /// @param c the number
+    /// @return the number of occurences until position i
+    u32 rank(u32 c, u32 i);
+    /// @brief Returns the 1-indexed position of the j-th occurence
     /// of the number c
     /// @param j a positive number
     /// @param c a number

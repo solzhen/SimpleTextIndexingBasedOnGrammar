@@ -72,3 +72,5 @@ Makefile
 cmake_install.cmake
 *.cmake
 *.tcl
+
+Testing/

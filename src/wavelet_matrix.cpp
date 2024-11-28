@@ -96,20 +96,21 @@ u32 WaveletMatrix::access(u32 i_) {
     }
     return a+1;
 }
-u32 WaveletMatrix::rank(u32 i_, u32 c) {
+u32 WaveletMatrix::rank(u32 c, u32 i_) {
+    if (c < 1 || c > sigma) return 0;
     u32 p = 0;
     u32 i = i_;
     u32 l = 1;
-    u32 a = 0;
-    u32 b = sigma-1;
+    u32 a = 1; // first symbol
+    u32 b = sigma; // last symbol
     while (a != b) {      
-        if (c <= (a+b+1)/2) {
+        if (c <= (a+b)/2) { 
             i = bm[l-1].rank_0(i);
             b = ((a+b)/2);
             p = bm[l-1].rank_0(p);
         } else {
             i = z[l-1] + bm[l-1].rank_1(i);
-            a = (a+b) / 2 + 1;
+            a = (a+b)/2 + 1;
             p = z[l-1] + bm[l-1].rank_1(p);
         }
         l++;

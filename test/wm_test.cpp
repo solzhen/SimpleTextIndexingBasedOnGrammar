@@ -1,17 +1,119 @@
 #include <catch2/catch_test_macros.hpp>
 #include "wavelet_matrix.hpp"
 
-TEST_CASE("WaveletMatrix access operation", "[wavelet_matrix]") {
+TEST_CASE("WaveletMatrix operations 1 to 9 vector", "[wavelet_matrix]") {
     std::vector<uint32_t> vec = {1, 2, 3, 4, 5, 6, 7, 8, 9};
-    WaveletMatrix wm = WaveletMatrix(vec, 9);
-    REQUIRE(wm.access(0) == 1);
-    REQUIRE(wm.access(1) == 2);
-    REQUIRE(wm.access(2) == 3);
-    REQUIRE(wm.access(3) == 4);
-    REQUIRE(wm.access(4) == 5);
-    REQUIRE(wm.access(5) == 6);
-    REQUIRE(wm.access(6) == 7);
-    REQUIRE(wm.access(7) == 8);
-    REQUIRE(wm.access(8) == 9);
-    
+    REQUIRE(vec.size() == 9);
+    WaveletMatrix wm = WaveletMatrix(vec, 9);    
+    //wm.printself();
+    SECTION("Access") {
+        REQUIRE(wm.access(0) == 1);
+        REQUIRE(wm.access(1) == 2);
+        REQUIRE(wm.access(2) == 3);
+        REQUIRE(wm.access(3) == 4);
+        REQUIRE(wm.access(4) == 5);
+        REQUIRE(wm.access(5) == 6);
+        REQUIRE(wm.access(6) == 7);
+        REQUIRE(wm.access(7) == 8);
+        REQUIRE(wm.access(8) == 9);
+    }
+    SECTION("Rank (c, i) in the sequence") {  
+        // Rank(c, i) is the number of occurences of c
+        // in the sequence up until i (not including i)
+        // i is a 0-indexed position
+        REQUIRE(wm.rank(1, 0) == 0);
+        REQUIRE(wm.rank(1, 1) == 1);
+        REQUIRE(wm.rank(1, 9) == 1);
+        REQUIRE(wm.rank(1, 10) == 1);
+        REQUIRE(wm.rank(2, 0) == 0);
+        REQUIRE(wm.rank(2, 1) == 0);
+        REQUIRE(wm.rank(2, 2) == 1);
+        REQUIRE(wm.rank(2, 10) == 1);
+        REQUIRE(wm.rank(3, 2) == 0);
+        REQUIRE(wm.rank(3, 3) == 1);
+        REQUIRE(wm.rank(3, 10) == 1);
+        REQUIRE(wm.rank(4, 3) == 0);
+        REQUIRE(wm.rank(4, 4) == 1);
+        REQUIRE(wm.rank(4, 10) == 1);
+        REQUIRE(wm.rank(5, 4) == 0);
+        REQUIRE(wm.rank(5, 5) == 1);
+        REQUIRE(wm.rank(5, 10) == 1);
+        REQUIRE(wm.rank(6, 5) == 0);
+        REQUIRE(wm.rank(6, 6) == 1);
+        REQUIRE(wm.rank(6, 10) == 1);
+        REQUIRE(wm.rank(7, 6) == 0);
+        REQUIRE(wm.rank(7, 7) == 1);
+        REQUIRE(wm.rank(7, 10) == 1);
+        REQUIRE(wm.rank(8, 7) == 0);
+        REQUIRE(wm.rank(8, 8) == 1);
+        REQUIRE(wm.rank(8, 10) == 1);
+        REQUIRE(wm.rank(9, 8) == 0);
+        REQUIRE(wm.rank(9, 9) == 1);
+        REQUIRE(wm.rank(9, 10) == 1);
+    }    
+    SECTION("Select 1-indexed position of i-th occurence of symbol j") {
+        REQUIRE(wm.select(1, 1) == 1);
+        REQUIRE(wm.select(1, 2) == 2);
+        REQUIRE(wm.select(1, 3) == 3);
+        REQUIRE(wm.select(1, 4) == 4);
+        REQUIRE(wm.select(1, 5) == 5);
+        REQUIRE(wm.select(1, 6) == 6);
+        REQUIRE(wm.select(1, 7) == 7);
+        REQUIRE(wm.select(1, 8) == 8);
+        REQUIRE(wm.select(1, 9) == 9);
+    }
+}
+
+TEST_CASE("Wavelet Matric operation for sequence {1,1,1,1,1,1,2,2,2,2,2}", "[wavelet_matrix 2]") {
+    std::vector<uint32_t> vec = {1,1,1,1,1,1,2,2,2,2,2};
+    REQUIRE(vec.size() == 11);
+    WaveletMatrix wm = WaveletMatrix(vec, 2);
+    //wm.printself();
+    SECTION("Access") {
+        REQUIRE(wm.access(0) == 1);
+        REQUIRE(wm.access(1) == 1);
+        REQUIRE(wm.access(2) == 1);
+        REQUIRE(wm.access(3) == 1);
+        REQUIRE(wm.access(4) == 1);
+        REQUIRE(wm.access(5) == 1);
+        REQUIRE(wm.access(6) == 2);
+        REQUIRE(wm.access(7) == 2);
+        REQUIRE(wm.access(8) == 2);
+        REQUIRE(wm.access(9) == 2);
+        REQUIRE(wm.access(10) == 2);
+    }
+    SECTION("Rank (c, i) in the sequence") {
+        REQUIRE(wm.rank(1, 0) == 0);
+        REQUIRE(wm.rank(1, 1) == 1);
+        REQUIRE(wm.rank(1, 2) == 2);
+        REQUIRE(wm.rank(1, 3) == 3);
+        REQUIRE(wm.rank(1, 4) == 4);
+        REQUIRE(wm.rank(1, 5) == 5);
+        REQUIRE(wm.rank(1, 6) == 6);
+        REQUIRE(wm.rank(1, 7) == 6);
+        REQUIRE(wm.rank(1, 8) == 6);
+        REQUIRE(wm.rank(1, 9) == 6);
+        REQUIRE(wm.rank(1, 10) == 6);
+        REQUIRE(wm.rank(2, 0) == 0);
+        REQUIRE(wm.rank(2, 5) == 0);
+        REQUIRE(wm.rank(2, 6) == 0);
+        REQUIRE(wm.rank(2, 7) == 1);
+        REQUIRE(wm.rank(2, 8) == 2);
+        REQUIRE(wm.rank(2, 9) == 3);
+        REQUIRE(wm.rank(2, 10) == 4);
+        REQUIRE(wm.rank(2, 11) == 5);
+    }
+    SECTION("Select 1-indexed position of i-th occurence of symbol j") {
+        REQUIRE(wm.select(1, 1) == 1);
+        REQUIRE(wm.select(2, 1) == 2);
+        REQUIRE(wm.select(3, 1) == 3);
+        REQUIRE(wm.select(4, 1) == 4);
+        REQUIRE(wm.select(5, 1) == 5);
+        REQUIRE(wm.select(6, 1) == 6);
+        REQUIRE(wm.select(1, 2) == 7);
+        REQUIRE(wm.select(2, 2) == 8);
+        REQUIRE(wm.select(3, 2) == 9);
+        REQUIRE(wm.select(4, 2) == 10);
+        REQUIRE(wm.select(5, 2) == 11);
+    }
 }

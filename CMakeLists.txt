@@ -46,12 +46,17 @@ target_link_libraries(${PROGRAM_NAME} sdsl divsufsort divsufsort64)
 # TESTING
 find_package(Catch2 3 REQUIRED)
 
-# Add the test source files (separate from main program)
+# Add the test source files
 set(TEST_DIR test)
 file(GLOB TEST_SOURCES ${TEST_DIR}/*.cpp)
 
-# Add the test executable (link only the test sources)
-add_executable(tests.x ${TEST_SOURCES} ${REPAIRS_OBJECTS} src/wavelet_matrix.cpp src/ppbv.cpp)
+# Add the test executable
+set(IMPLEMENTATION_SOURCES
+    src/wavelet_matrix.cpp
+    src/ppbv.cpp
+)
+
+add_executable(tests.x ${TEST_SOURCES} ${REPAIRS_OBJECTS} ${IMPLEMENTATION_SOURCES})
 
 # Include the source directory for header files
 target_include_directories(tests.x PRIVATE ${PROJECT_SOURCE_DIR}/src)
@@ -59,7 +64,7 @@ target_include_directories(tests.x PRIVATE ${PROJECT_SOURCE_DIR}/src)
 # Link Catch2 and any necessary libraries to the test executable
 target_link_libraries(tests.x PRIVATE Catch2::Catch2WithMain sdsl divsufsort divsufsort64)
 
-# Set compiler flags for the test executable (if needed)
+# Set compiler flags for the test executable
 target_compile_options(tests.x PRIVATE -std=c++20 -Wall -Wextra)
 
 # Register the tests with CTest

@@ -1,0 +1,9 @@
+sdsl::int_vector 0 0
+WaveletMatrix 0 0
+sdsl::int_vector 0 0
+WaveletMatrix 0 0
+sdsl::int_vector 0 0
+WaveletMatrix 0 0
+sdsl::int_vector basic operations 1 0.00314316
+WaveletMatrix access operation 1 0.00304148
+---

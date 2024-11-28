@@ -54,6 +54,10 @@ file(GLOB TEST_SOURCES ${TEST_DIR}/*.cpp)
 set(IMPLEMENTATION_SOURCES
     src/wavelet_matrix.cpp
     src/ppbv.cpp
+    src/sequences.cpp
+    src/permutations.cpp
+    src/grid.cpp
+    src/file_handler.cpp
 )
 
 add_executable(tests.x ${TEST_SOURCES} ${REPAIRS_OBJECTS} ${IMPLEMENTATION_SOURCES})

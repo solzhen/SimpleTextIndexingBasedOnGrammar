@@ -1,6 +1,3 @@
-using namespace sdsl;
-using namespace std;
-
 #include <iostream>
 #include <cstdlib>
 

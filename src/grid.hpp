@@ -11,7 +11,6 @@
 #include <cstdint>
 
 #include "file_handler.hpp"
-#include "printers.hpp"
 #include "wavelet_matrix.hpp"
 
 using namespace sdsl;
@@ -20,8 +19,7 @@ using namespace std;
 typedef uint32_t u32; // this special trick will save us 1% code width bro trust me
 typedef std::pair<u32, u32> Point;
 
-/// @brief A grid representation. Input file is a binary file of a sequence
-/// of 4 bytes integers with the format 
+/// @brief A grid representation.  
 /// {columns rows x_1 y_1 x_2 y_2 ... x_n y_n}
 class Grid {
 private:
@@ -45,6 +43,11 @@ public:
     /// in the file should be a 4-byte long unsigned integer (uint32_t).
     /// The coordinates should be 0-indexed.
     Grid(const string& fn);
+    /// @brief Construct a grid from a vector of points
+    /// The points must be 1-indexed
+    /// @param points A vector of points
+    /// @param columns Number of columns
+    /// @param rows Number of rows
     Grid(std::vector<Point>& points, u32 columns, u32 rows);
     /// @brief Count the number of points in the grid that are within the rectangle
     /// @param x_1 1-indexed column range start

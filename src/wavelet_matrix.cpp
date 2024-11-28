@@ -117,8 +117,9 @@ u32 WaveletMatrix::rank(u32 c, u32 i_) {
     }
     return i - p;
 }
-u32 WaveletMatrix::select(u32 j, u32 c) {
-    return select(1,0,1,sigma,c,j);
+u32 WaveletMatrix::select(u32 c, u32 j) {
+    if (c < 1 || c > sigma) return -1;
+    return select(1,0,1,sigma,c,j) - 1;
 }
 
 u32 WaveletMatrix::select(u32 l, u32 p, u32 a, u32 b, u32 c, u32 j_) {

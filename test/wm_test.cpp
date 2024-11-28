@@ -51,16 +51,17 @@ TEST_CASE("WaveletMatrix operations 1 to 9 vector", "[wavelet_matrix]") {
         REQUIRE(wm.rank(9, 9) == 1);
         REQUIRE(wm.rank(9, 10) == 1);
     }    
-    SECTION("Select 1-indexed position of i-th occurence of symbol j") {
-        REQUIRE(wm.select(1, 1) == 1);
-        REQUIRE(wm.select(1, 2) == 2);
-        REQUIRE(wm.select(1, 3) == 3);
-        REQUIRE(wm.select(1, 4) == 4);
-        REQUIRE(wm.select(1, 5) == 5);
-        REQUIRE(wm.select(1, 6) == 6);
-        REQUIRE(wm.select(1, 7) == 7);
-        REQUIRE(wm.select(1, 8) == 8);
-        REQUIRE(wm.select(1, 9) == 9);
+    SECTION("Select (c, j)") {
+        // Select(c, j) is the 0-indexed position of the j-th occurence of c
+        REQUIRE(wm.select(1, 1) == 0);
+        REQUIRE(wm.select(2, 1) == 1);
+        REQUIRE(wm.select(3, 1) == 2);
+        REQUIRE(wm.select(4, 1) == 3);
+        REQUIRE(wm.select(5, 1) == 4);
+        REQUIRE(wm.select(6, 1) == 5);
+        REQUIRE(wm.select(7, 1) == 6);
+        REQUIRE(wm.select(8, 1) == 7);
+        REQUIRE(wm.select(9, 1) == 8);
     }
 }
 
@@ -103,17 +104,19 @@ TEST_CASE("Wavelet Matric operation for sequence {1,1,1,1,1,1,2,2,2,2,2}", "[wav
         REQUIRE(wm.rank(2, 10) == 4);
         REQUIRE(wm.rank(2, 11) == 5);
     }
-    SECTION("Select 1-indexed position of i-th occurence of symbol j") {
-        REQUIRE(wm.select(1, 1) == 1);
-        REQUIRE(wm.select(2, 1) == 2);
-        REQUIRE(wm.select(3, 1) == 3);
-        REQUIRE(wm.select(4, 1) == 4);
-        REQUIRE(wm.select(5, 1) == 5);
-        REQUIRE(wm.select(6, 1) == 6);
-        REQUIRE(wm.select(1, 2) == 7);
-        REQUIRE(wm.select(2, 2) == 8);
-        REQUIRE(wm.select(3, 2) == 9);
-        REQUIRE(wm.select(4, 2) == 10);
-        REQUIRE(wm.select(5, 2) == 11);
+    SECTION("Select (c, j)") {    
+        REQUIRE(wm.select(1, 1) == 0);
+        REQUIRE(wm.select(1, 2) == 1);
+        REQUIRE(wm.select(1, 3) == 2);
+        REQUIRE(wm.select(1, 4) == 3);
+        REQUIRE(wm.select(1, 5) == 4);
+        REQUIRE(wm.select(1, 6) == 5);
+        REQUIRE(wm.select(2, 1) == 6);
+        REQUIRE(wm.select(2, 2) == 7);
+        REQUIRE(wm.select(2, 3) == 8);
+        REQUIRE(wm.select(2, 4) == 9);
+        REQUIRE(wm.select(2, 5) == 10);
+        REQUIRE(wm.select(2, 6) == wm.size());
+        REQUIRE(wm.select(3, 1) == -1);
     }
 }

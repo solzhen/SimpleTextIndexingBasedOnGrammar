@@ -38,15 +38,16 @@ public:
     /// @param c the number
     /// @return the number of occurences until position i
     u32 rank(u32 c, u32 i);
-    /// @brief Returns the 1-indexed position of the j-th occurence
+    /// @brief Returns the 0-indexed position of the j-th occurence
     /// of the number c
-    /// @param j a positive number
     /// @param c a number
+    /// @param j a positive number    
     /// @return the position or the size of the sequence if not found
-    u32 select(u32 j, u32 c);
+    u32 select(u32 c, u32 j);
     void printself();
     ppbv operator[](u32 level);
     u32 offset(u32 level);
+    u32 size() { return bm[0].size(); }
 };
 
 #endif

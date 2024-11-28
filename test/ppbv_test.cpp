@@ -42,4 +42,20 @@ TEST_CASE("Preprocessed bitvector", "[ppbv]") {
         REQUIRE(pbv.rank_0(9) == 4);
         REQUIRE(pbv.rank_0(10) == 5);
     }
+    SECTION("Select 1") {
+        REQUIRE(pbv.select_1(1) == 0);
+        REQUIRE(pbv.select_1(2) == 2);
+        REQUIRE(pbv.select_1(3) == 4);
+        REQUIRE(pbv.select_1(4) == 6);
+        REQUIRE(pbv.select_1(5) == 8);
+        REQUIRE(pbv.select_1(6) == 10);
+    }
+    SECTION("Select 0") {
+        REQUIRE(pbv.select_0(1) == 1);
+        REQUIRE(pbv.select_0(2) == 3);
+        REQUIRE(pbv.select_0(3) == 5);
+        REQUIRE(pbv.select_0(4) == 7);
+        REQUIRE(pbv.select_0(5) == 9);
+        REQUIRE(pbv.select_0(6) == 10);
+    }
 }

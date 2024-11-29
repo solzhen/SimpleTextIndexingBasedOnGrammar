@@ -66,8 +66,9 @@ private:
     vector<char> sl; // select vector for normalized alphabet
     vector<char> rk; // rank vector for normalized alphabet
     string expandRule( int i, unordered_map<int, string>& memo);
-    string expandRightSideRule(int i, unordered_map<int, string>& memo);
+    string expandRightSideRule(int i, unordered_map<int, string> &memo);
     string expandLeftSideRule(int i, unordered_map<int, string>& memo);
+    int ruleLength(int i);    
     Generator<char> expandRuleLazy( int i, bool rev = false);
     Generator<char> expandRuleSideLazy( int i, bool left = false);
     bool compareRulesLazy(int i, int j, bool rev = false);

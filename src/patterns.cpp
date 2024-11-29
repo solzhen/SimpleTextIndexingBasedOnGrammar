@@ -171,23 +171,30 @@ PatternSearcher::PatternSearcher(string input_filename) {
     S = S_i; //--------------------------------------------------
     cout << "------------------------" << endl;
     cout << ". . . Precalculating lengths" << endl;
-    unordered_map<int, string> memo;    
-    l = int_vector(n_non_terminals); //--------------------------------------------------
+    l = int_vector(n_non_terminals, 0); //--------------------------------------------------
     for (int i = 0; i < n_non_terminals; i++) {
-        l[i] = expandRule(i*2, memo).length();
+        l[i] = ruleLength(i);
     }
     cout << "------------------------" << endl;
-/*     for (int i = 0; i < R.size(); i++) {
-        cout << R[i] << " ";
-    } cout << endl;
-    for (int i = 0; i < n_non_terminals; i++) {
-        cout << "R_" << i ;
-        if (R[i*2] < nt) cout << ":\t" << sl[R[i*2] + 1] << "\t";
-        else cout << ":\tR_" << R[i*2]-nt << "\t";
-        if (R[i*2+1] < nt) cout << sl[R[i*2+1] + 1];
-        else cout << "R_" << R[i*2+1]-nt;
-        cout << "\t: "  << expandLeftSideRule(i*2, memo) << " " << expandRightSideRule(i*2, memo) <<  endl;
-    } */
+}
+
+int PatternSearcher::ruleLength(int i) {
+    if (l[i] != 0) {
+        return l[i];
+    }
+    int left, right;
+    if (R[i*2] < nt) {
+        left = 1;
+    } else {
+        left = ruleLength(R[i*2] - nt);
+    }
+    if (R[i*2+1] < nt) {
+        right = 1;
+    } else {
+        right = ruleLength(R[i*2+1] - nt);
+    }
+    l[i] = left + right;
+    return l[i];
 }
 
 string PatternSearcher::expandRule(int i, unordered_map<int, string> &memo) {

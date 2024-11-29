@@ -65,9 +65,6 @@ private:
     uint nt; // Number of terminals
     vector<char> sl; // select vector for normalized alphabet
     vector<char> rk; // rank vector for normalized alphabet
-    string expandRule( int i, unordered_map<int, string>& memo);
-    string expandRightSideRule(int i, unordered_map<int, string> &memo);
-    string expandLeftSideRule(int i, unordered_map<int, string>& memo);
     int ruleLength(int i);    
     Generator<char> expandRuleLazy( int i, bool rev = false);
     Generator<char> expandRuleSideLazy( int i, bool left = false);
@@ -75,7 +72,11 @@ private:
     template <typename Iterator> 
     int compareRuleWithPatternLazyImpl ( int i, Iterator pattern_begin, Iterator pattern_end, bool rev = false);
     int compareRuleWithPatternLazy(int i, string pattern, bool rev = false);
-    void secondaries(vector<int> *occurences, u_int A_i, u_int offset=0, bool terminal = false);
+    void secondaries(vector<int> *occurences, u_int A_i, u_int offset=0, bool terminal = false);    
+    int ruleAt(int r_i, int i);
+    int totalComparisons;
+    int comparisons;
+    int lastProgress;
 public:
     PatternSearcher(){};    
     /// @brief Construct a pattern searcher from a text file
@@ -86,5 +87,9 @@ public:
     /// @param P Pattern to search
     void search(vector<int> *occurences, string P);
     int numRules() { return R.size() / 2; }
+    int ruleAt(int i);
+    string expandRule( int i, unordered_map<int, string>& memo);
+    string expandRightSideRule(int i, unordered_map<int, string> &memo);
+    string expandLeftSideRule(int i, unordered_map<int, string>& memo);
 };
 

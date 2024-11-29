@@ -38,6 +38,14 @@ PatternSearcher::PatternSearcher(string input_filename) {
 
     while (dict->seq_len > 1) {
         for (u_int i = 0; i < dict->seq_len; i = i+2) {
+            if (dict->num_rules >= dict->buff_size) {
+                dict->buff_size *= 2;
+                dict->rule = (RULE*)realloc(dict->rule, sizeof(RULE) * dict->buff_size);
+                if (!dict->rule) {
+                    fprintf(stderr, "Memory allocation failed!\n");
+                    exit(EXIT_FAILURE);
+                }
+            }
             if (i == dict->seq_len - 1) { // if we're at the last element of the sequence, it means the sequence length was odd
                 comp_seq[i/2] = comp_seq[i];
             }
@@ -104,7 +112,7 @@ PatternSearcher::PatternSearcher(string input_filename) {
     ARSSequence arsSequence(normalized_sequenceR, max_normalized + 1); 
     R = arsSequence; //--------------------------------------------------  
     cout << "------------------------" << endl;
-    cout << ". . . Sorting rules" << endl;
+    cout << "Sorting rules by lexicographic order of left side reverse expansion" << endl;
     int_vector indexMap(n_non_terminals);
     int_vector reverseIndexMap(n_non_terminals);
 
@@ -112,69 +120,126 @@ PatternSearcher::PatternSearcher(string input_filename) {
         indexMap[i] = i;
         reverseIndexMap[i] = i;
     }
+    
+    totalComparisons = static_cast<int>(n_non_terminals * std::log2(std::max(1, n_non_terminals)));
+    if (totalComparisons == 0) totalComparisons = 1; // Prevent division by zero
+    comparisons = 0;
+    lastProgress = -1;
+    auto progressComparatorRev = [&](int a, int b) {
+        comparisons++;
+        int progress = min((comparisons * 100) / totalComparisons, 100);
+        if (progress > lastProgress) {
+            std::cout << "\rSorting progress: " << progress << "%" << std::flush;
+            lastProgress = progress;
+        }
+        return this->compareRulesLazy(a, b, true);
+    };
     sort(
+        reverseIndexMap.begin(), 
+        reverseIndexMap.end(), 
+        progressComparatorRev
+    );
+    cout << "\rSorting progress: 100%" << endl;
+    cout << "Sorting succesfull" << endl;
+    cout << "------------------------" << endl;
+
+/*     sort(
         reverseIndexMap.begin(), 
         reverseIndexMap.end(), 
         [&](int a, int b) { 
             return compareRulesLazy(a, b, true); 
         }
-    );
+    ); */
+    cout << "Reordering Sequence" << endl;
 
+    int last = 0;
+    int current = 0;
+
+    vector<int> distance_of_find(reverseIndexMap.size(), 0);
+    for (int i = 0; i < reverseIndexMap.size(); i++) {
+        distance_of_find[reverseIndexMap[i]] = i;        
+    }
     int_vector<> sortedSequenceR = int_vector(n_non_terminals * 2 + 1, 0);
     for (u_int i = 0; i < reverseIndexMap.size(); i++) {
+        current = i*100/reverseIndexMap.size();
+        if (current > last) {
+            cout << "\r" << current << "%" << flush;
+            last = current;
+        }
         int a_i = reverseIndexMap[i]; // index in ARSS of the i-th smallest rule (sorted by the reversed left side)
-        int b_i = arsSequence[a_i*2]; // left side of the rule
-        int c_i = arsSequence[a_i*2+1]; // right side of the rule
+        int b_i = normalized_sequenceR[a_i*2]; // left side of the rule
+        int c_i = normalized_sequenceR[a_i*2+1]; // right side of the rule
         int n_b_i, n_c_i;
         if (b_i < n_terminals) {
             n_b_i = b_i;
         } else {
-            n_b_i = distance(reverseIndexMap.begin(), find(reverseIndexMap.begin(), reverseIndexMap.end(), b_i-n_terminals))  + n_terminals;
+            n_b_i = distance_of_find[b_i - n_terminals]  + n_terminals;
         }
         if (c_i < n_terminals) {
             n_c_i = c_i;
         } else {
-            n_c_i = distance(reverseIndexMap.begin(), find(reverseIndexMap.begin(), reverseIndexMap.end(), c_i-n_terminals))  + n_terminals;
+            n_c_i = distance_of_find[c_i - n_terminals] + n_terminals;
         }
         sortedSequenceR[i*2] = n_b_i; // update the left side of the rule
         sortedSequenceR[i*2+1] = n_c_i; // update the right side of the rule
-    }
+    } cout << "\r100%" << endl;
     int S_i = distance(reverseIndexMap.begin(), find(reverseIndexMap.begin(), reverseIndexMap.end(), n_non_terminals-1)); // index of the initial symbol in the sorted sequence   
     cout << "Initial rule S: " << S_i << endl;
     sortedSequenceR[n_non_terminals*2] = S_i; // update the initial symbol
     R = ARSSequence(sortedSequenceR, max_normalized + 1 + 1); //--------------------------------------------------
 
-    cout << "Rules Sorted" << endl;
+    cout << "Sequence Reordered" << endl;
     cout << "------------------------" << endl;
-    cout << ". . . Creating points" << endl;
+    cout << "Sorting rules by lexicographic order of right side expansion" << endl;
+
+    totalComparisons = static_cast<int>(n_non_terminals * std::log2(std::max(1, n_non_terminals)));
+    if (totalComparisons == 0) totalComparisons = 1; // Prevent division by zero
+    comparisons = 0;
+    lastProgress = -1;
+    auto progressComparator = [&](int a, int b) {
+        comparisons++;
+        int progress = min((comparisons * 100) / totalComparisons, 100);
+        if (progress > lastProgress) {
+            std::cout << "\rSorting progress: " << progress << "%" << std::flush;
+            lastProgress = progress;
+        }
+        return this->compareRulesLazy(a, b);
+    };
     sort(
         indexMap.begin(), 
         indexMap.end(), 
-        [&](int a, int b) { 
-            return compareRulesLazy(a, b ); 
-        }
-    ); 
+        progressComparator
+    );
+    std::cout << "\rSorting progress: 100%" << std::endl;
+    cout << "Sorting succesfull" << endl;
+    cout << "------------------------" << endl;
+
+    cout << "Creating points for grid" << endl;
     std::vector<Point> points(n_non_terminals);
+
+    vector<int> distance_of_find_col(indexMap.size(), 0);
+    for (int i = 0; i < indexMap.size(); i++) {
+        distance_of_find_col[indexMap[i]] = i;        
+    }
+
     u_int j, k;
     for (u_int i = 0; i < indexMap.size(); i++) {
-        k = std::distance(indexMap.begin(), std::find(indexMap.begin(), indexMap.end(), i));
-        points[i] = Point(k, i);
+        k = distance_of_find_col[i];
+        points[i] = Point(k + 1, i + 1); // 1-indexed
     }
-    // 0-indexed to 1-indexed
-    for (u_int i = 0; i < points.size(); i++) {
-        points[i].first++;
-        points[i].second++;
-    }
+    cout << "Points created" << endl;
     cout << "------------------------" << endl;
-    cout << ". . . Creating Grid" << endl;
+    cout << "Creating Grid" << endl;
     G = Grid(points, n_non_terminals, n_non_terminals); //--------------------------------------------------
     S = S_i; //--------------------------------------------------
+    cout << "Grid created" << endl;
     cout << "------------------------" << endl;
-    cout << ". . . Precalculating lengths" << endl;
+    cout << "Precalculating lengths" << endl;
     l = int_vector(n_non_terminals, 0); //--------------------------------------------------
     for (int i = 0; i < n_non_terminals; i++) {
         l[i] = ruleLength(i);
     }
+    cout << "Lengths precalculated" << endl;
     cout << "------------------------" << endl;
 }
 
@@ -272,6 +337,7 @@ Generator<char> PatternSearcher::expandRuleSideLazy(int i, bool left) {
 }
 
 bool PatternSearcher::compareRulesLazy(int i, int j, bool rev) {
+    //cout << "Comparing rules " << i << " and " << j << endl;
     // Set up generators for each rule's expansion
     auto gen_i = expandRuleSideLazy(2 * i, rev);
     auto gen_j = expandRuleSideLazy(2 * j, rev);
@@ -314,6 +380,25 @@ void PatternSearcher::secondaries(vector<int> *occurences, u_int A_i, u_int offs
         }
         secondaries(occurences, D_i, offset_prime, false);
     }
+}
+int PatternSearcher::ruleAt(int i)
+{
+    if (i < l[R[S*2] - nt]) { // rule is at left side
+        return ruleAt(R[S*2] - nt, i);
+    } else {
+        return ruleAt(R[S*2+1] - nt, i - l[S]);
+    }
+}
+int PatternSearcher::ruleAt(int r_i, int i)
+{
+    if (DEBUG) cout << "r_i: " << r_i << " i: " << i << " l[r_i]:" << l[r_i] << " l[r_i.left]: " << l[R[r_i*2] - nt] << " l[r_i.right]: " << l[R[r_i*2 + 1] - nt] << endl;
+    if (R[r_i*2] < nt && i == 0) return r_i;
+    if (R[r_i*2] < nt && R[r_i*2 + 1] < nt) return r_i;
+    if (R[r_i*2] >= nt && i < l[R[r_i*2] - nt]) return ruleAt(R[r_i*2] - nt, i);
+    if (R[r_i*2] >= nt && i >= l[R[r_i*2] - nt]) {
+        if (R[r_i*2 + 1] < nt) return r_i;
+        return ruleAt(R[r_i*2 + 1] - nt, i - l[R[r_i*2] - nt]);
+    }   
 };
 
 void PatternSearcher::search(vector<int> *occurences, string P) {    
@@ -412,6 +497,7 @@ void PatternSearcher::search(vector<int> *occurences, string P) {
                 cout << "------------------------" << endl;
             }
             vector<Point> points = G.report(s_x, e_x, s_y, e_y);
+            if (DEBUG) cout << "Points: " << points.size() << endl;
             for (Point p : points) {
                 int r_i = p.second - 1;
                 if (R[r_i*2] < nt) { //if left side is terminal

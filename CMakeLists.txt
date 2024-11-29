@@ -28,6 +28,9 @@ set(SDSL_INC_DIR /home/cfnts/include)
 include_directories(${SDSL_INC_DIR})
 link_directories(${SDSL_LIB_DIR})
 
+# Add cxxopts
+add_subdirectory(external/cxxopts)
+
 # Add the coroutine flag to the compiler options
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcoroutines")
 
@@ -41,7 +44,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -ffast-math -funroll
 add_executable(${PROGRAM_NAME} ${SOURCES} ${REPAIRS_OBJECTS})
 
 # Link the SDSL library
-target_link_libraries(${PROGRAM_NAME} sdsl divsufsort divsufsort64)
+target_link_libraries(${PROGRAM_NAME} sdsl divsufsort divsufsort64 cxxopts)
 
 # TESTING
 find_package(Catch2 3 REQUIRED)
@@ -58,6 +61,8 @@ set(IMPLEMENTATION_SOURCES
     src/permutations.cpp
     src/grid.cpp
     src/file_handler.cpp
+    src/patterns.cpp
+    src/debug_config.cpp
 )
 
 add_executable(tests.x ${TEST_SOURCES} ${REPAIRS_OBJECTS} ${IMPLEMENTATION_SOURCES})

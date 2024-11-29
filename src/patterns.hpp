@@ -84,5 +84,6 @@ public:
     /// @param occurences Vector to store the occurences
     /// @param P Pattern to search
     void search(vector<int> *occurences, string P);
+    int numRules() { return R.size() / 2; }
 };
 

@@ -5,6 +5,7 @@
 #include <cmath>
 #include <sdsl/bit_vectors.hpp>
 #include "wavelet_matrix.hpp"
+#include "debug_config.hpp"
 
 using namespace sdsl;
 using namespace std;
@@ -19,43 +20,51 @@ void WaveletMatrix::build(vector<u32>& S, u32 n, u32 sigma) {
     bit_vector M(n, 0);
     bit_vector M_hat(n, 0);
     u32 m = sigma;
-    for (u32 l = 1; l <= ceil(log2(sigma)); l++) {    
+    //int x,y; x = 15846;
+    //cout << ceil(log2(sigma))-1 << endl;
+    for (u32 l = 0; l <= ceil(log2(sigma))-1; l++) {    
+        //cout << "l: " << l << " n: " << n << " m:" << m << flush;
         u32 z_l = 0;
         bit_vector B_l(n, 0);
-        for (u32 i =0; i < n; i++) {
-            if (S[i] <= ((m-M[i]+1)/2) ) {
+        for (u32 i = 0; i < n; i++) {
+            //if (i == x) cout << " i: " << i << " S[i]: " << S[i] << " M[i]: " << M[i] << endl;
+            if (S[i] <= (m - M[i] + 1) / 2) { 
                 B_l[i] = 0;
                 z_l++;
             } else {
                 B_l[i] = 1;
-                S[i] = S[i] - ((m-M[i]+1)/2);
+                S[i] = S[i] - (m - M[i] + 1) / 2;
             }
         }
         bm.push_back(ppbv(B_l));
         z.push_back(z_l);
-        if (l < ceil(log2(sigma))) {
-            u32 p_l = 0;
-            u32 p_r = z[l-1];
+        if (l < ceil(log2(sigma)) - 1) {
+            u32 p_l = -1; // max value + 1 = 0
+            u32 p_r = z[l] - 1;
             u32 p;
-            for (u32 i = 0; i < n; i++) {
-                u32 b = bm[l-1][i];
+            int n_ = n;
+            for (u32 i = 0; i < n_; i++) {
+                u32 b = bm[l][i];
                 if (b == 0) {                    
                     p_l ++;  
-                    p = p_l;                    
+                    p = p_l;
                 } else {                    
-                    p_r ++;  
-                    p = p_r;                   
-                }
-                S_hat[p-1] = S[i];
-                if (m % 2 == bm[l-1][i]) {
-                    M_hat[p-1] = bm[l-1][i];
+                    p_r ++;
+                    p = p_r;              
+                }                
+                //if (i==x) cout << "i: " << i << " p: " << p << endl;// <---------
+                //if (i==x) y = p;// <---------
+                S_hat[p] = S[i];
+                if (m % 2 == b) {
+                    M_hat[p] = b;
                 } else {
-                    M_hat[p-1] = M[i];
+                    M_hat[p] = M[i];
                 }
-                if ((m+1)/2==2 && M_hat[p-1] == 1) {
-                    n = n-1;
+                if ((m+1)/2==2 && M_hat[p] == 1) {
+                    n = n-1;;
                 }
             }
+            //x = y - (n_ - n); // <---------            
             swap(S, S_hat);
             swap(M, M_hat);
             m = (m+1)/2;
@@ -78,23 +87,24 @@ WaveletMatrix::WaveletMatrix() {
     build(p, 1, sigma);
 }
 
-
-u32 WaveletMatrix::access(u32 i_) {
+u32 WaveletMatrix::access(u32 i_) {    
     u32 i = i_;
     u32 l = 1;
-    u32 a = 0;
-    u32 b = sigma-1;
-    while (a != b) {      
+    u32 a = 1;
+    u32 b = sigma;
+    while (a != b) {
+        if (DEBUG) cout << "i: " << i << flush;
+        if (DEBUG) cout << " a:" << a << ", b:" << b << endl; 
         if (bm[l-1][i] == 0) {         
             i = bm[l-1].rank_0(i);
-            b = floor((a + b) / 2);
+            b = ((a + b) / 2);
         } else {
             i = z[l-1] + bm[l-1].rank_1(i);
-            a = floor((a + b) / 2) + 1;
+            a = ((a + b) / 2) + 1;
         }
         l++;
     }
-    return a+1;
+    return a;
 }
 u32 WaveletMatrix::rank(u32 c, u32 i_) {
     if (c < 1 || c > sigma) return 0;

@@ -130,13 +130,13 @@ Grid::Grid(const string &fn) : filename(fn)
     vector<u32> yvalues = readIntegersFromFile(filename);      
     wt = WaveletMatrix(yvalues, r);
 }
-Grid::Grid(std::vector<Point> &points, u32 columns, u32 rows) {
+Grid::Grid(std::vector<Point> points, u32 columns, u32 rows) {
     c = columns;
     r = rows;
     n = points.size();
     bit_vector b(n+c);
     // We first sort the pairs by x-coord
-    std::sort(points.begin(), points.end(), sortByX);
+    std::sort(points.begin(), points.end(), sortByX); 
     // build map bitvector
     u32 last_x_coord = 0;
     int i = 0;
@@ -153,7 +153,7 @@ Grid::Grid(std::vector<Point> &points, u32 columns, u32 rows) {
     vector<u32> yvalues(n);
     for (u32 i = 0; i < n; i++) {
         yvalues[i] = points[i].second;
-    }  
+    }
     wt = WaveletMatrix(yvalues, r);
 };
 

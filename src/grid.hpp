@@ -22,7 +22,7 @@ typedef std::pair<u32, u32> Point;
 /// @brief A grid representation.  
 /// {columns rows x_1 y_1 x_2 y_2 ... x_n y_n}
 class Grid {
-private:
+public:
     string filename; // external file   
     u32 c; // number of columns
     u32 r; // number of rows
@@ -34,7 +34,6 @@ private:
     vector<Point> report(u32 x_1, u32 x_2, u32 y_1, u32 y_2, u32 l, u32 a, u32 b);
     u32 outputx(u32 level, u32 x);
     u32 outputy(u32 level, u32 a, u32 b, u32 i);
-public:
     Grid();
     /// @brief Construct a grid from a binary file
     /// @param fn Filename of the binary file
@@ -48,7 +47,7 @@ public:
     /// @param points A vector of points
     /// @param columns Number of columns
     /// @param rows Number of rows
-    Grid(std::vector<Point>& points, u32 columns, u32 rows);
+    Grid(std::vector<Point> points, u32 columns, u32 rows);
     /// @brief Count the number of points in the grid that are within the rectangle
     /// @param x_1 1-indexed column range start
     /// @param x_2 1-indexed column range end

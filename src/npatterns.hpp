@@ -6,12 +6,10 @@
 #include "permutations.hpp"
 #include "sequences.hpp"
 #include "debug_config.hpp"
+#include <sys/stat.h>
+
 using namespace sdsl;
 using namespace std;
-extern "C" { // C implementation of repair and encoder
-    #include "../repairs/repair110811/repair.h"
-    #include "../repairs/repair110811/encoder.h"
-}
 
 template <typename T>
 struct Generator {
@@ -56,13 +54,12 @@ struct Generator {
 };
 
 /// @brief A class to search for patterns in a text
-class PatternSearcher {
-//private:
-public:
+class nPatternSearcher {
+private:
     Grid G; // Grid
     ARSSequence R; // ARS sequence
     u_int S; // Initial symbol
-    vector<uint> l; // Lengths of the expansion of the rules
+    int_vector<> l; // Lengths of the expansion of the rules
     uint nt; // Number of terminals
     vector<char> sl; // select vector for normalized alphabet
     vector<char> rk; // rank vector for normalized alphabet
@@ -78,18 +75,13 @@ public:
     int totalComparisons;
     int comparisons;
     int lastProgress;
-    PatternSearcher(){};    
-    /// @brief Construct a pattern searcher from a text file
-    /// @param input_filename 
-    PatternSearcher(string input_filename);
-    /// @brief Report all occurences of a pattern in the text
-    /// @param occurences Vector to store the occurences
-    /// @param P Pattern to search
-    void search(vector<int> *occurences, string P, vector<int> *rules_found = nullptr);
+public:
+    nPatternSearcher(){};
+    nPatternSearcher(string input_filename);
+    void search(vector<int> *occurences, string P);
     int numRules() { return R.size() / 2; }
     int ruleAt(int i);
     string expandRule( int i, unordered_map<int, string>& memo);
-    string expandRule( int i );
     string expandRightSideRule(int i, unordered_map<int, string> &memo);
     string expandLeftSideRule(int i, unordered_map<int, string>& memo);
 };

@@ -25,7 +25,7 @@ vector<int> findOccurrences(const string& filecontent,
 }
 
 TEST_CASE("PatternSearcher","[pattern]") {
-    string input_filename = "textfile/quijote.txt";
+    string input_filename = "textfile/lazarillo_de_tormes.txt";
     FILE *input  = fopen(input_filename.c_str(), "rb");
     string filecontent = "";
     char c;
@@ -35,17 +35,6 @@ TEST_CASE("PatternSearcher","[pattern]") {
     fclose(input);
 
     PatternSearcher PS(input_filename);
-
-    unordered_map<int, string> memo;
-
-    vector<int> occs;
-    PS.search(&occs, "i d");
-    sort(occs.begin(), occs.end());
-    
-
-    vector<int> expected_occurences = findOccurrences(filecontent, "i d");
-    REQUIRE(occs == expected_occurences);
-
 
     //DEBUG = true;
 

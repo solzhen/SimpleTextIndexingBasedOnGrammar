@@ -15,13 +15,13 @@ typedef std::pair<u32, u32> Point;
 
 /// @brief A wavelet matrix using bit_vectors over an alphabet [1, sigma].
 class WaveletMatrix {
-private:    
+private:  
+public:    
     u32 sigma; // highest symbol in the alphabet
     vector<u32> z; // right child pointer
     void build(vector<u32>& S, u32 n, u32 sigma);
     u32 select(u32 l, u32 p, u32 a, u32 b, u32 c, u32 j);
-    vector<ppbv> bm; // bit matrix seen as vector of preprocessed bit vectors
-public:    
+    vector<ppbv> bm; // bit matrix seen as vector of preprocessed bit vectors  
     /// @brief A wavelet matrix using bit_vectors over an alphabet [1, sigma]
     /// @param s 4-byte long unsigned integer vector
     /// @param sigma highest numerical symbol

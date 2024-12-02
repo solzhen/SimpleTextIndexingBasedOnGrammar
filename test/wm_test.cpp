@@ -65,7 +65,7 @@ TEST_CASE("WaveletMatrix operations 1 to 9 vector", "[wavelet_matrix]") {
     }
 }
 
-TEST_CASE("Wavelet Matric operation for sequence {1,1,1,1,1,1,2,2,2,2,2}", "[wavelet_matrix 2]") {
+TEST_CASE("Wavelet Matric operation for sequence {1,1,1,1,1,1,2,2,2,2,2}", "[wavelet_matrix]") {
     std::vector<uint32_t> vec = {1,1,1,1,1,1,2,2,2,2,2};
     REQUIRE(vec.size() == 11);
     WaveletMatrix wm = WaveletMatrix(vec, 2);
@@ -118,5 +118,60 @@ TEST_CASE("Wavelet Matric operation for sequence {1,1,1,1,1,1,2,2,2,2,2}", "[wav
         REQUIRE(wm.select(2, 5) == 10);
         REQUIRE(wm.select(2, 6) == wm.size());
         REQUIRE(wm.select(3, 1) == -1);
+    }
+}
+TEST_CASE("Matrix for vector ={1 2 3 4 5 6 7 8 9 10}", "[wavelet_matrix]") {
+    vector<uint32_t> vec = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+    REQUIRE(vec.size() == 10);
+    WaveletMatrix wm = WaveletMatrix(vec, 10);
+    //wm.printself();
+    SECTION("Access") {
+        REQUIRE(wm.access(0) == 1);
+        REQUIRE(wm.access(1) == 2);
+        REQUIRE(wm.access(2) == 3);
+        REQUIRE(wm.access(3) == 4);
+        REQUIRE(wm.access(4) == 5);
+        REQUIRE(wm.access(5) == 6);
+        REQUIRE(wm.access(6) == 7);
+        REQUIRE(wm.access(7) == 8);
+        REQUIRE(wm.access(8) == 9);
+        REQUIRE(wm.access(9) == 10);
+    }
+}
+TEST_CASE("Matrix for vector ={10 1 2 3 4 5 6 7 8 9}", "[wavelet_matrix]") {
+    vector<uint32_t> vec = {10, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    REQUIRE(vec.size() == 10);
+    WaveletMatrix wm = WaveletMatrix(vec, 10);
+    //wm.printself();
+    SECTION("Access") {
+        REQUIRE(wm.access(0) == 10);
+        REQUIRE(wm.access(1) == 1);
+        REQUIRE(wm.access(2) == 2);
+        REQUIRE(wm.access(3) == 3);
+        REQUIRE(wm.access(4) == 4);
+        REQUIRE(wm.access(5) == 5);
+        REQUIRE(wm.access(6) == 6);
+        REQUIRE(wm.access(7) == 7);
+        REQUIRE(wm.access(8) == 8);
+        REQUIRE(wm.access(9) == 9);
+    }
+}
+TEST_CASE("Matrix for vector ={10 1 2 3 11 4 5 6 7 8 9}", "[wavelet_matrix]") {
+    vector<uint32_t> vec = {10, 1, 2, 3, 11, 4, 5, 6, 7, 8, 9};
+    REQUIRE(vec.size() == 11);
+    WaveletMatrix wm = WaveletMatrix(vec, 11);
+    //wm.printself();
+    SECTION("Access") {
+        REQUIRE(wm.access(0) == 10);
+        REQUIRE(wm.access(1) == 1);
+        REQUIRE(wm.access(2) == 2);
+        REQUIRE(wm.access(3) == 3);
+        REQUIRE(wm.access(4) == 11);
+        REQUIRE(wm.access(5) == 4);
+        REQUIRE(wm.access(6) == 5);
+        REQUIRE(wm.access(7) == 6);
+        REQUIRE(wm.access(8) == 7);
+        REQUIRE(wm.access(9) == 8);
+        REQUIRE(wm.access(10) == 9);
     }
 }

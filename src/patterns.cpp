@@ -17,7 +17,7 @@
             (result) = c - rank_bbbb(257) + 257; \
     } while (0)
 
-PatternSearcher::PatternSearcher(string input_filename) {
+PatternSearcher::PatternSearcher(string input_filename) { 
     FILE *input;
     DICT *dict;
     input  = fopen(input_filename.c_str(), "rb");
@@ -235,7 +235,7 @@ PatternSearcher::PatternSearcher(string input_filename) {
     cout << "Grid created" << endl;
     cout << "------------------------" << endl;
     cout << "Precalculating lengths" << endl;
-    l = int_vector(n_non_terminals, 0); //--------------------------------------------------
+    l = vector<uint>(n_non_terminals, 0); //--------------------------------------------------
     for (int i = 0; i < n_non_terminals; i++) {
         l[i] = ruleLength(i);
     }
@@ -263,6 +263,7 @@ int PatternSearcher::ruleLength(int i) {
 }
 
 string PatternSearcher::expandRule(int i, unordered_map<int, string> &memo) {
+    if (DEBUG) cout << "Expanding rule " << i << "->" << R[i] << "\t" << R[i+1] << endl;
     if (memo.find(i) != memo.end()) {
         return memo[i];
     }
@@ -279,6 +280,23 @@ string PatternSearcher::expandRule(int i, unordered_map<int, string> &memo) {
     }
     string result = left + right;
     memo[i] = result;
+    return result;
+}
+
+string PatternSearcher::expandRule(int i) {
+    if (DEBUG) cout << "Expanding rule " << i << "->" << R[i] << "\t" << R[i+1] << endl;
+    string left, right;
+    if (R[i] < nt) {
+        left = string(1, sl[ R[i] + 1 ]);
+    } else {        
+        left = expandRule(2*(R[i]-nt));
+    }
+    if (R[i + 1] < nt) {
+        right = string(1, sl[ R[i+1] + 1 ]);
+    } else {
+        right = expandRule(2*(R[i+1]-nt));
+    }
+    string result = left + right;
     return result;
 }
 
@@ -383,25 +401,29 @@ void PatternSearcher::secondaries(vector<int> *occurences, u_int A_i, u_int offs
 }
 int PatternSearcher::ruleAt(int i)
 {
+    if (DEBUG) cout << "i: " << i << " S: " << S << " l[S]: " << l[S] << " R[S*2]: " << R[S*2] << " R[S*2+1]: " << R[S*2+1] << endl;
     if (i < l[R[S*2] - nt]) { // rule is at left side
         return ruleAt(R[S*2] - nt, i);
     } else {
-        return ruleAt(R[S*2+1] - nt, i - l[S]);
+        return ruleAt(R[S*2+1] - nt, i - l[R[S*2] - nt]);
     }
 }
 int PatternSearcher::ruleAt(int r_i, int i)
 {
-    if (DEBUG) cout << "r_i: " << r_i << " i: " << i << " l[r_i]:" << l[r_i] << " l[r_i.left]: " << l[R[r_i*2] - nt] << " l[r_i.right]: " << l[R[r_i*2 + 1] - nt] << endl;
-    if (R[r_i*2] < nt && i == 0) return r_i;
-    if (R[r_i*2] < nt && R[r_i*2 + 1] < nt) return r_i;
-    if (R[r_i*2] >= nt && i < l[R[r_i*2] - nt]) return ruleAt(R[r_i*2] - nt, i);
-    if (R[r_i*2] >= nt && i >= l[R[r_i*2] - nt]) {
-        if (R[r_i*2 + 1] < nt) return r_i;
-        return ruleAt(R[r_i*2 + 1] - nt, i - l[R[r_i*2] - nt]);
+    if (DEBUG) cout << "r_i: " << r_i << " i: " << i <<  " Left: " << R[r_i*2] << " Right: " << R[r_i*2 + 1] << endl; 
+    if (R[r_i*2] < nt && i == 0) return r_i; // a X, i = 0
+    if (R[r_i*2] < nt && R[r_i*2 + 1] < nt) return r_i; // a b
+    if (R[r_i*2] < nt && i >= 1) return ruleAt(R[r_i*2 + 1] - nt, i - 1); // a X, i > 0
+    if (DEBUG) cout << " l[r_i]:" << l[r_i]<< " l[left]: " << l[R[r_i*2] - nt] << endl;     
+    if (R[r_i*2] >= nt && i < l[R[r_i*2] - nt]) return ruleAt(R[r_i*2] - nt, i); // A X, i < l[A]
+    if (R[r_i*2] >= nt && i >= l[R[r_i*2] - nt]) { // A X, i >= l[A]
+        if (R[r_i*2 + 1] < nt) return r_i; // A b
+        if (DEBUG) cout << " l[right]: " << l[R[r_i*2 + 1] - nt] << endl;
+        return ruleAt(R[r_i*2 + 1] - nt, i - l[R[r_i*2] - nt]); // A B
     }   
 };
 
-void PatternSearcher::search(vector<int> *occurences, string P) {    
+void PatternSearcher::search(vector<int> *occurences, string P, vector<int> *rules_found) {    
     u_int m = P.size();
     if (m == 1) {
         secondaries(occurences, rk[P.at(0)], 0, true);
@@ -500,6 +522,7 @@ void PatternSearcher::search(vector<int> *occurences, string P) {
             if (DEBUG) cout << "Points: " << points.size() << endl;
             for (Point p : points) {
                 int r_i = p.second - 1;
+                if (rules_found) rules_found->push_back(r_i); 
                 if (R[r_i*2] < nt) { //if left side is terminal
                     secondaries(occurences, r_i, 0);
                 } else {

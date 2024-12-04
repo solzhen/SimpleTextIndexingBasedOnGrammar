@@ -1,5 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include "patterns.hpp"
+#include "globals.h"
 
 #define REDIRECT_STDOUT \
     FILE* originalStdout = stdout; \
@@ -24,9 +25,13 @@ vector<int> findOccurrences(const string& filecontent,
     return occurrences;
 }
 
-TEST_CASE("PatternSearcher","[pattern]") {
-    string input_filename = "textfile/lazarillo_de_tormes.txt";
-    FILE *input  = fopen(input_filename.c_str(), "rb");
+TEST_CASE("PatternSearcher","[pattern]") {    
+
+    REQUIRE_FALSE(g_fileName.empty());
+
+    string input_filename = g_fileName;
+    FILE *input  = fopen(input_filename.c_str(), "rb");   
+    
     string filecontent = "";
     char c;
     while (fread(&c, 1, 1, input) == 1) {

@@ -225,7 +225,7 @@ PatternSearcher::PatternSearcher(string input_filename) {
     u_int j, k;
     for (u_int i = 0; i < indexMap.size(); i++) {
         k = distance_of_find_col[i];
-        points[i] = Point(k + 1, i + 1); // 1-indexed
+        points[k] = Point(k + 1, i + 1); // 1-indexed   // SHOULD BE points[k] = Point(k + 1, i + 1); since we will eventually sort them by X
     }
     cout << "Points created" << endl;
     cout << "------------------------" << endl;

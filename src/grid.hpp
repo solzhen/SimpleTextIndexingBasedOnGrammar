@@ -29,7 +29,7 @@ public:
     u32 n; // nubmer of points
     //vector<Point> points; // Grid points
     WaveletMatrix wt; // Wavelet tree
-    PreprocessedBitvector bv;
+    //PreprocessedBitvector bv;
     u32 count(u32 x_1, u32 x_2, u32 y_1, u32 y_2, u32 l, u32 a, u32 b);
     vector<Point> report(u32 x_1, u32 x_2, u32 y_1, u32 y_2, u32 l, u32 a, u32 b);
     u32 outputx(u32 level, u32 x);

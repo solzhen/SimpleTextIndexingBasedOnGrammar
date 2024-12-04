@@ -71,7 +71,10 @@ add_executable(tests.x ${TEST_SOURCES} ${REPAIRS_OBJECTS} ${IMPLEMENTATION_SOURC
 target_include_directories(tests.x PRIVATE ${PROJECT_SOURCE_DIR}/src)
 
 # Link Catch2 and any necessary libraries to the test executable
-target_link_libraries(tests.x PRIVATE Catch2::Catch2WithMain sdsl divsufsort divsufsort64)
+#target_link_libraries(tests.x PRIVATE Catch2::Catch2WithMain sdsl divsufsort divsufsort64)
+
+target_link_libraries(tests.x PRIVATE Catch2::Catch2 sdsl divsufsort divsufsort64)
+
 
 # Set compiler flags for the test executable
 target_compile_options(tests.x PRIVATE -std=c++20 -Wall -Wextra)

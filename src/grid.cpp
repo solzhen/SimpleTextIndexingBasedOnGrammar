@@ -111,7 +111,7 @@ Grid::Grid(const string &fn) : filename(fn)
     n = points.size();
     bit_vector b(n+c);
     // We first sort the pairs by x-coord
-    std::sort(points.begin(), points.end(), sortByX);
+    std::sort(points.begin(), points.end(), sortByX); // we don't need to sort if we change the way we build the bitvector
     //writePointsToFile(filename, c, r, points);
     // build map bitvector
     u32 last_x_coord = 0;
@@ -124,8 +124,8 @@ Grid::Grid(const string &fn) : filename(fn)
             last_x_coord = point.first;
         } i++;            
     }
-    bv = PreprocessedBitvector(b);
-    bv.preprocess();
+    //bv = PreprocessedBitvector(b);
+    //bv.preprocess();
     writeYToFile(filename, points); //pack Y values, may want to write c and r 
     vector<u32> yvalues = readIntegersFromFile(filename);      
     wt = WaveletMatrix(yvalues, r);
@@ -136,7 +136,7 @@ Grid::Grid(std::vector<Point> points, u32 columns, u32 rows) {
     n = points.size();
     bit_vector b(n+c);
     // We first sort the pairs by x-coord
-    std::sort(points.begin(), points.end(), sortByX); 
+    //std::sort(points.begin(), points.end(), sortByX); //not needed for pattern search
     // build map bitvector
     u32 last_x_coord = 0;
     int i = 0;
@@ -148,8 +148,8 @@ Grid::Grid(std::vector<Point> points, u32 columns, u32 rows) {
             last_x_coord = point.first;
         } i++;            
     }
-    bv = PreprocessedBitvector(b);
-    bv.preprocess();
+    //bv = PreprocessedBitvector(b);
+    //bv.preprocess();
     vector<u32> yvalues(n);
     for (u32 i = 0; i < n; i++) {
         yvalues[i] = points[i].second;

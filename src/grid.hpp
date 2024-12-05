@@ -23,13 +23,14 @@ typedef std::pair<u32, u32> Point;
 /// {columns rows x_1 y_1 x_2 y_2 ... x_n y_n}
 class Grid {
 public:
-    string filename; // external file   
+    //string filename; // external file   
     u32 c; // number of columns
     u32 r; // number of rows
     u32 n; // nubmer of points
     //vector<Point> points; // Grid points
     WaveletMatrix wt; // Wavelet tree
     //PreprocessedBitvector bv;
+
     u32 count(u32 x_1, u32 x_2, u32 y_1, u32 y_2, u32 l, u32 a, u32 b);
     vector<Point> report(u32 x_1, u32 x_2, u32 y_1, u32 y_2, u32 l, u32 a, u32 b);
     u32 outputx(u32 level, u32 x);
@@ -48,6 +49,10 @@ public:
     /// @param columns Number of columns
     /// @param rows Number of rows
     Grid(std::vector<Point> points, u32 columns, u32 rows);
+    /// @brief Construct a grid, for use exclusively with pattern search
+    /// @param points A vector of points, pre-sorted by X, 1-indexed, with unique X values rangin from 1 to n
+    /// @param n The number of points which equals the number of columns and rows
+    Grid(std::vector<Point> points, u32 n);
     /// @brief Count the number of points in the grid that are within the rectangle
     /// @param x_1 1-indexed column range start
     /// @param x_2 1-indexed column range end

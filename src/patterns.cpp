@@ -230,7 +230,7 @@ PatternSearcher::PatternSearcher(string input_filename) {
     cout << "Points created" << endl;
     cout << "------------------------" << endl;
     cout << "Creating Grid" << endl;
-    G = Grid(points, n_non_terminals, n_non_terminals); //--------------------------------------------------
+    G = Grid(points, n_non_terminals); //--------------------------------------------------
     S = S_i; //--------------------------------------------------
     cout << "Grid created" << endl;
     cout << "------------------------" << endl;

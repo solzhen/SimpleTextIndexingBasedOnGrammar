@@ -103,10 +103,10 @@ Grid::Grid() {
     c = 0;
     r = 0;
     n = 0;
-    filename = "";
 }
-Grid::Grid(const string &fn) : filename(fn)
+Grid::Grid(const string &fn)
 {
+    string filename = fn;
     vector<Point> points = readPointsFromFile(filename, c, r); // symbol range is = [1, rows]
     n = points.size();
     bit_vector b(n+c);
@@ -136,7 +136,7 @@ Grid::Grid(std::vector<Point> points, u32 columns, u32 rows) {
     n = points.size();
     bit_vector b(n+c);
     // We first sort the pairs by x-coord
-    //std::sort(points.begin(), points.end(), sortByX); //not needed for pattern search
+    std::sort(points.begin(), points.end(), sortByX); //not needed for pattern search
     // build map bitvector
     u32 last_x_coord = 0;
     int i = 0;
@@ -150,6 +150,17 @@ Grid::Grid(std::vector<Point> points, u32 columns, u32 rows) {
     }
     //bv = PreprocessedBitvector(b);
     //bv.preprocess();
+    vector<u32> yvalues(n);
+    for (u32 i = 0; i < n; i++) {
+        yvalues[i] = points[i].second;
+    }
+    wt = WaveletMatrix(yvalues, r);
+};
+
+Grid::Grid(std::vector<Point> points, u32 columns_n_rows) {
+    c = columns_n_rows;
+    r = columns_n_rows;
+    n = points.size();
     vector<u32> yvalues(n);
     for (u32 i = 0; i < n; i++) {
         yvalues[i] = points[i].second;

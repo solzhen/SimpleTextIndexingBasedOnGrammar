@@ -157,15 +157,15 @@ Grid::Grid(std::vector<Point> points, u32 columns, u32 rows) {
     wt = WaveletMatrix(yvalues, r);
 };
 
-Grid::Grid(std::vector<Point> points, u32 columns_n_rows) {
-    c = columns_n_rows;
-    r = columns_n_rows;
+Grid::Grid(std::vector<Point> points) {    
     n = points.size();
+    c = n;
+    r = n;
     vector<u32> yvalues(n);
     for (u32 i = 0; i < n; i++) {
         yvalues[i] = points[i].second;
     }
-    wt = WaveletMatrix(yvalues, r);
+    wt = WaveletMatrix(yvalues, n);
 };
 
 u32 Grid::count(u32 x_1, u32 x_2, u32 y_1, u32 y_2) {        

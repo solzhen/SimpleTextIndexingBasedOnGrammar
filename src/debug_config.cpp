@@ -2,3 +2,5 @@
 
 bool DEBUG = false;
 bool TEST = false;
+bool TIME = false;
+bool SDEBUG = false;

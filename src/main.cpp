@@ -9,6 +9,7 @@
 #include <tuple>
 #include <unordered_map>
 #include <coroutine>
+#include <chrono>
 #include <cxxopts.hpp>
 #include <sys/stat.h>
 #include "patterns.hpp"
@@ -46,7 +47,9 @@ int main(int argc, char* argv[]) {
     options.add_options()
         ("f,file", "Input file name", cxxopts::value<std::string>())
         ("d,debug", "Enable debugging mode")
+        ("t,time", "Print execution time")
         ("h,help", "Print usage");
+        
     auto result = options.parse(argc, argv);
     if (result.count("help")) {
         std::cout << options.help() << std::endl;
@@ -63,22 +66,101 @@ int main(int argc, char* argv[]) {
         std::cout << "Debug mode enabled." << std::endl;
         DEBUG = true;
     }
-    
-    PatternSearcher PS(input_filename);
+    if (result["time"].as<bool>()) {
+        std::cout << "Execution time will be printed." << std::endl;
+        TIME = true;
+    }
 
+    using std::chrono::high_resolution_clock;
+    using std::chrono::duration_cast;
+    using std::chrono::duration;
+    using std::chrono::milliseconds;
+
+    auto t1 = high_resolution_clock::now();    
+    PatternSearcher PS(input_filename);
+    auto t2 = high_resolution_clock::now();
+    if (TIME) {
+        duration<double, std::milli> ms_double = t2 - t1;
+        std::cout << "Time taken to build the pattern searcher: " << ms_double.count() << " ms" << std::endl;    
+    }   
+    
     while (true) {
         cout << "Enter the pattern to search: ";
         string pattern;
         getline(cin, pattern);
         cout << "Searching for pattern: \"" << pattern << "\"" << endl;
         vector<int> occurences;
+        auto t3 = high_resolution_clock::now();
         PS.search(&occurences, pattern);
+        auto t4 = high_resolution_clock::now();
         cout << "Occurences Found: \t";
         sort(occurences.begin(), occurences.end());
         for (u_int i = 0; i < occurences.size(); i++) {
             cout << occurences[i] << " ";
         } cout << endl;
+        if (TIME) {
+            duration<double, std::milli> ms_double = t4 - t3;
+            std::cout << "Time taken to search for the pattern: " << ms_double.count() << " ms" << std::endl;
+        }
     }
 
     return 0;
 }
+
+/*
+    vector<string> patterns = {"b", "ab", "aab", "aaab", "aaaab", "aaaaab", "aaaaaab", "aaaaaaab", 
+        "aaaaaaaab", "aaaaaaaaab", "aaaaaaaaaab", "aaaaaaaaaaab", "aaaaaaaaaaaab", "aaaaaaaaaaaaab",} ;
+    
+    for (string pattern : patterns) {        
+        double times;
+        for (int i = 0; i < 50; i++) {
+            vector<int> occurences;
+            auto t3 = high_resolution_clock::now();
+            PS.search(&occurences, pattern);
+            auto t4 = high_resolution_clock::now();
+            duration<double, std::milli> ms_double = t4 - t3;
+            times += ms_double.count();
+        }
+        double avg = times / 50;
+        cout << "Average time for pattern " << pattern << ": " << avg << " ms" << endl;
+    }
+    return 0;
+
+
+*/
+
+/*
+    vector<string> patterns = {"th", "he", "in", "er", "an", "re", "on", "at",
+        "en", "nd", "ti", "es", "or", "te", "of", "ed", "is", "it", "al", "ar", 
+        "st", "to", "nt", "ng", "se", "ha", "as", "ou", "io", "le", "ve", "co", 
+        "me", "de", "hi", "ri", "ro", "ic", "ne", "ea", "ra", "ce", "li", "ch", 
+        "ll", "be", "ma", "si", "om", "ur"};
+    struct trio {
+        int occs;
+        int p_size;
+        double time;
+    };
+    vector<trio> results;
+    for (string pattern : patterns) {
+        double times = 0;
+        int occs;
+        for (int i = 0; i < 50; i++) {
+            vector<int> occurences;
+            auto t3 = high_resolution_clock::now();
+            PS.search(&occurences, pattern);
+            auto t4 = high_resolution_clock::now();
+            duration<double, std::milli> ms_double = t4 - t3;
+            cout << ms_double.count() << " ";
+            occs = occurences.size();
+            times += ms_double.count();
+        }
+        cout << endl;
+        double avg = times / 50;
+        results.push_back({occs, (int)pattern.size(), avg});
+    }    
+    ofstream out("results.txt");
+    for (const auto& r : results) {
+        out << r.occs << " " << r.p_size << " " << r.time << endl;
+    }
+    return 0;
+*/

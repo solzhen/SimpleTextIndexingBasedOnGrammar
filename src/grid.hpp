@@ -50,9 +50,8 @@ public:
     /// @param rows Number of rows
     Grid(std::vector<Point> points, u32 columns, u32 rows);
     /// @brief Construct a grid, for use exclusively with pattern search
-    /// @param points A vector of points, pre-sorted by X, 1-indexed, with unique X values rangin from 1 to n
-    /// @param n The number of points which equals the number of columns and rows
-    Grid(std::vector<Point> points, u32 n);
+    /// @param points A vector of n points, pre-sorted by X, 1-indexed, with unique X values ranging from 1 to n
+    Grid(std::vector<Point> points);
     /// @brief Count the number of points in the grid that are within the rectangle
     /// @param x_1 1-indexed column range start
     /// @param x_2 1-indexed column range end

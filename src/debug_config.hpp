@@ -10,3 +10,6 @@ extern bool DEBUG;
 extern bool TEST;
 
 #endif
+
+extern bool TIME;
+extern bool SDEBUG;

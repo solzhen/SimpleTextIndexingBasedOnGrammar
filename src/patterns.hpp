@@ -13,6 +13,8 @@ extern "C" { // C implementation of repair and encoder
     #include "../repairs/repair110811/encoder.h"
 }
 
+extern bool MEMOIZE;
+
 template <typename T>
 struct Generator {
     struct promise_type {
@@ -70,6 +72,11 @@ public:
     Generator<char> expandRuleLazy( int i, bool rev = false);
     Generator<char> expandRuleSideLazy( int i, bool left = false);
     bool compareRulesLazy(int i, int j, bool rev = false);
+    string expandRule( int i, unordered_map<int, string>& memo);
+    string expandRule( int i );
+    string expandRightSideRule(int i, unordered_map<int, string> &memo);
+    string expandLeftSideRule(int i, unordered_map<int, string>& memo);
+    bool compareRulesMemoized(int i, int j, bool rev, unordered_map<int, string>& memo);
     template <typename Iterator> 
     int compareRuleWithPatternLazyImpl ( int i, Iterator pattern_begin, Iterator pattern_end, bool rev = false);
     int compareRuleWithPatternLazy(int i, string pattern, bool rev = false);
@@ -81,16 +88,12 @@ public:
     PatternSearcher(){};    
     /// @brief Construct a pattern searcher from a text file
     /// @param input_filename 
-    PatternSearcher(string input_filename);
+    PatternSearcher(string input_filename, u_int*txt_len=nullptr, u_int*num_rules=nullptr);
     /// @brief Report all occurences of a pattern in the text
     /// @param occurences Vector to store the occurences
     /// @param P Pattern to search
     void search(vector<int> *occurences, string P, vector<int> *rules_found = nullptr);
     int numRules() { return R.size() / 2; }
     int ruleAt(int i);
-    string expandRule( int i, unordered_map<int, string>& memo);
-    string expandRule( int i );
-    string expandRightSideRule(int i, unordered_map<int, string> &memo);
-    string expandLeftSideRule(int i, unordered_map<int, string>& memo);
 };
 

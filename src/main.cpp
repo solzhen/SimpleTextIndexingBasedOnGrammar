@@ -48,7 +48,8 @@ int main(int argc, char* argv[]) {
         ("f,file", "Input file name", cxxopts::value<std::string>())
         ("d,debug", "Enable debugging mode")
         ("t,time", "Print execution time")
-        ("h,help", "Print usage");
+        ("h,help", "Print usage")
+        ("m,memoize", "Memoize the expansion of the rules");
         
     auto result = options.parse(argc, argv);
     if (result.count("help")) {
@@ -69,6 +70,10 @@ int main(int argc, char* argv[]) {
     if (result["time"].as<bool>()) {
         std::cout << "Execution time will be printed." << std::endl;
         TIME = true;
+    }
+    if (result["memoize"].as<bool>()) {
+        std::cout << "Memoization enabled." << std::endl;
+        MEMOIZE = true;
     }
 
     using std::chrono::high_resolution_clock;

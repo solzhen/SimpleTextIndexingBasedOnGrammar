@@ -1,5 +1,6 @@
 #include "patterns.hpp"
 
+bool MEMOIZE = false;
 
 // MACROS
 #define seqR2normalized(c, result) \
@@ -17,14 +18,15 @@
             (result) = c - rank_bbbb(257) + 257; \
     } while (0)
 
-PatternSearcher::PatternSearcher(string input_filename) { 
+PatternSearcher::PatternSearcher(string input_filename, u_int*txt_len, u_int*num_rules) { 
     FILE *input;
     DICT *dict;
     input  = fopen(input_filename.c_str(), "rb");
     dict = RunRepair(input);
-    fclose(input);
+    fclose(input);   
 
     std::cout << "original text length: " << dict->txt_len << std::endl;
+    if (txt_len) *txt_len = dict->txt_len;
     std::cout << "number of rules: " << dict->num_rules - 256 << std::endl;
     std::cout << "sequence length: " << dict->seq_len << std::endl;
 
@@ -39,6 +41,7 @@ PatternSearcher::PatternSearcher(string input_filename) {
     while (dict->seq_len > 1) {
         for (u_int i = 0; i < dict->seq_len; i = i+2) {
             if (dict->num_rules >= dict->buff_size) {
+                cout << "Attempting to reallocate memory" << endl;
                 dict->buff_size *= 2;
                 dict->rule = (RULE*)realloc(dict->rule, sizeof(RULE) * dict->buff_size);
                 if (!dict->rule) {
@@ -108,6 +111,7 @@ PatternSearcher::PatternSearcher(string input_filename) {
     cout << "Max Symbol: " << max_normalized << endl;
     cout << "N. of Terminals: " << n_terminals << endl;
     cout << "N. of Non-terminals: " << n_non_terminals << endl;
+    if (num_rules) *num_rules = n_non_terminals;
     free(dict);
     ARSSequence arsSequence(normalized_sequenceR, max_normalized + 1); 
     R = arsSequence; //--------------------------------------------------  
@@ -115,6 +119,9 @@ PatternSearcher::PatternSearcher(string input_filename) {
     cout << "Sorting rules by lexicographic order of left side reverse expansion" << endl;
     int_vector indexMap(n_non_terminals);
     int_vector reverseIndexMap(n_non_terminals);
+    if (MEMOIZE) {
+        cout << "Memoization enabled" << endl;
+    } 
 
     for (int i = 0; i < n_non_terminals; i++) {
         indexMap[i] = i;
@@ -125,12 +132,16 @@ PatternSearcher::PatternSearcher(string input_filename) {
     if (totalComparisons == 0) totalComparisons = 1; // Prevent division by zero
     comparisons = 0;
     lastProgress = -1;
+    unordered_map<int, string> memo;
     auto progressComparatorRev = [&](int a, int b) {
         comparisons++;
         int progress = min((comparisons * 100) / totalComparisons, 100);
         if (progress > lastProgress) {
             std::cout << "\rSorting progress: " << progress << "%" << std::flush;
             lastProgress = progress;
+        }
+        if (MEMOIZE) {            
+            return this->compareRulesMemoized(a, b, true, memo);
         }
         return this->compareRulesLazy(a, b, true);
     };
@@ -142,14 +153,6 @@ PatternSearcher::PatternSearcher(string input_filename) {
     cout << "\rSorting progress: 100%" << endl;
     cout << "Sorting succesfull" << endl;
     cout << "------------------------" << endl;
-
-/*     sort(
-        reverseIndexMap.begin(), 
-        reverseIndexMap.end(), 
-        [&](int a, int b) { 
-            return compareRulesLazy(a, b, true); 
-        }
-    ); */
     cout << "Reordering Sequence" << endl;
 
     int last = 0;
@@ -202,6 +205,9 @@ PatternSearcher::PatternSearcher(string input_filename) {
         if (progress > lastProgress) {
             std::cout << "\rSorting progress: " << progress << "%" << std::flush;
             lastProgress = progress;
+        }
+        if (MEMOIZE) {            
+            return this->compareRulesMemoized(a, b, false, memo);
         }
         return this->compareRulesLazy(a, b);
     };
@@ -355,8 +361,6 @@ Generator<char> PatternSearcher::expandRuleSideLazy(int i, bool left) {
 }
 
 bool PatternSearcher::compareRulesLazy(int i, int j, bool rev) {
-    //cout << "Comparing rules " << i << " and " << j << endl;
-    // Set up generators for each rule's expansion
     auto gen_i = expandRuleSideLazy(2 * i, rev);
     auto gen_j = expandRuleSideLazy(2 * j, rev);
     // Create iterators to lazily consume characters from both expansions
@@ -374,6 +378,21 @@ bool PatternSearcher::compareRulesLazy(int i, int j, bool rev) {
     }
     // If one sequence is shorter, the shorter one is considered "less"
     return (it_i == gen_i.end()) && (it_j != gen_j.end());
+}
+
+bool PatternSearcher::compareRulesMemoized(int i, int j, bool rev, unordered_map<int, string>& memo) {
+    string expansion_i, expansion_j;
+    if (rev) {// expand left side and reverse it
+        expansion_i = expandLeftSideRule(i, memo);
+        expansion_j = expandLeftSideRule(j, memo);
+        reverse(expansion_i.begin(), expansion_i.end());
+        reverse(expansion_j.begin(), expansion_j.end());
+        return expansion_i < expansion_j;
+    } else {
+        expansion_i = expandRightSideRule(i, memo);
+        expansion_j = expandRightSideRule(j, memo);
+        return expansion_i < expansion_j;
+    }
 }
 
 void PatternSearcher::secondaries(vector<int> *occurences, u_int A_i, u_int offset, bool terminal) {

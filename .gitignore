@@ -85,3 +85,5 @@ debugging.txt
 out.txt
 
 .fuse_*
+
+myenv/

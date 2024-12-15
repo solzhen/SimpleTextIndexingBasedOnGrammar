@@ -66,8 +66,8 @@ public:
     u_int S; // Initial symbol
     vector<uint> l; // Lengths of the expansion of the rules
     uint nt; // Number of terminals
-    vector<char> sl; // select vector for normalized alphabet
-    vector<char> rk; // rank vector for normalized alphabet
+    vector<unsigned char> sl; // select vector for normalized alphabet
+    vector<unsigned char> rk; // rank vector for normalized alphabet
     int ruleLength(int i);    
     Generator<char> expandRuleLazy( int i, bool rev = false);
     Generator<char> expandRuleSideLazy( int i, bool left = false);

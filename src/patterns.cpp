@@ -79,15 +79,16 @@ PatternSearcher::PatternSearcher(string input_filename, u_int*txt_len, u_int*num
             bbbb[sequenceR[i + 1]] = 1;
         }
     }
+    //cout << "bbbb:" << bbbb << endl;
     rank_support_v<1> rank_bbbb(&bbbb);
     select_support_mcl<1, 1> select_bbbb(&bbbb);
-    vector<char> rank(257, 0);
-    vector<char> select(257, 0);
+    vector<unsigned char> rank(257, 0);
+    vector<unsigned char> select(257, 0);
     for (int i = 0; i < 257; i++) {
         rank[i] = rank_bbbb(i);
         if (i==0) continue;
         select[i] = select_bbbb(i);
-    }
+    } cout << endl;
     u_int max_terminal = 0;    
     for (u_int i = 1; i <= rank_bbbb(257); i++) {
         if (select_bbbb(i) > max_terminal) {
@@ -122,9 +123,6 @@ PatternSearcher::PatternSearcher(string input_filename, u_int*txt_len, u_int*num
     cout << "Sorting rules by lexicographic order of left side reverse expansion" << endl;
     int_vector indexMap(n_non_terminals);
     int_vector reverseIndexMap(n_non_terminals);
-    if (MEMOIZE) {
-        cout << "Memoization enabled" << endl;
-    } 
 
     for (int i = 0; i < n_non_terminals; i++) {
         indexMap[i] = i;
@@ -142,9 +140,6 @@ PatternSearcher::PatternSearcher(string input_filename, u_int*txt_len, u_int*num
         if (progress > lastProgress) {
             std::cout << "\rSorting progress: " << progress << "%" << std::flush;
             lastProgress = progress;
-        }
-        if (MEMOIZE) {
-            return this->compareRulesMemoized(a, b, true, memo);;            
         }
         return this->compareRulesLazy(a, b, true);
     };
@@ -233,9 +228,6 @@ PatternSearcher::PatternSearcher(string input_filename, u_int*txt_len, u_int*num
         if (progress > lastProgress) {
             std::cout << "\rSorting progress: " << progress << "%" << std::flush;
             lastProgress = progress;
-        }
-        if (MEMOIZE) {
-            return this->compareRulesMemoized(a, b, false, memo2);
         }
         return this->compareRulesLazy(a, b);
     };

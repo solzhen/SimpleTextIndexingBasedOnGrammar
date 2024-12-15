@@ -1,7 +1,10 @@
 #include "patterns.hpp"
+// #define NDEBUG
+#include <cassert> 
+// Use (void) to silence unused warnings.
+#define assertm(exp, msg) assert((void(msg), exp))
 
 bool MEMOIZE = false;
-
 // MACROS
 #define seqR2normalized(c, result) \
     do { \
@@ -128,7 +131,7 @@ PatternSearcher::PatternSearcher(string input_filename, u_int*txt_len, u_int*num
         reverseIndexMap[i] = i;
     }
     
-    totalComparisons = static_cast<int>(n_non_terminals * std::log2(std::max(1, n_non_terminals)));
+    totalComparisons = static_cast<int>(1.1* n_non_terminals * std::log2(std::max(1, n_non_terminals)));
     if (totalComparisons == 0) totalComparisons = 1; // Prevent division by zero
     comparisons = 0;
     lastProgress = -1;
@@ -140,8 +143,8 @@ PatternSearcher::PatternSearcher(string input_filename, u_int*txt_len, u_int*num
             std::cout << "\rSorting progress: " << progress << "%" << std::flush;
             lastProgress = progress;
         }
-        if (MEMOIZE) {            
-            return this->compareRulesMemoized(a, b, true, memo);
+        if (MEMOIZE) {
+            return this->compareRulesMemoized(a, b, true, memo);;            
         }
         return this->compareRulesLazy(a, b, true);
     };
@@ -155,8 +158,20 @@ PatternSearcher::PatternSearcher(string input_filename, u_int*txt_len, u_int*num
     cout << "------------------------" << endl;
     cout << "Reordering Sequence" << endl;
 
+    // print keys and values of memo
+
     int last = 0;
     int current = 0;
+/* 
+    for (auto const& x : memo)
+    {
+        std::cout << x.first  // string (key)
+                  << ':' 
+                  << x.second.size() // string's value 
+                  << std::endl ;
+    } */
+
+    unordered_map<int, string> memo2;
 
     vector<int> distance_of_find(reverseIndexMap.size(), 0);
     for (int i = 0; i < reverseIndexMap.size(); i++) {
@@ -169,7 +184,8 @@ PatternSearcher::PatternSearcher(string input_filename, u_int*txt_len, u_int*num
             cout << "\r" << current << "%" << flush;
             last = current;
         }
-        int a_i = reverseIndexMap[i]; // index in ARSS of the i-th smallest rule (sorted by the reversed left side)
+        int a_i = reverseIndexMap[i]; // rule index of the i-th smallest rule (sorted by the reversed left side)
+        if (memo.find(a_i) != memo.end()) memo2[i] = memo[a_i];
         int b_i = normalized_sequenceR[a_i*2]; // left side of the rule
         int c_i = normalized_sequenceR[a_i*2+1]; // right side of the rule
         int n_b_i, n_c_i;
@@ -191,11 +207,23 @@ PatternSearcher::PatternSearcher(string input_filename, u_int*txt_len, u_int*num
     sortedSequenceR[n_non_terminals*2] = S_i; // update the initial symbol
     R = ARSSequence(sortedSequenceR, max_normalized + 1 + 1); //--------------------------------------------------
 
+    // print memo2
+/*     for (auto const& x : memo2)
+    {
+        std::cout << x.first  // string (key)
+                  << ':' 
+                  << x.second.size() // string's value 
+                  << std::endl ;
+    } */
+
+
     cout << "Sequence Reordered" << endl;
     cout << "------------------------" << endl;
     cout << "Sorting rules by lexicographic order of right side expansion" << endl;
 
-    totalComparisons = static_cast<int>(n_non_terminals * std::log2(std::max(1, n_non_terminals)));
+    //memo.clear();
+
+    totalComparisons = static_cast<int>(1.1 * n_non_terminals * std::log2(std::max(1, n_non_terminals)));
     if (totalComparisons == 0) totalComparisons = 1; // Prevent division by zero
     comparisons = 0;
     lastProgress = -1;
@@ -206,8 +234,8 @@ PatternSearcher::PatternSearcher(string input_filename, u_int*txt_len, u_int*num
             std::cout << "\rSorting progress: " << progress << "%" << std::flush;
             lastProgress = progress;
         }
-        if (MEMOIZE) {            
-            return this->compareRulesMemoized(a, b, false, memo);
+        if (MEMOIZE) {
+            return this->compareRulesMemoized(a, b, false, memo2);
         }
         return this->compareRulesLazy(a, b);
     };
@@ -268,6 +296,25 @@ int PatternSearcher::ruleLength(int i) {
     return l[i];
 }
 
+// i is the position in R of the rule (2*rule_index)
+string PatternSearcher::expandRule(int i) {
+    if (DEBUG) cout << "Expanding rule " << i << "->" << R[i] << "\t" << R[i+1] << endl;
+    string left, right;
+    if (R[i] < nt) {
+        left = string(1, sl[ R[i] + 1 ]);
+    } else {        
+        left = expandRule(2*(R[i]-nt));
+    }
+    if (R[i + 1] < nt) {
+        right = string(1, sl[ R[i+1] + 1 ]);
+    } else {
+        right = expandRule(2*(R[i+1]-nt));
+    }
+    string result = left + right;
+    return result;
+}
+
+// i is the position in R of the rule (2*rule_index)
 string PatternSearcher::expandRule(int i, unordered_map<int, string> &memo) {
     if (DEBUG) cout << "Expanding rule " << i << "->" << R[i] << "\t" << R[i+1] << endl;
     if (memo.find(i) != memo.end()) {
@@ -289,43 +336,31 @@ string PatternSearcher::expandRule(int i, unordered_map<int, string> &memo) {
     return result;
 }
 
-string PatternSearcher::expandRule(int i) {
-    if (DEBUG) cout << "Expanding rule " << i << "->" << R[i] << "\t" << R[i+1] << endl;
-    string left, right;
-    if (R[i] < nt) {
-        left = string(1, sl[ R[i] + 1 ]);
-    } else {        
-        left = expandRule(2*(R[i]-nt));
-    }
-    if (R[i + 1] < nt) {
-        right = string(1, sl[ R[i+1] + 1 ]);
-    } else {
-        right = expandRule(2*(R[i+1]-nt));
-    }
-    string result = left + right;
-    return result;
-}
-
+// i is the rule index
 string PatternSearcher::expandRightSideRule(int i, unordered_map<int, string> &memo) {
     string right;
-    if (R[i+1] < nt) {
-        right = string(1, sl[ R[i+1] + 1 ]);
+    int r_p = 2*i + 1;
+    if (R[r_p ] < nt) {
+        right = string(1, sl[ R[r_p ] + 1 ]);
     } else {
-        right = expandRule(2*(R[i+1]-nt), memo);
+        right = expandRule(2*(R[r_p ]-nt), memo);
     }
     return right;
 }
 
+// i is the rule index
 string PatternSearcher::expandLeftSideRule(int i, unordered_map<int, string> &memo) {
     string left;
-    if (R[i] < nt) {
-        left = string(1, sl[R[i] +1 ]);
+    int r_p = 2*i;
+    if (R[r_p] < nt) {
+        left = string(1, sl[R[r_p] +1 ]);
     } else {
-        left = expandRule(2*(R[i]-nt), memo);
+        left = expandRule(2*(R[r_p]-nt), memo);
     }
     return left;
 }
 
+// i is the position in R of the rule (2*rule_index)
 Generator<char> PatternSearcher::expandRuleLazy(int i, bool rev) {
     int f,s;
     f = rev? i+1: i;
@@ -348,6 +383,7 @@ Generator<char> PatternSearcher::expandRuleLazy(int i, bool rev) {
     }
 }
 
+// i is the position in R of the rule (2*rule_index)
 Generator<char> PatternSearcher::expandRuleSideLazy(int i, bool left) {   
     int lr_i = left? i: i+1;
     if (R[lr_i] < nt) {
@@ -360,6 +396,7 @@ Generator<char> PatternSearcher::expandRuleSideLazy(int i, bool left) {
     }
 }
 
+// i and j are the rule indexes
 bool PatternSearcher::compareRulesLazy(int i, int j, bool rev) {
     auto gen_i = expandRuleSideLazy(2 * i, rev);
     auto gen_j = expandRuleSideLazy(2 * j, rev);
@@ -370,7 +407,9 @@ bool PatternSearcher::compareRulesLazy(int i, int j, bool rev) {
     while (it_i != gen_i.end() && it_j != gen_j.end()) {
         char char_i = *it_i;
         char char_j = *it_j;
+        //cout << char_i << " vs " << char_j << ", ";
         if (char_i != char_j) {
+            //cout << endl;
             return char_i < char_j;
         }
         ++it_i;
@@ -380,17 +419,17 @@ bool PatternSearcher::compareRulesLazy(int i, int j, bool rev) {
     return (it_i == gen_i.end()) && (it_j != gen_j.end());
 }
 
+// i and j are the rule indexes
 bool PatternSearcher::compareRulesMemoized(int i, int j, bool rev, unordered_map<int, string>& memo) {
+    if (DEBUG) cout << "Comparing rules " << i << " and " << j << endl;
     string expansion_i, expansion_j;
-    if (rev) {// expand left side and reverse it
-        expansion_i = expandLeftSideRule(i, memo);
-        expansion_j = expandLeftSideRule(j, memo);
+    expansion_i = rev? expandLeftSideRule(i, memo) : expandRightSideRule(i, memo);
+    expansion_j = rev? expandLeftSideRule(j, memo) : expandRightSideRule(j, memo);
+    if (rev) {// expand left side and reverse it        
         reverse(expansion_i.begin(), expansion_i.end());
         reverse(expansion_j.begin(), expansion_j.end());
         return expansion_i < expansion_j;
     } else {
-        expansion_i = expandRightSideRule(i, memo);
-        expansion_j = expandRightSideRule(j, memo);
         return expansion_i < expansion_j;
     }
 }

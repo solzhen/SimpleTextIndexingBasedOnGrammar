@@ -31,14 +31,14 @@ link_directories(${SDSL_LIB_DIR})
 # Add cxxopts
 add_subdirectory(external/cxxopts)
 
+# Add the coroutine flag to the compiler options
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcoroutines")
+
+# Add general flags (equivalent to MY_CXX_FLAGS)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20 -Wall -Wextra -DNDEBUG -Wno-ignored-qualifiers -Wno-deprecated-copy -Wno-unused-parameter")
+
 # Add optimization-specific flags (equivalent to MY_CXX_OPT_FLAGS)
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -ffast-math -funroll-loops -msse4.2 -march=native -DNDEBUG")
-
-# Configuración común (aplicable a todos los modos)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcoroutines -std=c++20 -Wno-ignored-qualifiers -Wno-deprecated-copy -Wno-unused-parameter")
-
-# Configuración de Debug
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Wextra -Wpedantic")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -ffast-math -funroll-loops -msse4.2 -march=native")
 
 # Compile the main program
 add_executable(${PROGRAM_NAME} ${SOURCES} ${REPAIRS_OBJECTS})

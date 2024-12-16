@@ -49,6 +49,14 @@ public:
     /// @param i 
     /// @return 
     int inverse(int i);
+    long long bitsize() { 
+        long long size = 0;
+        size += size_in_bytes(b.b)*8;
+        size += size_in_bytes(b.rank)*8;
+        size += size_in_bytes(pi)*8;
+        size += size_in_bytes(S)*8;
+        return  size;
+    }
 };
 /// @brief bitvector-based repersentation of a permutation using 
 /// shortcuts with power operation support

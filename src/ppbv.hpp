@@ -35,5 +35,12 @@ public:
     //void bitset(u32 i);
     //void bitclear(u32 i);
     u32 size() { return rrrb.size(); }
+    long long bitsize() {   
+    return size_in_bytes(rrrb)*8 + 
+        size_in_bytes(rank_1_)*8 + 
+        size_in_bytes(rank_0_)*8 + 
+        size_in_bytes(select_1_)*8 + 
+        size_in_bytes(select_0_)*8;
+    };
 };
 using ppbv = PreprocessedBitvector;

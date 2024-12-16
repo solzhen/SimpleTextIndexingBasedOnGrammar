@@ -49,7 +49,7 @@ int main(int argc, char* argv[]) {
         ("d,debug", "Enable debugging mode")
         ("t,time", "Print execution time")
         ("h,help", "Print usage")
-        ("m,memoize", "Memoize the expansion of the rules");
+        ("s,skip", "Skip the sorting of the rules");
         
     auto result = options.parse(argc, argv);
     if (result.count("help")) {
@@ -71,9 +71,9 @@ int main(int argc, char* argv[]) {
         std::cout << "Execution time will be printed." << std::endl;
         TIME = true;
     }
-    if (result["memoize"].as<bool>()) {
-        std::cout << "Memoization enabled." << std::endl;
-        MEMOIZE = true;
+    if (result["skip"].as<bool>()) {
+        std::cout << "Skipping the sorting of the rules." << std::endl;
+        SKIP = true;
     }
 
     using std::chrono::high_resolution_clock;
@@ -81,13 +81,22 @@ int main(int argc, char* argv[]) {
     using std::chrono::duration;
     using std::chrono::milliseconds;
 
+    long long bit_s; 
+    u_int txt_len, num_rules;
+
     auto t1 = high_resolution_clock::now();    
-    PatternSearcher PS(input_filename);
+    PatternSearcher PS(input_filename, &txt_len, &num_rules, &bit_s);
     auto t2 = high_resolution_clock::now();
     if (TIME) {
         duration<double, std::milli> ms_double = t2 - t1;
         std::cout << "Time taken to build the pattern searcher: " << ms_double.count() << " ms" << std::endl;    
     }   
+    std::ostringstream nullStream; // Pass a dummy stream
+    
+    cout << "Est_size: " << bit_s << endl;
+    long long rbs = PS.bitsize();
+    cout << "Bitsize:" << rbs << endl;
+    cout << "bps: " << (float) rbs / txt_len << endl;
     
     while (true) {
         cout << "Enter the pattern to search: ";

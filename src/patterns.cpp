@@ -4,7 +4,7 @@
 // Use (void) to silence unused warnings.
 #define assertm(exp, msg) assert((void(msg), exp))
 
-bool MEMOIZE = false;
+bool SKIP = false;
 // MACROS
 #define seqR2normalized(c, result) \
     do { \
@@ -21,7 +21,7 @@ bool MEMOIZE = false;
             (result) = c - rank_bbbb(257) + 257; \
     } while (0)
 
-PatternSearcher::PatternSearcher(string input_filename, u_int*txt_len, u_int*num_rules, u_int*bitsize) { 
+PatternSearcher::PatternSearcher(string input_filename, u_int*txt_len, u_int*num_rules, long long*bitsize) { 
     FILE *input;
     DICT *dict;
     input  = fopen(input_filename.c_str(), "rb");
@@ -35,10 +35,8 @@ PatternSearcher::PatternSearcher(string input_filename, u_int*txt_len, u_int*num
 
     RULE *rules = dict->rule; // set or rules 
     CODE *comp_seq = dict->comp_seq; // sequence C
-
     int len = dict->txt_len; // length of the text
     cout << "Text length: " << len << endl;
-
     cout << ". . .Adding extra rules to get rid of sequence C" << endl;
 
     while (dict->seq_len > 1) {
@@ -133,6 +131,7 @@ PatternSearcher::PatternSearcher(string input_filename, u_int*txt_len, u_int*num
     R = arsSequence; //--------------------------------------------------  
     cout << "------------------------" << endl;
     cout << "Sorting rules by lexicographic order of left side reverse expansion" << endl;
+
     int_vector indexMap(n_non_terminals);
     int_vector reverseIndexMap(n_non_terminals);
 
@@ -140,7 +139,7 @@ PatternSearcher::PatternSearcher(string input_filename, u_int*txt_len, u_int*num
         indexMap[i] = i;
         reverseIndexMap[i] = i;
     }
-    
+
     int totalComparisons = static_cast<int>(1.1* n_non_terminals * std::log2(std::max(1, (int)n_non_terminals)));
     if (totalComparisons == 0) totalComparisons = 1; // Prevent division by zero
     int comparisons = 0;
@@ -155,11 +154,13 @@ PatternSearcher::PatternSearcher(string input_filename, u_int*txt_len, u_int*num
         }
         return this->compareRulesLazy(a, b, true);
     };
+if (!SKIP) {
     sort(
         reverseIndexMap.begin(), 
         reverseIndexMap.end(), 
         progressComparatorRev
     );
+};
     cout << "\rSorting progress: 100%" << endl;
     cout << "Sorting succesfull" << endl;
     cout << "------------------------" << endl;
@@ -178,8 +179,6 @@ PatternSearcher::PatternSearcher(string input_filename, u_int*txt_len, u_int*num
                   << std::endl ;
     } */
 
-    unordered_map<int, string> memo2;
-
     vector<int> distance_of_find(reverseIndexMap.size(), 0);
     for (int i = 0; i < reverseIndexMap.size(); i++) {
         distance_of_find[reverseIndexMap[i]] = i;        
@@ -192,7 +191,6 @@ PatternSearcher::PatternSearcher(string input_filename, u_int*txt_len, u_int*num
             last = current;
         }
         int a_i = reverseIndexMap[i]; // rule index of the i-th smallest rule (sorted by the reversed left side)
-        if (memo.find(a_i) != memo.end()) memo2[i] = memo[a_i];
         int b_i = normalized_sequenceR[a_i*2]; // left side of the rule
         int c_i = normalized_sequenceR[a_i*2+1]; // right side of the rule
         int n_b_i, n_c_i;
@@ -209,6 +207,7 @@ PatternSearcher::PatternSearcher(string input_filename, u_int*txt_len, u_int*num
         sortedSequenceR[i*2] = n_b_i; // update the left side of the rule
         sortedSequenceR[i*2+1] = n_c_i; // update the right side of the rule
     } cout << "\r100%" << endl;
+
     int S_i = distance(reverseIndexMap.begin(), find(reverseIndexMap.begin(), reverseIndexMap.end(), n_non_terminals-1)); // index of the initial symbol in the sorted sequence   
     cout << "Initial rule S: " << S_i << endl;
     sortedSequenceR[n_non_terminals*2] = S_i; // update the initial symbol
@@ -230,14 +229,17 @@ PatternSearcher::PatternSearcher(string input_filename, u_int*txt_len, u_int*num
         }
         return this->compareRulesLazy(a, b);
     };
+if (!SKIP) {
     sort(
         indexMap.begin(), 
         indexMap.end(), 
         progressComparator
     );
+}
     std::cout << "\rSorting progress: 100%" << std::endl;
     cout << "Sorting succesfull" << endl;
     cout << "------------------------" << endl;
+
 
     cout << "Creating points for grid" << endl;
     std::vector<Point> points(n_non_terminals);
@@ -260,8 +262,9 @@ PatternSearcher::PatternSearcher(string input_filename, u_int*txt_len, u_int*num
     cout << "Grid created" << endl;
     cout << "------------------------" << endl;
     cout << "Precalculating lengths" << endl;
-    l = int_vector<>(n_non_terminals, 0); //--------------------------------------------------
+    l = int_vector<>(n_non_terminals, 0, ceil(log2(len+1))); //--------------------------------------------------
     for (int i = 0; i < n_non_terminals; i++) {
+        if (SKIP) l[i] = floor(log2(len)); else
         l[i] = ruleLength(i);
     }
     cout << "Lengths precalculated" << endl;

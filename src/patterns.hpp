@@ -13,7 +13,7 @@ extern "C" { // C implementation of repair and encoder
     #include "../repairs/repair110811/encoder.h"
 }
 
-extern bool MEMOIZE;
+extern bool SKIP;
 
 template <typename T>
 struct Generator {
@@ -88,12 +88,17 @@ public:
     PatternSearcher(){};    
     /// @brief Construct a pattern searcher from a text file
     /// @param input_filename 
-    PatternSearcher(string input_filename, u_int*txt_len=nullptr, u_int*num_rules=nullptr, u_int*bitsize=nullptr);
+    PatternSearcher(string input_filename, 
+        u_int*txt_len=nullptr, u_int*num_rules=nullptr, long long *bitsize=nullptr);
     /// @brief Report all occurences of a pattern in the text
     /// @param occurences Vector to store the occurences
     /// @param P Pattern to search
     void search(vector<int> *occurences, string P, vector<int> *rules_found = nullptr);
     int numRules() { return R.size() / 2; }
     int ruleAt(int i);
+    long long bitsize() { 
+        return G.bitsize() + R.bitsize() + size_in_bytes(l)*8 + 
+            2 * sizeof(u_int)*8 + 2 * sizeof(u_char)*8 * sl.size() ; 
+    }
 };
 

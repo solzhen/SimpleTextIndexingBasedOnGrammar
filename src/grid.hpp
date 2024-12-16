@@ -80,4 +80,5 @@ public:
     /// @param c 
     /// @return 
     u32 select(u32 j, u32 c) {return wt.select(j, c);};
+    long long bitsize() { return wt.bitsize() + 3 * 32; }
 };

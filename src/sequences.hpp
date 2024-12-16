@@ -59,6 +59,21 @@ public:
             cout << access(i) << " ";
         } cout << endl;
     }
+    long long bitsize() {
+        long long size = 0;
+        for (auto a : A)      {    
+            size_t total_bytes = size_in_bytes(a.b) + size_in_bytes(a.rank) + size_in_bytes(a.sel_1) + size_in_bytes(a.sel_0);
+            size += total_bytes*8;
+        }
+        for (auto d : D) {
+            size_t total_bytes = size_in_bytes(d.b) + size_in_bytes(d.sel_1) + size_in_bytes(d.sel_0);
+            size += total_bytes*8;
+        }
+        for (auto p : pi) {
+            size += p.bitsize();
+        }
+        return size;
+    }
 };
 
 void seq_test();

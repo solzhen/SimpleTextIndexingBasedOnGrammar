@@ -49,6 +49,14 @@ public:
     ppbv operator[](u32 level);
     u32 offset(u32 level);
     u32 size() { return bm[0].size(); }
+    long long bitsize() { 
+        long long bsize = 0;
+        for (ppbv b : bm) {
+            bsize += b.bitsize();
+        }
+        bsize += 32 * z.size() + 32;
+        return bsize;
+    };
 };
 
 #endif

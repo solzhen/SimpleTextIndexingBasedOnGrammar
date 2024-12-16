@@ -4,6 +4,7 @@
 TEST_CASE("Sequence basic operations on 1,0 alternating sequence", "[sequence]") {
     int_vector<> vec({1, 0, 1, 0, 1, 0, 1, 0, 1, 0});
     ARSSequence seq = ARSSequence(vec, 2);
+    cout << "Sequence: ";
     REQUIRE(seq.size() == 10);
     REQUIRE(seq.access(0) == 1);
     REQUIRE(seq.access(1) == 0);

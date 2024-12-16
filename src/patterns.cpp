@@ -21,7 +21,7 @@ bool MEMOIZE = false;
             (result) = c - rank_bbbb(257) + 257; \
     } while (0)
 
-PatternSearcher::PatternSearcher(string input_filename, u_int*txt_len, u_int*num_rules) { 
+PatternSearcher::PatternSearcher(string input_filename, u_int*txt_len, u_int*num_rules, u_int*bitsize) { 
     FILE *input;
     DICT *dict;
     input  = fopen(input_filename.c_str(), "rb");
@@ -99,7 +99,7 @@ PatternSearcher::PatternSearcher(string input_filename, u_int*txt_len, u_int*num
     rk = rank; //--------------------------------------------------
 
     int_vector<> normalized_sequenceR(sequenceR.size(), 0, sizeof(CODE) * 8);
-    int sz = sequenceR.size(); // size of the sequence R
+    u_int sz = sequenceR.size(); // size of the sequence R
     int r;
     int max_normalized = 0; // maximum symbol in the normalized alphabet
     for (int i = 0; i < sz; i++) {
@@ -110,11 +110,23 @@ PatternSearcher::PatternSearcher(string input_filename, u_int*txt_len, u_int*num
         }
     }
     int n_terminals = rk[256];
-    int n_non_terminals = sz / 2;
+    u_int n_non_terminals = sz / 2;
     nt = n_terminals; //--------------------------------------------------
     cout << "Max Symbol: " << max_normalized << endl;
     cout << "N. of Terminals: " << n_terminals << endl;
     cout << "N. of Non-terminals: " << n_non_terminals << endl;
+
+    // estimated size: (r = n_non_terminals, n = dict->txt_len, sigma = n_terminals)
+    // bitsize = 4224 + r \log n +  + 32 \log r + 1.5 r \log r + 10r + 2 r \log {(r + \sigma)}
+    u_int bs = 4224 + n_non_terminals * (std::log2(dict->txt_len)) + 
+        32 * std::log2(n_non_terminals) + 
+        1.5 * n_non_terminals * std::log2(n_non_terminals) + 
+        10 * n_non_terminals + 
+        2 * n_non_terminals * std::log2(n_non_terminals + n_terminals);
+    if (bitsize) *bitsize = bs;
+    cout << "Estimated size: " << bs << " bits" << endl;
+    // compression ratio
+    cout << "Bits per symbol: " << (float)bs / ((float)dict->txt_len) << endl;
     if (num_rules) *num_rules = n_non_terminals;
     free(dict);
     ARSSequence arsSequence(normalized_sequenceR, max_normalized + 1); 
@@ -129,10 +141,10 @@ PatternSearcher::PatternSearcher(string input_filename, u_int*txt_len, u_int*num
         reverseIndexMap[i] = i;
     }
     
-    totalComparisons = static_cast<int>(1.1* n_non_terminals * std::log2(std::max(1, n_non_terminals)));
+    int totalComparisons = static_cast<int>(1.1* n_non_terminals * std::log2(std::max(1, (int)n_non_terminals)));
     if (totalComparisons == 0) totalComparisons = 1; // Prevent division by zero
-    comparisons = 0;
-    lastProgress = -1;
+    int comparisons = 0;
+    int lastProgress = -1;
     unordered_map<int, string> memo;
     auto progressComparatorRev = [&](int a, int b) {
         comparisons++;
@@ -202,23 +214,10 @@ PatternSearcher::PatternSearcher(string input_filename, u_int*txt_len, u_int*num
     sortedSequenceR[n_non_terminals*2] = S_i; // update the initial symbol
     R = ARSSequence(sortedSequenceR, max_normalized + 1 + 1); //--------------------------------------------------
 
-    // print memo2
-/*     for (auto const& x : memo2)
-    {
-        std::cout << x.first  // string (key)
-                  << ':' 
-                  << x.second.size() // string's value 
-                  << std::endl ;
-    } */
-
-
     cout << "Sequence Reordered" << endl;
     cout << "------------------------" << endl;
     cout << "Sorting rules by lexicographic order of right side expansion" << endl;
 
-    //memo.clear();
-
-    totalComparisons = static_cast<int>(1.1 * n_non_terminals * std::log2(std::max(1, n_non_terminals)));
     if (totalComparisons == 0) totalComparisons = 1; // Prevent division by zero
     comparisons = 0;
     lastProgress = -1;
@@ -261,7 +260,7 @@ PatternSearcher::PatternSearcher(string input_filename, u_int*txt_len, u_int*num
     cout << "Grid created" << endl;
     cout << "------------------------" << endl;
     cout << "Precalculating lengths" << endl;
-    l = vector<uint>(n_non_terminals, 0); //--------------------------------------------------
+    l = int_vector<>(n_non_terminals, 0); //--------------------------------------------------
     for (int i = 0; i < n_non_terminals; i++) {
         l[i] = ruleLength(i);
     }

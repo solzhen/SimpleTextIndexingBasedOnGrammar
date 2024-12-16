@@ -64,7 +64,7 @@ public:
     Grid G; // Grid
     ARSSequence R; // ARS sequence
     u_int S; // Initial symbol
-    vector<uint> l; // Lengths of the expansion of the rules
+    int_vector<> l; // Lengths of the expansion of the rules
     uint nt; // Number of terminals
     vector<unsigned char> sl; // select vector for normalized alphabet
     vector<unsigned char> rk; // rank vector for normalized alphabet
@@ -82,13 +82,13 @@ public:
     int compareRuleWithPatternLazy(int i, string pattern, bool rev = false);
     void secondaries(vector<int> *occurences, u_int A_i, u_int offset=0, bool terminal = false);    
     int ruleAt(int r_i, int i);
-    int totalComparisons;
-    int comparisons;
-    int lastProgress;
+    //int totalComparisons;
+    //int comparisons;
+    //int lastProgress;
     PatternSearcher(){};    
     /// @brief Construct a pattern searcher from a text file
     /// @param input_filename 
-    PatternSearcher(string input_filename, u_int*txt_len=nullptr, u_int*num_rules=nullptr);
+    PatternSearcher(string input_filename, u_int*txt_len=nullptr, u_int*num_rules=nullptr, u_int*bitsize=nullptr);
     /// @brief Report all occurences of a pattern in the text
     /// @param occurences Vector to store the occurences
     /// @param P Pattern to search

@@ -397,6 +397,57 @@ TEST_CASE("2-size Pattern Search","[2size]") {
             out << text_length << " " << r.pattern << " " << r.occs << " " << r.time << endl;
         }
     }
+}
 
-
+TEST_CASE("PatternSearcherBig_m=10","[m10]") {   
+    REQUIRE_FALSE(g_fileName.empty());
+    string input_filename = g_fileName;
+    string output_filename = g_fileName + ".big.10m.results.txt";
+    using std::chrono::high_resolution_clock;
+    using std::chrono::duration_cast;
+    using std::chrono::duration;
+    using std::chrono::milliseconds;
+    TIME = true;
+    u_int txt_len;
+    u_int rule_ct;
+    int n = 35;
+    cout << "Enter the number of patterns to search: ";
+    cin >> n;
+    auto t1 = high_resolution_clock::now();
+    PatternSearcher PS = PatternSearcher(input_filename, &txt_len, &rule_ct);
+    auto t2 = high_resolution_clock::now();
+    long long microseconds = std::chrono::duration_cast<std::chrono::microseconds>(
+        t2 - t1).count(); 
+    std::cout << "Time taken to build the pattern searcher: " << microseconds << " microseconds" << std::endl;
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    string filecontent = "";
+    std::ifstream file(input_filename, std::ios::in | std::ios::binary);
+    if (!file) {
+        std::cerr << "Error opening input file!" << std::endl;
+        exit(1);
+    }
+    std::ostringstream content;
+    content << file.rdbuf();
+    filecontent = content.str();
+    file.close();
+    ofstream out(output_filename);
+    if (!out) {
+        std::cerr << "Error opening output file!" << std::endl;
+        exit(1);
+    }
+    out << txt_len << " " << rule_ct << endl;
+    int m = 10;    
+    for (int i = 0; i < n; i++) {
+        int r = rand() % (filecontent.size() - m - 1);
+        std::string pattern = filecontent.substr(r, m);
+        vector<int> occs;
+        auto t3 = high_resolution_clock::now();
+        PS.search(&occs, pattern);
+        auto t4 = high_resolution_clock::now();            
+        long long microseconds = std::chrono::duration_cast<std::chrono::microseconds>(
+            t4 - t3).count();
+        out << txt_len << " " << rule_ct << " " << m << " " << occs.size() << " " << microseconds << endl; 
+        cout << "\r" << i+1 << "/" << n  << flush; 
+    } cout << "\r" << n << "/" << n << endl;    
+    out.close();
 }

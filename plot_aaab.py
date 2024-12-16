@@ -35,6 +35,13 @@ pattern_size time
 92 8.27877
 96 8.69826
 '''
+
+#  32 + r*log*n + 16*256 bits + 3*32 + 32 + 32log(r) + log(r) * 1.5 r + 12r + 2r / log r + 2r log (sigma + r)
+def size(r, s):
+    return 32 + r * np.log2(s) + 16 * 256 + 3 * 32 + 32 + 32 * np.log2(r) + np.log2(r) * 1.5 * r + 12 * r + 2 * r / np.log2(r) + 2 * r * np.log2(256 + r)
+
+
+
 import matplotlib.pyplot as plt
 #plot time vs. pattern_size
 pattern_size = [2, 3, 5, 7, 9, 13, 16, 18, 21, 23, 26, 29, 32, 34, 37, 40, 43, 46, 49, 51, 53, 56, 59, 63, 65, 69, 74, 78, 81, 83, 86, 89, 92, 96]

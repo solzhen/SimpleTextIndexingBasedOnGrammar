@@ -1,4 +1,5 @@
 #include "nsequences.hpp"
+#include "debug_config.hpp"
 
 using namespace sdsl;
 using namespace std;
@@ -160,10 +161,20 @@ int RSequence::rank(int c, int i) {
 }
 
 //A_k.select_1(j) = A_.select_1(j + A_.rank_1(B_.sel_1(k+1))) - B_.sel_1(k+1)
-int RSequence::select_1_A(int k, int i) {
-    if (i == 0) return -1;
+int RSequence::select_1_A(int k, int j) {
+    if (DEBUG) cout << "k = " << k << " j = " << j << endl;
+    if (j == 0) return -1;
     int C_k = B_.sel(k+1);
-    return A_.sel_1(i + C_k - A_.rank(C_k))  - C_k;
+    int C_kp1 = B_.sel(k+2);
+    if (j >= (C_kp1 - C_k)) return j; // A_k.size()
+    if (DEBUG) cout << "C_k = " << C_k << endl;
+    if (DEBUG) cout << "C_k+1 = " << B_.sel(k+2) << endl;
+    // A_.rank_1 = C_k - A_.rank_0(C_k)
+    int j_prime = j + C_k - A_.rank(C_k);
+    if (DEBUG) cout << "A_.rank_1(C_k) = " << C_k - A_.rank(C_k) << endl;
+    if (DEBUG) cout << "j_prime = " << j_prime << endl;
+    if (DEBUG) cout << "A_.sel_1(j_prime) = " << A_.sel_1(j_prime) << endl;
+    return A_.sel_1(j_prime) - C_k;
 }
 // A_k.rank_1(i) = A_.rank_1(i +  B_.sel_1(k+1)) - A_.rank_1(B_.sel_1(k+1))
 int RSequence::rank_A(int c, int i) {
@@ -182,10 +193,13 @@ int RSequence::pred_0_A(int c, int s) {
 int RSequence::select(int c, int j) {
     if (j == 0) return -1;
     int s = select_1_A(c, j);
+    if (DEBUG) cout << "s = " << s << endl;
     if (s >= (B_.sel(c+2) - B_.sel(c+1))) return n; // A_c.size()
     int pred = pred_0_A(c, s);
+    if (DEBUG) cout << "pred = " << pred << endl;
     int j_prime = s - pred;
     int sL = select_1_D(s+1-j, c ) - (c); // s-j :: which chunk
+    if (DEBUG) cout << "sL = " << sL << endl;
     return (s+1-j)*sigma + pi[s+1-j].permute(j_prime + sL);
 }
 

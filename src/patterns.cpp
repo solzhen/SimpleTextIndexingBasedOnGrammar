@@ -127,7 +127,7 @@ PatternSearcher::PatternSearcher(string input_filename, u_int*txt_len, u_int*num
     cout << "Bits per symbol: " << (float)bs / ((float)dict->txt_len) << endl;
     if (num_rules) *num_rules = n_non_terminals;
     free(dict);
-    ARSSequence arsSequence(normalized_sequenceR, max_normalized + 1); 
+    RSequence arsSequence(normalized_sequenceR, max_normalized + 1); 
     R = arsSequence; //--------------------------------------------------  
     cout << "------------------------" << endl;
     cout << "Sorting rules by lexicographic order of left side reverse expansion" << endl;
@@ -211,7 +211,7 @@ if (!SKIP) {
     int S_i = distance(reverseIndexMap.begin(), find(reverseIndexMap.begin(), reverseIndexMap.end(), n_non_terminals-1)); // index of the initial symbol in the sorted sequence   
     cout << "Initial rule S: " << S_i << endl;
     sortedSequenceR[n_non_terminals*2] = S_i; // update the initial symbol
-    R = ARSSequence(sortedSequenceR, max_normalized + 1 + 1); //--------------------------------------------------
+    R = RSequence(sortedSequenceR, max_normalized + 1 + 1); //--------------------------------------------------
 
     cout << "Sequence Reordered" << endl;
     cout << "------------------------" << endl;

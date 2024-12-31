@@ -3,7 +3,7 @@
 #include <sdsl/bit_vectors.hpp>
 #include "grid.hpp"
 #include "permutations.hpp"
-#include "sequences.hpp"
+#include "nsequences.hpp"
 #include "debug_config.hpp"
 using namespace sdsl;
 using namespace std;
@@ -61,7 +61,7 @@ class PatternSearcher {
 //private:
 public:
     Grid G; // Grid
-    ARSSequence R; // ARS sequence
+    RSequence R; // ARS sequence
     u_int S; // Initial symbol
     int_vector<> l; // Lengths of the expansion of the rules
     uint nt; // Number of terminals

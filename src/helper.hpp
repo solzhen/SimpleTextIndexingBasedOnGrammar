@@ -24,23 +24,24 @@ std::string expandSequence(const CODE* sequence, const int seq_len, const RULE* 
 #ifndef HELPER_HPP
 #define HELPER_HPP
 
+// rank_1, select_1 bit vector
 typedef struct rbv {
     bit_vector b;
-    rank_support_v<1, 1> rank;
-    select_support_mcl<1, 1> sel;
+    rank_support_v<1, 1> rank; // rank_1
+    select_support_mcl<1, 1> sel; // select_1
 } rbv;
-
+// rank_0, select_1, select_0 bit vector
 typedef struct abv {
     bit_vector b;
-    rank_support_v<0> rank;
-    select_support_mcl<1, 1> sel_1;
-    select_support_mcl<0, 1> sel_0;
+    rank_support_v<0> rank; // rank_0
+    select_support_mcl<1, 1> sel_1; // select_1
+    select_support_mcl<0, 1> sel_0; // select_0
 } abv;
-
+// select_1, select_0 bit vector
 typedef struct dbv {
     bit_vector b;
-    select_support_mcl<1, 1> sel_1;
-    select_support_mcl<0, 1> sel_0;
+    select_support_mcl<1, 1> sel_1; // select_1
+    select_support_mcl<0, 1> sel_0; // select_0
 } dbv;
 
 #endif // HELPER_HPP

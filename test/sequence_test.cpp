@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include "sequences.hpp"
 #include "nsequences.hpp"
+#include "debug_config.hpp"
 
 // count the number of occurrences of symbol c in v up to and including position i
 int t_rank(int_vector<> v, int c, int i) {
@@ -23,10 +24,10 @@ int t_select(int_vector<> v, int c, int j) {
     return v.size();
 }
 
-TEST_CASE("Sequence basic operations on 1,0 alternating sequence", "[sequence]") {
+TEST_CASE("Sequence basic operations", "[sequence]") {
     int_vector<> vec({1, 0, 2, 1, 2, 2, 2, 0, 1, 0, 0, 3, 2, 1, 0, 0, 2, 3, 5, 4, 7, 0, 1, 2, 4, 4, 6, 0, 0, 1, 1, 0});
     ARSSequence seq = ARSSequence(vec, 8);
-    // print vector
+/*     // print vector
     cout << "S = " << vec << endl;    
     // print member A
     for (u_int i = 0; i < seq.A.size(); i++) {
@@ -39,7 +40,7 @@ TEST_CASE("Sequence basic operations on 1,0 alternating sequence", "[sequence]")
     // print member pi
     for (u_int i = 0; i < seq.pi.size(); i++) {
         cout << "pi[" << i << "]: " << seq.pi[i].pi << endl;
-    }
+    } */
     cout << "Accessing sequence..." << endl;
     for (u_int i = 0; i < vec.size(); i++) {
         REQUIRE(seq.access(i) == vec[i]);
@@ -61,10 +62,10 @@ TEST_CASE("Sequence basic operations on 1,0 alternating sequence", "[sequence]")
     
 }
 
-TEST_CASE("New Sequence basic operations on 1,0 alternating sequence", "[sequence]") {
+TEST_CASE("New Sequence basic operations", "[sequence]") {
     int_vector<> vec({1, 0, 2, 1, 2, 2, 2, 0, 1, 0, 0, 3, 2, 1, 0, 0, 2, 3, 5, 4, 7, 0, 1, 2, 4, 4, 6, 0, 0, 1, 1, 0});
     RSequence seq = RSequence(vec, 8);
-    // print vector
+/*     // print vector
     cout << "S = " << vec << endl;    
     // print member A_
     cout << "A_.b: " << seq.A_.b << endl;
@@ -77,7 +78,7 @@ TEST_CASE("New Sequence basic operations on 1,0 alternating sequence", "[sequenc
     // print member pi
     for (u_int i = 0; i < seq.pi.size(); i++) {
         cout << "pi[" << i << "]: " << seq.pi[i].pi << endl;
-    }
+    } */
     cout << "Accessing sequence..." << endl;
     for (u_int i = 0; i < vec.size(); i++) {
         REQUIRE(seq.access(i) == vec[i]);
@@ -94,6 +95,57 @@ TEST_CASE("New Sequence basic operations on 1,0 alternating sequence", "[sequenc
             REQUIRE(seq.select(c, j) == t_select(vec, c, j));
         }
     }
+}
+
+TEST_CASE("New Sequence basic operations on random sequence", "[sequence]") {
+    u_int sigma = 100;
+    u_int n = 15000;
+    int_vector<> vec = int_vector<>(n, 0);    
+    for (u_int i = 0; i < n; i++) {
+        vec[i] = rand() % sigma;
+    }
+    // ensure all symbols are present in the sequence
+    for (u_int c = 0; c < sigma; c++) {
+        vec[c] = c;
+    }
+    cout << "Accessing sequence..." << endl;
+    RSequence seq = RSequence(vec, sigma);
+    for (u_int i = 0; i < vec.size(); i++) {
+        REQUIRE(seq.access(i) == vec[i]);
+    }
+/*     cout << "Rank queries... 0%" << flush;
+    for (u_int i = 0; i < vec.size(); i++) {
+        if (i % (n/100) == 0) {
+            cout << "\rRank queries... " << i*100/n << "%" << flush;
+        }
+        for (u_int c = 0; c < sigma; c++) {
+            REQUIRE(seq.rank(c, i) == t_rank(vec, c, i));
+        }
+    }
+    cout << "\rRank queries... 100%" << endl; */
+
+/*     // catch SISSEGV
+    int asd = t_select(vec, 41, 1857);
+    cout << asd << endl;
+    DEBUG = true;
+    try {
+        seq.select(41,1857);
+    } catch (const std::exception& e) {
+        cout << e.what() << endl;
+    }
+    DEBUG = false; */
+    //cout << "Select query" << flush;
+    cout << "Select queries... 0%" << flush;
+    for (u_int j = 1; j < vec.size(); j++) {
+        if (j % (n/100) == 0) {
+            cout << "\rSelect queries... " << j*100/n << "%" << flush;
+        }
+        for (u_int c = 0; c < sigma; c++) {
+            //cout << "\rSelect(" << c << ", " << j << ")" << flush;
+            REQUIRE(seq.select(c, j) == t_select(vec, c, j));
+        }
+    }
+    cout << "\rSelect queries... 100%" << endl;
 }
 
 

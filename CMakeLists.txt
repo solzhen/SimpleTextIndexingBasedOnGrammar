@@ -63,6 +63,7 @@ set(IMPLEMENTATION_SOURCES
     src/file_handler.cpp
     src/patterns.cpp
     src/debug_config.cpp
+    src/nsequences.cpp
 )
 
 add_executable(tests.x ${TEST_SOURCES} ${REPAIRS_OBJECTS} ${IMPLEMENTATION_SOURCES})

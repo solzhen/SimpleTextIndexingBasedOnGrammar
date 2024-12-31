@@ -2,7 +2,6 @@
 #include <iostream>
 #include <sdsl/bit_vectors.hpp>
 #include "grid.hpp"
-#include "helper.hpp"
 #include "permutations.hpp"
 #include "sequences.hpp"
 #include "debug_config.hpp"

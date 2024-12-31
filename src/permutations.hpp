@@ -26,12 +26,13 @@ typedef struct brv {
 /// @brief bitvector-based repersentation of a permutation using shortcuts
 class Permutation {
     friend class PowerPermutation;
-protected:    
+protected:
+public:       
     int rank_b(int i);
     int_vector<> pi; // permutation
     int_vector<> S; // shortcuts
     brv b; // bit vector to mark shortcuts
-public:    
+ 
     Permutation();
     int t; // parameter t    
     

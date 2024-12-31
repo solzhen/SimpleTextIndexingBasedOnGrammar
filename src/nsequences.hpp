@@ -6,9 +6,11 @@
 using namespace sdsl;
 using namespace std;
 
-class ARSSequence {
+class RSequence {
+private:
 public:
-    vector<abv> A;
+    abv A_;
+    rbv B_;
     vector<dbv> D;
     vector<Permutation> pi;
     int sigma; int n;
@@ -18,11 +20,12 @@ public:
     int select_1_A(int k, int i);
     int rank_A(int c, int i);
     int pred_0_A(int c, int s);
-    ARSSequence();
+
+    RSequence();
     /// @brief Builds structure to support rank, select and access queries
     /// @param S integer vector representing the sequence
     /// @param sigma size of alphabet [0 . . . sigma)
-    ARSSequence(int_vector<> S, int sigma);
+    RSequence(int_vector<> S, int sigma);
     /// @brief Access query
     /// @param i position in the sequence
     /// @return The symbol at position i
@@ -46,19 +49,7 @@ public:
         } cout << endl;
     }
     long long bitsize() {
-        long long size = 0;
-        for (auto a : A)      {    
-            size_t total_bytes = size_in_bytes(a.b) + size_in_bytes(a.rank) + size_in_bytes(a.sel_1) + size_in_bytes(a.sel_0);
-            size += total_bytes*8;
-        }
-        for (auto d : D) {
-            size_t total_bytes = size_in_bytes(d.b) + size_in_bytes(d.sel_1) + size_in_bytes(d.sel_0);
-            size += total_bytes*8;
-        }
-        for (auto p : pi) {
-            size += p.bitsize();
-        }
-        return size;
+        return 0;
     }
 };
 

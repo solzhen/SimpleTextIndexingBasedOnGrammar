@@ -29,8 +29,6 @@ RSequence::RSequence(int_vector<> S, int sigma) : sigma(sigma){
         F[i] = 0; // reset f
     } 
     B_.b[C_[sigma]] = 1;
-    B_.rank = rank_support_v<1, 1>(&B_.b);
-    B_.sel = select_support_mcl<1, 1>(&B_.b); 
 
     // now we use F to hold the index for each chunk in the loop below
     for (int k = 0; k < noc; k++) {
@@ -44,10 +42,6 @@ RSequence::RSequence(int_vector<> S, int sigma) : sigma(sigma){
             F[c]++;
         }
     }
-
-    A_.rank = rank_support_v<0>(&A_.b);
-    A_.sel_1 = select_support_mcl<1, 1>(&A_.b);
-    A_.sel_0 = select_support_mcl<0, 1>(&A_.b);
 
     vector<int_vector<>> pi_v(noc);
     D = vector<dbv>(noc);
@@ -85,10 +79,24 @@ RSequence::RSequence(int_vector<> S, int sigma) : sigma(sigma){
     for (int i = 0; i < noc; i++) {
         pi[i] = Permutation(pi_v[i], 3);
     }
+    A_.rank = rank_support_v<0>(&A_.b);
+    A_.sel_1 = select_support_mcl<1, 1>(&A_.b);
+    A_.sel_0 = select_support_mcl<0, 1>(&A_.b);
+    B_.rank = rank_support_v<1, 1>(&B_.b);
+    B_.sel = select_support_mcl<1, 1>(&B_.b); 
     // A_k = A_[ B_.sel_1(k+1) : B_.sel_1(k+2) - 1 ]
     // A_k.rank_1(i) = A_.rank_1(i +  B_.sel_1(k+1)) - A_.rank_1(B_.sel_1(k+1))
     // A_k.select_1(j) = A_.select_1(j + A_.rank_1(B_.sel_1(k+1))) - B_.sel_1(k+1)
     
+}
+
+void RSequence::reload()
+{
+    B_.sel = select_support_mcl<1, 1>(&B_.b);
+    B_.rank = rank_support_v<1, 1>(&B_.b);
+    A_.rank = rank_support_v<0>(&A_.b);
+    A_.sel_1 = select_support_mcl<1, 1>(&A_.b);
+    A_.sel_0 = select_support_mcl<0, 1>(&A_.b);
 }
 
 int RSequence::select_1_D(int k, int i) {
@@ -129,13 +137,16 @@ int RSequence::access(int i) {
 }
 
 // A_k.select_1(j) = A_.select_1(j + A_.rank(B_.sel(k+1))) - B_.sel(k+1)
-int RSequence::select_0_A(int k, int i){
+int RSequence::select_0_A(int c, int i){
+    if (DEBUG) cout << "select_0_A k = " << c << " i = " << i << endl;
     if (i == 0) return -1;
-    int C_k = B_.sel(k+1);
+    int C_k = B_.sel(c+1); if (DEBUG) cout << "C_k = " << C_k << endl;
+    if (DEBUG) cout << "A_.rank(C_k) = " << A_.rank(C_k) << endl;
     return A_.sel_0(i + A_.rank(C_k)) - C_k;
 }
 
 int RSequence::rank(int c, int i) {
+    if (DEBUG) cout << "rank c = " << c << " i = " << i << " sigma = " << sigma << endl;
     int k = i / sigma;
     int i_prime = (i % sigma);
     int sL = select_1_D(k, c) - (c);
@@ -162,7 +173,7 @@ int RSequence::rank(int c, int i) {
 
 //A_k.select_1(j) = A_.select_1(j + A_.rank_1(B_.sel_1(k+1))) - B_.sel_1(k+1)
 int RSequence::select_1_A(int k, int j) {
-    if (DEBUG) cout << "k = " << k << " j = " << j << endl;
+    if (DEBUG) cout << "select_1_A k = " << k << " j = " << j << endl;
     if (j == 0) return -1;
     int C_k = B_.sel(k+1);
     int C_kp1 = B_.sel(k+2);
@@ -170,8 +181,8 @@ int RSequence::select_1_A(int k, int j) {
     if (DEBUG) cout << "C_k = " << C_k << endl;
     if (DEBUG) cout << "C_k+1 = " << B_.sel(k+2) << endl;
     // A_.rank_1 = C_k - A_.rank_0(C_k)
-    int j_prime = j + C_k - A_.rank(C_k);
     if (DEBUG) cout << "A_.rank_1(C_k) = " << C_k - A_.rank(C_k) << endl;
+    int j_prime = j + C_k - A_.rank(C_k);
     if (DEBUG) cout << "j_prime = " << j_prime << endl;
     if (DEBUG) cout << "A_.sel_1(j_prime) = " << A_.sel_1(j_prime) << endl;
     return A_.sel_1(j_prime) - C_k;
@@ -191,6 +202,7 @@ int RSequence::pred_0_A(int c, int s) {
 
 //A_k.size() = B_.sel_1(k+2) - B_.sel_1(k+1)
 int RSequence::select(int c, int j) {
+    if (DEBUG) cout << "select c = " << c << " j = " << j << endl;
     if (j == 0) return -1;
     int s = select_1_A(c, j);
     if (DEBUG) cout << "s = " << s << endl;

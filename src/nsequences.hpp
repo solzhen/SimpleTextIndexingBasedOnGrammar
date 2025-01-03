@@ -6,6 +6,9 @@
 using namespace sdsl;
 using namespace std;
 
+#ifndef RSEQUENCE_H
+#define RSEQUENCE_H
+
 class RSequence {
 private:
 public:
@@ -26,6 +29,7 @@ public:
     /// @param S integer vector representing the sequence
     /// @param sigma size of alphabet [0 . . . sigma)
     RSequence(int_vector<> S, int sigma);
+    void reload();
     /// @brief Access query
     /// @param i position in the sequence
     /// @return The symbol at position i
@@ -52,5 +56,7 @@ public:
         return 0;
     }
 };
+
+#endif // RSEQUENCE_H
 
 void seq_test();

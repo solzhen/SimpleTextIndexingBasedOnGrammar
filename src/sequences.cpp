@@ -185,11 +185,14 @@ ARSSequence::ARSSequence() {
     sigma = 2;
     ARSSequence(S, sigma);
 }
+int ARSSequence::size_A(int c) {
+    return A[c].b.size();
+}
 int ARSSequence::select(int c, int j)
 {
     if (j == 0) return -1;
     int s = select_1_A(c, j);
-    if (s > A[c].b.size()) return n;
+    if (s > size_A(c)) return n;
     int pred = pred_0_A(c, s);
     int j_prime = s - pred;
     int sL = select_1_D(s+1-j, c ) - (c); // s-j :: which chunk

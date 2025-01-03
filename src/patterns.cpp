@@ -269,6 +269,7 @@ if (!SKIP) {
     }
     cout << "Lengths precalculated" << endl;
     cout << "------------------------" << endl;
+    R.reload();
 }
 
 int PatternSearcher::ruleLength(int i) {

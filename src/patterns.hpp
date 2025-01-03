@@ -4,6 +4,7 @@
 #include "grid.hpp"
 #include "permutations.hpp"
 #include "nsequences.hpp"
+#include "sequences.hpp"
 #include "debug_config.hpp"
 using namespace sdsl;
 using namespace std;

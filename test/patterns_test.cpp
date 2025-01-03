@@ -85,7 +85,9 @@ TEST_CASE("PatternSearcher","[pattern]") {
         out << text_length << " " << num_rules << " " << ms_double.count() << endl;
     }    
 
-    vector<int> ms = {5, 10, 20, 30, 40, 50, 70, 100} ;    
+    vector<int> ms = {5, 10, 20, 30, 40, 50} ;    
+
+    cout << "..." << endl;
 
     for (int m : ms) {   
         results.clear();
@@ -97,7 +99,10 @@ TEST_CASE("PatternSearcher","[pattern]") {
             //pattern = asciiContent.substr(96 - m, m);
             //pattern = "GGGG";            
             auto t3 = high_resolution_clock::now();
+            //DEBUG = true;
+            //cout << "\rSearching pattern: " << pattern << flush;
             PS.search(&occurences, pattern);
+            //DEBUG = false;
             auto t4 = high_resolution_clock::now();
             sort(occurences.begin(), occurences.end());
             auto t5 = high_resolution_clock::now();

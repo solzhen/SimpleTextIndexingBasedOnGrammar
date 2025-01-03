@@ -6,6 +6,9 @@
 using namespace sdsl;
 using namespace std;
 
+#ifndef ARSSEQUENCE_H
+#define ARSSEQUENCE_H
+
 class ARSSequence {
 public:
     vector<abv> A;
@@ -19,6 +22,7 @@ public:
     int rank_A(int c, int i);
     int pred_0_A(int c, int s);
     ARSSequence();
+    int size_A(int c);
     /// @brief Builds structure to support rank, select and access queries
     /// @param S integer vector representing the sequence
     /// @param sigma size of alphabet [0 . . . sigma)
@@ -61,5 +65,7 @@ public:
         return size;
     }
 };
+
+#endif
 
 void seq_test();

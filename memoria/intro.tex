@@ -1,0 +1,73 @@
+% LTeX: language=es-es
+\chapter{Introducción}
+
+El estudio de las estructuras de datos compactas es crucial en la actualidad, dado que la cantidad de información generada crece a un ritmo exponencial\cite{statista_data_growth}\cite{we_are_social_2024}, superando ampliamente la capacidad de almacenamiento y procesamiento de los sistemas computacionales modernos. Este desequilibrio subraya la necesidad de técnicas eficientes que permitan manejar grandes volúmenes de datos utilizando menos espacio, sin comprometer significativamente tiempos de acceso y procesamiento. Desde los campos de \textit{Big Data} y \textit{Business Analytics} hasta las áreas de aprendizaje de máquinas es relevante la capacidad de procesar cantidades gigantescas de información de forma eficiente y rápida en un entorno arquitectónico que limita el espacio de memoria que a estas se les tiene permitido. 
+
+Desde los años 50, dentro del estudio de la teoría de la información y de la mano de Claude Shannon, se han desarrollado algoritmos de compresión de datos que permiten reducir el espacio de almacenamiento o el tiempo de transmisión, sin pérdida de la información contenida en los datos. Posteriormente, surgieron las estructuras de datos compactas, que permiten acceder a los datos comprimidos directamente, sin necesidad de descomprimirlos previamente. En cuanto a lo que compete el presente trabajo es menester mirar a un tiempo más cercano al presente: hitos importantes como el trabajo de Cook, Rosenfeld y Aronson \cite{COOK197659} en 1976 sentaron las bases para que  Kieffer y Yang publicaran en el 2000 \textit{Grammar-Based Codes: A New Class of Universal Lossless Source Codes} \cite{841160} donde la compresión de texto en base a reglas de gramática simple se acerca a la entropía estadística de la fuente. Tabei, Takabatake y Sakamoto en 2013 utilizaron árboles para representar la gramática compacta\cite{Tabei2013}. Claude y Navarro en 2012 propusieron una estructura para la búsqueda de patrones en textos basados en gramática\cite{Claude2012}. De esta última se desprende una versión simplificada descrita en \textit{Compact Data Structures} \cite[Capítulo 10.5.6]{Navarro} que concierne al trabajo a realizar en esta memoria.
+
+La elección de cuál algoritmo y/o estructura utilizar depende primariamente de lo qué se desee hacer con el texto a comprimir. Si consideramos la búsqueda de patrones sobre textos de un largo cualquiera como la operación deseada entonces pasa a tomar más relevancia en la decisión de la elección el desempeño de los algoritmos y estructuras según los parámetros de los patrones y los textos de búsqueda. En muchos casos, distintas estructuras presenta desempeños similares en el análisis teórico, sin embargo, implementaciones muestran empíricamente que algunas se comportan mejor en función de ciertas características los datos. Por esto, es necesario aseverar según las características de los datos que se desea procesar qué estructuras son mejores para cada una de las operaciones que se requieran, y para eso es esencial desarrollar implementaciones para las estructuras hasta ahora solo teorizadas.
+
+La estructura comprimida simplificada para indexar texto basada en gramáticas ofrece una solución al problema de identificar todas las ocurrencias de un patrón de texto en un texto dado. Aunque no es la única estructura diseñada para abordar este desafío\cite{claude2020}, presenta ventajas y desventajas que dependen de las características específicas del texto y del patrón de búsqueda. Su principal atractivo radica en la simplicidad de sus componentes (secuencias comprimibles, secuencias con permutaciones \cite[1, Capítulo 6.1]{Navarro}, y grillas representadas mediante Wavelet Trees \cite[1, Capítulo 10.1]{Navarro}), lo que sugiere un posible buen desempeño. Sin embargo, el análisis teórico de su eficiencia en términos de tiempo y espacio no es suficiente para determinar su viabilidad práctica. Es necesario implementar la estructura y realizar evaluaciones empíricas comparativas que permitan determinar cuantitativamente si resulta más adecuada que otras soluciones de complejidad similar.
+
+Del análisis de resultados fue posible concluir el correcto funcionamiento de la solución, su congruencia con la predicción teórica de su comportamiento, su utilidad con respecto a una solución estándar de búsqueda y posibles mejoras a la implementación.
+
+\section{Objetivos}
+\subsection*{Objetivo General}\label{sec:obj-g}
+
+El objetivo del trabajo presente consistió en programar una buena, esto es, optimizada y congruente al espacio y tiempo teórico de la estructura, implementación de lo descrito en el libro Compact Data Structures (Indexed Searching in Grammar-Compressed Text)\cite[1, Capítulo 10.5.6]{Navarro}. Utilizando pruebas de robustez y tiempo, fue posible un análisis empírico en función de los parámetros de entrada, obteniéndose conclusiones sobre el desempeño de la estructura. Fue posible comparar su desempeño con los algoritmos y estructuras actuales (y sus implementaciones) para la
+búsqueda de patrones en texto.
+
+\subsection*{Objetivos Específicos}\label{sec:obj-e}
+  
+\begin{enumerate}
+  \item Implementación la estructura de forma correcta. Esto incluye la implementación de cada una de las estructuras que componen la solución propuesta.
+  \item Implementación de pruebas de robustez y consistencia de la estructura.
+  \item Implementación de pruebas de desempeño espacial y temporal de la implementación.
+  \item Análisis de los resultados de las pruebas para obtener conclusiones respecto al desempeño
+empírico de la estructura.
+\end{enumerate}
+
+\section{Metodología}\label{sec:metodologia}
+
+Para llevar a cabo este trabajo de investigación y cumplir con los objetivos planteados, se siguieron los pasos descritos a continuación:
+
+\begin{enumerate} 
+\item Revisión bibliográfica y conceptualización de la solución: 
+Se realizó un análisis detallado de la estructura comprimida basada en gramáticas descrita en el libro \textit{Compact Data Structures}, específicamente el capítulo sobre \textit{Indexed Searching in Grammar-Compressed Text}. Esta revisión incluyó la comprensión de las técnicas utilizadas, los algoritmos propuestos y sus posibles aplicaciones. Además, se investigaron estructuras y algoritmos actuales para la búsqueda de patrones en texto como punto de comparación. Se estudió la bibliografía pertinente a los conceptos teóricos utilizados en el trabajo presente y 
+
+\item Diseño de la implementación:
+Se definió una arquitectura modular para la implementación de la estructura propuesta. Esto incluyó la elección de patrones de diseño adecuados, la división del trabajo en componentes individuales y los algoritmos necesarios para crear la instancia de la estructura y la búsqueda.
+
+\item Implementación de la estructura propuesta:
+Cada componente identificado fue implementado de forma incremental, priorizando los componentes independientes, y luego aquellos dependientes de los primeros, escribiendo al mismo tiempo pruebas unitarias para cada una de estas estructuras con el fin de garantizar la corrección de las operaciones, garantizando que cada módulo fuera funcional antes de la integración de cada parte necesaria para el funcionamiento del buscador de patrones.
+
+\item Diseño y ejecución de pruebas de validación:
+Se desarrollaron casos de prueba enfocados en evaluar la robustez y consistencia de la estructura. Estas pruebas incluyeron escenarios con datos sintéticos y reales para validar que los resultados de las operaciones fueran correctos y se comportaran según lo esperado.
+
+\item Pruebas de desempeño:
+Para evaluar el desempeño espacial y temporal de la estructura, se realizaron pruebas con conjuntos de datos de diferentes tamaños y características. Estas pruebas incluyeron mediciones de tiempo de búsqueda de patrones por cantidad de ocurrencias y largo de patrones, además de mediciones del uso de memoria. Los resultados se compararon con implementaciones existentes de estructuras similares.
+
+\item Análisis de resultados:
+Se analizaron los datos obtenidos de las pruebas de desempeño, comparando los resultados de la estructura propuesta con las alternativas existentes. Este análisis permitió identificar fortalezas, debilidades y posibles mejoras para la estructura implementada.
+
+\item Documentación y presentación de resultados:
+Finalmente, los hallazgos fueron documentados de manera estructurada, destacando las conclusiones principales y proporcionando recomendaciones basadas en los resultados del análisis en el trabajo presente.
+
+\end{enumerate}
+
+
+
+\iffalse 
+\section*{Evaluación}\label{sec:eval}
+
+Considerando que el trabajo a realizar consiste en implementación de una estructura y
+luego el análisis de esta con el fin de obtener conclusiones respecto a su desempeño temporal
+y espacial, hay dos evaluaciones a hacer: evaluar la implementación en términos de código, y
+evaluar el análisis.
+
+Para evaluar el funcionamiento correcto del código de la implementación de la estructura
+se utilizarán \textit{unit tests}. Se deben evaluar los resultados obtenidos por el código en función
+de distintas entradas de prueba, incluyendo casos límites (como entradas sin datos o con entropía de orden cero nula). Además, se debe evaluar que la solución sea congruente con el análisis teórico del libro, esto es, que el tiempo de ejecución sea del orden teórico predicho. Una vez todas estas pruebas pasen con éxito se considerará exitosa la implementación.
+
+El análisis de los resultados de los tests de desempeño temporal y espacial de la implementación será correcto siempre que las conclusiones obtenidas dependan totalmente de los resultados empíricos obtenidos en contraste a las predicciones teóricas del libro y los resultados, independiente si estos muestran un mejor o peor desempeño en comparación al estado del arte.
+\fi

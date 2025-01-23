@@ -53,7 +53,23 @@ public:
         } cout << endl;
     }
     long long bitsize() {
-        return 0;
+        long long size = 0;
+        size += size_in_bytes(A_.b)*8;
+        size += size_in_bytes(A_.rank)*8;  
+        size += size_in_bytes(A_.sel_1)*8;
+        size += size_in_bytes(A_.sel_0)*8;
+        size += size_in_bytes(B_.sel)*8;      
+        size += size_in_bytes(B_.b)*8;
+        size += size_in_bytes(B_.rank)*8;
+        for (int i = 0; i < D.size(); i++) {
+            size += size_in_bytes(D[i].b)*8;
+            size += size_in_bytes(D[i].sel_1)*8;
+            size += size_in_bytes(D[i].sel_0)*8;
+        }
+        for (int i = 0; i < pi.size(); i++) {
+            size += pi[i].bitsize();
+        }
+        return size;
     }
 };
 

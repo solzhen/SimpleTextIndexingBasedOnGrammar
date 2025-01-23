@@ -1,0 +1,53 @@
+% LTeX: language=es-es
+\chapter{Conclusiones}
+\section{Conclusiones generales}
+\subsection{Objetivo general}
+Finalizado este trabajo, se puede concluir con suficiente certeza que los objetivos propuestos, esto es, la correcta implementación de la estructura y el análisis empírico de su funcionamiento, fueron completados satisfactoriamente. La estructura se comporta en la práctica como lo teorizado.
+
+En textos reales, la estructura comprimida simplificada para indexar texto basada en gramática logra el reporte de las posiciones de las ocurrencias de patrones de búsqueda en tiempos más cortos que la búsqueda lineal de patrones ($\mathcal{O}( (m + \log{n}) m \log{r} \log{\log{r}} + \textit{occ} \log{n} \log{\log{r}}  )$ versus $\mathcal{O}(n m)$). El espacio usado es de orden similar al texto original, pues a pesar de que se comprime a una cantidad \textit{r} de reglas que es menor al largo \textit{n} del texto, estas reglas requieren más memoria para ser guardadas ($\log r$ bits por cada regla). Sin embargo, textos suficientemente repetitivo logra una compresión significativa, y se benefician de una velocidad de reporte de ocurrencias aún mayor.
+
+En particular, si la cantidad de ocurrencias del patrón es muy pequeña en comparación al tamaño del texto, y el texto en sí es suficientemente repetitivo, la búsqueda es ordenes de magnitud más rápida que una búsqueda lineal. Textos altamente repetitivo son también comprimidos de forma significativa, por ejemplo, los textos correspondientes a las colecciones repetitivas analizados en \ref{sect:repet}
+
+Los tiempos de búsqueda por patrón mejoran enormemente con la cantidad de ocurrencias de un patrón, y esto es consistente con lo esperado. Con respecto al estado del arte, en las colecciones repetitivas evaluadas, los tiempos de búsqueda por ocurrencia son mayores (alrededor de 4 microsegundos más) que los tiempos por ocurrencia de el índice comprimido basado en gramática\cite{claude2020}. Futuras optimizaciones en la implementación podrían mejorar este aspecto y equiparar los tiempos de búsqueda de la estructura.
+
+\section{Cumplimiento de objetivos específicos}
+\begin{enumerate}
+    \item Implementación la estructura de forma correcta: La implementación de la estructura fue realizada de forma correcta, y se logró una implementación funcional de la estructura propuesta en el libro \textit{Compact Data Structures}.
+    \item Implementación de pruebas de robustez y consistencia de la estructura: Se implementaron pruebas de robustez y consistencia de la estructura, las cuales permitieron validar su correcto funcionamiento y su congruencia con el análisis teórico.
+    \item Implementación de pruebas de desempeño espacial y temporal de la implementación: Se realizaron pruebas de desempeño espacial y temporal de la implementación, las cuales permitieron evaluar su eficiencia en términos de tiempo y espacio.
+    \item Análisis de los resultados de las pruebas para obtener conclusiones respecto al desempeño: Se analizaron los resultados de las pruebas para obtener conclusiones respecto al desempeño empírico de la estructura, identificando sus fortalezas y debilidades.
+\end{enumerate}
+
+
+\iffalse
+\section{Medición empírica del espacio de la estructura}
+\label{section:medic}
+
+Queda como deuda de este trabajo la medición concreta y empírica del espacio de la estructura en tiempo de ejecución. Para esto es necesario cambiar ciertos elementos de la estructura, en específico, los vectores de bits que representan los pedazos de la secuencia \textit{R} representada por permutaciones. La implementación actual crea $\sigma + r$ vectores de bits, y la gran mayoría de estos tienen tamaño 2 (lo son de esta forma todos los vectores de bits extras creados al expandir las reglas). En teoría esto no es un problema pues los vectores en total suman $2n$ bits de espacio, sin embargo, cada uno de estos tiene un exceso en metadatos de 136 KB. Para solucionar esto basta reemplazar estos vectores por un solo gran vector de bits que corresponde a la concatenación de todos, y utilizar un vector auxiliar para marcar las posiciones de los vectores originales en este vector final. Con esto, se puede hacer una medición empírica más cercana a la estimada en el trabajo en la tabla \ref{tab:collect}.
+\fi
+
+\section{Memoizar}
+
+No obstante las virtudes de la estructura, esta requiere un tiempo de construcción no menospreciable. Si se utiliza extra memoria es posible aplicar memoización (regla $\longrightarrow $ expansión) para acelerar el proceso de ordenamiento de las reglas por sus expansiones y así disminuir el tiempo de comparación y por consiguiente construcción, pero esto requiera memoria extra durante el proceso equivalente al mismo texto, es decir, $\mathcal{O}(n \log \sigma)$ bits, con lo cual no hay compresión. 
+
+Se puede limitar la memoización a sólo las reglas originalmente creadas por \textit{Re-Pair} y aprovechar que la estructura del árbol gramatical está balanceada desde el nivel correspondiente a los sub-árboles que salen de tomar pares de símbolos de la secuencia \textit{C}.
+
+Es posible también aplicar memoización en la búsqueda de ocurrencias secundarias, lo cual reduciría enormemente el tiempo de búsqueda de patrones. Esto requeriría memoria de ejecución extra $\mathcal{O}(r \log r)$, pero evitaría re-calcular las ocurrencias de cada regla en el símbolo inicial. Si se considera la búsqueda de ocurrencias como recorrer el árbol sintáctico desde cada nodo equivalente a la regla, este proceso de memoización permite evitar recorrer los mismos nodos más de una vez.
+
+\section{Sobre la secuencia \textit{R}}
+
+La estructura expande la secuencia \textit{R} obtenida de \textit{Re-Pair} con el fin de eliminar la secuencia \textit{C}. Esto implica extender \textit{R} con extras $\mathcal{O}(|C|)$ reglas. Es posible hacer este proceso de extender \textit{R} de una forma puramente virtual, manteniendo \textit{C} y \textit{R} originales. En efecto, el proceso de extender \textit{R} es equivalente a construir un árbol binario con \textit{C} como las hojas del árbol. Con esto, si el programa requiere una regla específica de la secuencia virtual $R'$ como \textit{R} expandida, es fácil saber la posición de esta regla en este árbol virtual, y con eso, se puede saber con exactitud el rango en \textit{C} que corresponde a la regla (si la regla corresponde a las creadas en la expansión). 
+
+La expresión para obtener el rango de \textit{C} que le corresponde a una regla $R_i$ no es simple pero se puede obtener, pues la estructura del árbol virtual es conocida: Las reglas se crean a partir de \textit{C} tomando, en cada iteración, pares de símbolos de izquierda a derecha, reemplazándolos por un nuevo símbolo, dejando símbolos sin par para la siguiente iteración, y así hasta reducir \textit{C} a un solo símbolo. Así, en casos donde el largo de \textit{C} no es una potencia de 2 las posiciones de las reglas son aún calculables.
+
+Cuando la estructura implementada requiera reordenar $R'$ por su expansión izquierda invertida por orden lexicográfico, basta con traducir este reordenamiento a la secuencia $R$ original y \textit{C}.
+
+Lo anterior permite expandir estas reglas extras en tiempo $\mathcal{O}(h_i)$, donde $h_i$ es la altura de la regla en el árbol, lo que implica que expandir todas estas reglas extras, utilizando la técnica descrita, tiene un costo total de tiempo $\mathcal{O}(n)$ y espacio equivalente a la expansión de las reglas originales $\mathcal{O}(n)$. 
+
+Si se añade memoización sobre las reglas originales, expandir cualquier regla extra toma tiempo constante por cada regla que pertenece al rango en \textit{C} correspondiente.
+
+\section{Otras mejoras}
+
+\subsection{Potencial paralelismo}
+
+Es posible también utilizar múltiples \textit{threads} o multihilos en ciertas partes del programa en donde el paralelismo podría mejorar considerablemente la búsqueda, por ejemplo, los dos ordenamientos de las reglas por sus expansiones, las múltiples divisiones del patrón en sus sufijos y prefijos, las cuatro búsquedas binarias para encontrar los rangos de estas divisiones, y las múltiples búsquedas para cada ocurrencia encontrada en la grilla. En teoría, y con suficientes hilos, se puede eliminar el largo del patrón y las ocurrencias. como factores en los tiempos de búsqueda. 

@@ -1,0 +1,266 @@
+\chapter{Anexo}
+\begin{lstlisting}[style=cppstyle, caption={Llamando Re-Pair}, label={lst:re-pair-call}]
+FILE *input;
+DICT *dict;
+input  = fopen(input_filename.c_str(), "rb");
+dict = RunRepair(input);
+fclose(input);
+RULE *rules = dict->rule; // set or rules 
+CODE *comp_seq = dict->comp_seq; // sequence C
+\end{lstlisting}
+\begin{lstlisting}[style=cppstyle, caption={Añadir más reglas hasta eliminar C}, label={lst:rule-add}]
+while (dict->seq_len > 1) {
+    for (u_int i = 0; i < dict->seq_len; i = i+2) {
+        if (i == dict->seq_len - 1) { // odd case
+            comp_seq[i/2] = comp_seq[i];
+        }
+        else {
+            RULE new_rule;
+            new_rule.left = comp_seq[i];
+            new_rule.right = comp_seq[i+1];
+            rules[dict->num_rules] = new_rule; // append new rule
+            comp_seq[i/2] = dict->num_rules; // update sequence C
+            dict->num_rules++; 
+        }
+    }
+    dict->seq_len = dict->seq_len % 2 == 0 ? dict->seq_len / 2 : dict->seq_len / 2 + 1; 
+}
+\end{lstlisting} 
+\begin{lstlisting}[style=cppstyle, caption={Normalizar Secuencia}, label={lst:normalizar}]
+bit_vector bbbb(257, 0); // bit vector to mark which symbols are in the alphabet used by text
+int_vector<> sequenceR((dict->num_rules - 257) * 2, 0, sizeof(CODE) * 8);
+for (u_int i = 0; i < sequenceR.size(); i = i + 2) {
+    sequenceR[i] = rules[i/2 + 257].left;
+    sequenceR[i + 1] = rules[i/2 + 257].right;
+    if (sequenceR[i] <= 256) {
+        bbbb[sequenceR[i]] = 1;
+    }
+    if (sequenceR[i + 1] <= 256) {
+        bbbb[sequenceR[i + 1]] = 1;
+    }
+}
+rank_support_v<1> rank_bbbb(&bbbb);
+select_support_mcl<1, 1> select_bbbb(&bbbb);
+vector<char> rank(257, 0);
+vector<char> select(257, 0);
+for (int i = 0; i < 257; i++) {
+    rank[i] = rank_bbbb(i);
+    if (i==0) continue;
+    select[i] = select_bbbb(i);
+}
+u_int max_terminal = 0;    
+for (u_int i = 1; i <= rank_bbbb(257); i++) {
+    if (select_bbbb(i) > max_terminal) {
+        max_terminal = select_bbbb(i);
+    }
+}
+int_vector<> normalized_sequenceR(sequenceR.size(), 0, sizeof(CODE) * 8);
+int sz = sequenceR.size();
+int r;
+int max_normalized = 0; // maximum symbol in the normalized alphabet
+for (int i = 0; i < sz; i++) {
+    if (sequenceR[i] < 256) 
+        r = rank_bbbb(sequenceR[i] + 1) - 1; 
+    else 
+        r = sequenceR[i] - 257 + rank_bbbb(257); 
+    normalized_sequenceR[i] = r;
+    if (r > max_normalized) {
+        max_normalized = r;
+    }
+}
+\end{lstlisting} 
+\begin{lstlisting}[style=cppstyle, caption={Permutaciones utilizando vectores de bit}, label={lst:perm}]
+typedef struct abv {
+    bit_vector b;
+    rank_support_v<0> rank;
+    select_support_mcl<1, 1> sel_1;
+    select_support_mcl<0, 1> sel_0;
+} abv; // rank, selects vector
+typedef struct dbv {
+    bit_vector b;
+    select_support_mcl<1, 1> sel_1;
+    select_support_mcl<0, 1> sel_0;
+} dbv; // selects vector
+
+class Permutation {
+    friend class PowerPermutation;
+protected:    
+    int rank_b(int i);
+    int_vector<> pi; // permutation
+    int_vector<> S; // shortcuts
+    brv b; // bit vector to mark shortcuts
+public:    
+    Permutation();
+    int t; // parameter t    
+    
+    /// @brief Sole constructor, it does not check if pi is a permutation
+    /// @param pi vector of integers (initially, 8 bit long integers)
+    /// @param t parameter t length of the shortcuts
+    Permutation(int_vector<> pi, int t);
+
+    /// @brief Return the position of the element i after applying the permutation
+    int operator[](int i);
+    int permute(int i) { return this->operator[](i); };
+
+    /// @brief Return the inverse of the permutation, 
+    /// that is, the position j such that permutation ( j ) = i
+    /// @param i 
+    /// @return 
+    int inverse(int i);
+};
+\end{lstlisting} 
+\begin{lstlisting}[style=cppstyle, caption={Secuencia utilizando permutaciones}, label={lst:seq}]
+class ARSSequence {
+private:
+    vector<abv> A;
+    vector<dbv> D;
+    vector<Permutation> pi;
+    int sigma; int n;
+    int select_1_D(int k, int i);
+    int select_0_D(int k, int i);
+    int select_0_A(int k, int i);
+    int select_1_A(int k, int i);
+    int rank_A(int c, int i);
+    int pred_0_A(int c, int s);
+public:
+    /// @brief Builds structure to support rank, select and access queries
+    /// @param S integer vector representing the sequence
+    /// @param sigma size of alphabet [0 . . . sigma)
+    ARSSequence(int_vector<> S, int sigma);
+    /// @brief Access query
+    /// @param i position in the sequence
+    /// @return The symbol at position i
+    int access(int i);
+    int operator[](int i) { return access(i); };
+    /// @brief Rank query
+    /// @param c symbol in the alphabet
+    /// @param i position in the sequence
+    /// @return The number of occurrences of c in the sequence up to and including position i    
+    int rank(int c, int i);
+    /// @brief Select query
+    /// @param c symbol in the alphabet 
+    /// @param i the i-th occurrence of c in the sequence
+    /// @return The position of the i-th occurrence of c in the sequence
+    /// @note Position returned is 0-indexed, while parameter i is 1-indexed as ordinal numbers are.
+    int select(int c, int j);
+    u_int size() { return n; }
+};
+\end{lstlisting} 
+\begin{lstlisting}[style=cppstyle, caption={Matriz \textit{Wavelet}}, label={lst:wlmt}]
+class WaveletMatrix {
+private:    
+    u32 sigma; // highest symbol in the alphabet
+    vector<u32> z; // right child pointer
+    void build(vector<u32>& S, u32 n, u32 sigma);
+    u32 select(u32 l, u32 p, u32 a, u32 b, u32 c, u32 j);
+    vector<ppbv> bm; // bit matrix seen as vector of preprocessed bit vectors
+public:    
+    /// @brief A wavelet matrix using bit_vectors over an alphabet [1, sigma]
+    /// @param s 4-byte long unsigned integer vector
+    /// @param sigma highest numerical symbol
+    WaveletMatrix(vector<u32>& s, u32 sigma);
+    WaveletMatrix();
+    /// @brief Access the number in the i-th zero-indexed 
+    /// position of the original sequence.
+    /// @param i positive 0-indexed position.
+    /// @return The number or NULL if out of bounds
+    u32 access(u32 i);
+    /// @brief Counts the occurences of number c up until yet excluding the given zero-indexed position i
+    /// @param i the zero-indexed position
+    /// @param c the number
+    /// @return the number of occurences until position i
+    u32 rank(u32 c, u32 i);
+    /// @brief Returns the 0-indexed position of the j-th occurence of the number c
+    /// @param c a number
+    /// @param j a positive number    
+    /// @return the position or the size of the sequence if not found, or -1 if c is not in the sequence
+    u32 select(u32 c, u32 j);
+    void printself();
+    ppbv operator[](u32 level);
+    u32 offset(u32 level);
+    u32 size() { return bm[0].size(); }
+};
+\end{lstlisting}
+\begin{lstlisting}[style=cppstyle, caption={Grilla}, label={lst:grid}]
+class Grid {
+private: 
+    u32 c; // number of columns
+    u32 r; // number of rows
+    u32 n; // nubmer of points
+    WaveletMatrix wt; // Wavelet tree
+    u32 count(u32 x_1, u32 x_2, u32 y_1, u32 y_2, u32 l, u32 a, u32 b);
+    vector<Point> report(u32 x_1, u32 x_2, u32 y_1, u32 y_2, u32 l, u32 a, u32 b);
+    u32 outputx(u32 level, u32 x);
+    u32 outputy(u32 level, u32 a, u32 b, u32 i);
+public:
+    /// @brief Construct a grid from a binary file
+    /// @param fn Filename of the binary file
+    /// @note The binary file should contain the dimensions of the grid first 
+    /// (columns, rows), followed by the points as pairs of integers. Every integer
+    /// in the file should be a 4-byte long unsigned integer (uint32_t).
+    /// The coordinates should be 0-indexed.
+    Grid(const string& fn);
+    Grid(std::vector<Point>& points, u32 columns, u32 rows);
+    /// @brief Count the number of points in the grid that are within the rectangle
+    /// @param x_1 1-indexed column range start
+    /// @param x_2 1-indexed column range end
+    /// @param y_1 1-indexed row range start
+    /// @param y_2 1-indexed row range end
+    /// @return The number of points in the grid that are
+    /// within the rectangle as an integer
+    u32 count(u32 x_1, u32 x_2, u32 y_1, u32 y_2);
+    /// @brief Report the points in the grid that are within the rectangle
+    /// @param x_1 1-indexed column range start
+    /// @param x_2 1-indexed column range end
+    /// @param y_1 1-indexed row range start
+    /// @param y_2 1-indexed row range end
+    /// @return A vector of points that are within the rectangle
+    vector<Point> report(u32 x_1, u32 x_2, u32 y_1, u32 y_2);
+    void printself();
+    u32 getColumns() { return c; }
+    u32 getRows() { return r; }
+    WaveletMatrix getWaveletMatrix() { return wt; }
+    /// @brief Access the number in the i-th 1-indexed position
+    /// @param i 
+    /// @return 
+    u32 access(u32 i) {return wt.access(i-1);};
+    /// @brief Returns the 1-indexed position of the j-th occurrence of c
+    /// @param j 
+    /// @param c 
+    /// @return 
+    u32 select(u32 j, u32 c) {return wt.select(j, c);};
+};
+\end{lstlisting}
+\begin{lstlisting}[style=cppstyle, caption={Buscador de patrones}, label={lst:pattern}]
+class PatternSearcher {
+private:
+    Grid G; // Grid
+    ARSSequence R; // ARS sequence
+    u_int S; // Initial symbol
+    int_vector<> l; // Lengths of the expansion of the rules
+    uint nt; // Number of terminals
+    vector<char> sl; // select vector for normalized alphabet
+    vector<char> rk; // rank vector for normalized alphabet
+    string expandRule( int i, unordered_map<int, string>& memo);
+    string expandRightSideRule(int i, unordered_map<int, string> &memo);
+    string expandLeftSideRule(int i, unordered_map<int, string>& memo);
+    int ruleLength(int i);    
+    Generator<char> expandRuleLazy( int i, bool rev = false);
+    Generator<char> expandRuleSideLazy( int i, bool left = false);
+    bool compareRulesLazy(int i, int j, bool rev = false);
+    template <typename Iterator> 
+    int compareRuleWithPatternLazyImpl ( int i, Iterator pattern_begin, Iterator pattern_end, bool rev = false);
+    int compareRuleWithPatternLazy(int i, string pattern, bool rev = false);
+    void secondaries(vector<int> *occurences, u_int A_i, u_int offset=0, bool terminal = false);
+public:
+    PatternSearcher(){};    
+    /// @brief Construct a pattern searcher from a text file
+    /// @param input_filename 
+    PatternSearcher(string input_filename);
+    /// @brief Report all occurences of a pattern in the text
+    /// @param occurences Vector to store the occurences
+    /// @param P Pattern to search
+    void search(vector<int> *occurences, string P);
+    int numRules() { return R.size() / 2; }
+};
+\end{lstlisting}

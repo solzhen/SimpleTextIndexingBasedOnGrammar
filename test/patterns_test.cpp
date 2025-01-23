@@ -137,6 +137,38 @@ TEST_CASE("PatternSearcher","[pattern]") {
     out.close();
 }
 
+TEST_CASE("Patterns", "[ppp]") {
+    REQUIRE_FALSE(g_fileName.empty());
+    string input_filename = g_fileName;
+    string filecontent = "";
+    std::ifstream file(input_filename, std::ios::in | std::ios::binary);
+    if (!file) {
+        std::cerr << "Error opening input file!" << std::endl;
+        exit(1);
+    }
+    std::ostringstream content;
+    content << file.rdbuf();
+    filecontent = content.str();
+    file.close();
+    int n = 35;
+    cout << "Enter the number of patterns to search: ";
+    cin >> n;
+
+    string output_filename = g_fileName + ".patterns.txt";
+
+    std::ofstream patts(output_filename);
+    vector<int> ms = {5, 10, 20, 30, 40, 50};
+    for (int m : ms) {
+        for (int i = 0; i < n; i++) {
+            int r = rand() % (filecontent.size() - m - 1);
+            std::string pattern = filecontent.substr(r, m);
+            vector<int> occs = findOccurrences(filecontent, pattern);
+            patts << "PATTERN:{" << pattern << "}, OCCS:{" << occs.size() << "}" << endl;
+        }
+    }
+    patts.close();
+}
+
 TEST_CASE("PatternSearcherBig","[big]") {   
     REQUIRE_FALSE(g_fileName.empty());
     string input_filename = g_fileName;
@@ -182,11 +214,14 @@ TEST_CASE("PatternSearcherBig","[big]") {
     }
     out << txt_len << " " << rule_ct << endl;
     vector<int> ms = {5, 10, 20, 30, 40, 50};
+
+    //std::ofstream patts("patterns.txt");
     
     for (int m : ms) {
         for (int i = 0; i < n; i++) {
             int r = rand() % (filecontent.size() - m - 1);
             std::string pattern = filecontent.substr(r, m);
+            //patts << pattern << endl;
             vector<int> occs;
             auto t3 = high_resolution_clock::now();
             PS.search(&occs, pattern);

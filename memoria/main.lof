@@ -1,0 +1,24 @@
+\babel@toc {spanish}{}\relax 
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {4.1}{\ignorespaces Diagrama UML de la implementación}}{14}{figure.caption.8}%
+\contentsline {figure}{\numberline {4.2}{\ignorespaces Secuencia \textit {R} y expansión de las reglas $R_i$, junto con secuencia \textit {l}, el largo de cada expansión}}{21}{figure.caption.9}%
+\contentsline {figure}{\numberline {4.3}{\ignorespaces Árbol sintáctico para \textit {abrabracadabrabra}}}{22}{figure.caption.10}%
+\contentsline {figure}{\numberline {4.4}{\ignorespaces DAG para \textit {abrabracadabrabra}, las conexiones que corresponden a reglas que aparecen como lados izquierdos son grises, y las derechas son negras}}{22}{figure.caption.11}%
+\contentsline {figure}{\numberline {4.5}{\ignorespaces Grilla}}{24}{figure.caption.12}%
+\contentsline {figure}{\numberline {4.6}{\ignorespaces Grilla}}{26}{figure.caption.13}%
+\contentsline {figure}{\numberline {4.7}{\ignorespaces Búsqueda en el DAG para nodo $R_0$}}{29}{figure.caption.15}%
+\contentsline {figure}{\numberline {4.8}{\ignorespaces Búsqueda en el DAG para nodo $R_2$}}{30}{figure.caption.16}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {5.1}{\ignorespaces Tiempo de construcción de la estructura en función del número de reglas, comparado a tiempo teórico $\mathcal {O}(n + r \log {r} \log {n})$}}{37}{figure.caption.20}%
+\contentsline {figure}{\numberline {5.2}{\ignorespaces Tiempo de búsqueda en función del largo del patrón para un mismo número de ocurrencias}}{38}{figure.caption.22}%
+\contentsline {figure}{\numberline {5.3}{\ignorespaces Tiempo de búsqueda en función del número de ocurrencias para un patrón de largo dos}}{39}{figure.caption.23}%
+\contentsline {figure}{\numberline {5.4}{\ignorespaces Tiempo de búsqueda en función del número de ocurrencias para un patrón de largo dos con predicción teórica usando promedio de \textit {n} y \textit {r}, con tiempo teórico $ O( (m + \log {n}) m \log {r} \log {\log {r}} + occ \log {n} \log {r} ) $.}}{40}{figure.caption.24}%
+\contentsline {figure}{\numberline {5.5}{\ignorespaces Tiempos de búsquedas en \textit {ms} (milisegundos) en función del número de ocurrencias para un patrón de largo 2}}{41}{figure.caption.25}%
+\contentsline {figure}{\numberline {5.6}{\ignorespaces Tiempos de búsquedas en \textit {ms} (milisegundos) en función del número de ocurrencias para un patrón de largo 2 (Continuación)}}{42}{figure.caption.26}%
+\contentsline {figure}{\numberline {5.7}{\ignorespaces Tiempos por ocurrencia en $\mu s$ (microsegundos) de búsquedas en función del número de ocurrencias para distintas colecciones repetitivas. Ambos ejes están es escala logarítmica}}{43}{figure.caption.28}%
+\contentsline {figure}{\numberline {5.8}{\ignorespaces Tiempos por ocurrencia en $\mu s$ (microsegundos) de búsquedas de patrones aleatorios de largo fijo 10 en función del número de ocurrencias en la colección \textit {einstein.en}. El eje X está en escala logarítmica}}{44}{figure.caption.29}%
+\addvspace {10\p@ }
+\addvspace {10\p@ }

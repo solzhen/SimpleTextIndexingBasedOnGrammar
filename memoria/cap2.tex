@@ -1,0 +1,259 @@
+% LTeX: language=es-es
+\chapter{Marco Teórico}\label{chap:marco-teorico}
+
+\section{Entropía}
+
+En problemas de compresión, la entropía indica el límite teórico mínimo para codificar un mensaje sin perder información. Una noción básica de entropía es el mínimo número de bits requeridos por identificadores, llamados códigos, si se asigna un código único a cada elemento de un conjunto $\mathcal{U}$ y todos los códigos tienen el mismo largo de bits. Esto corresponde a la entropía del peor caso de $\mathcal{U}$ y se denota $\mathcal{H}(\mathcal{U})$ y es equivalente a:
+\[
+\mathcal{H}(\mathcal{U}) = \log  |\mathcal{U}| 
+\]
+Donde $\log$ es el logaritmo en base 2.
+
+La entropía es una medida de incertidumbre o desorden en un sistema. En el contexto de la teoría de la información, se utiliza para cuantificar la cantidad promedio de información que se obtiene al observar un evento aleatorio. Formalmente, la entropía $\mathcal{H}(X)$ de una variable aleatoria $X$ con un conjunto de posibles valores $\{x_1, x_2, \ldots, x_n\}$ y probabilidades asociadas $P(X=x_i)$, se define como:
+\[
+\mathcal{H}(X) = - \sum_{i=1}^n P(X=x_i) \log(P(X=x_i)).
+\]
+Equivalente a:
+\[
+\mathcal{H}(X) = \sum_{i=1}^n P(X=x_i) \frac{1}{\log(P(X=x_i))}
+\]
+
+La fórmula muestra que mientras más predecible es una secuencia de elementos, menos bits son necesarios para codificarla.
+
+\subsection{Entropía de orden cero}
+Si una secuencia $B$ de largo \textit{n} contiene \textit{m} 1s, (asumiendo que hay más 1s que 0s) se puede asumir que $P(X=1) = \frac{m}{n}$. Entones la entropía de orden cero es:
+\[
+\mathcal{H}(B) = \mathcal{H}_0(\frac{m}{n}) = \frac{m}{n}\log{\frac{n}{m}} + \frac{n-m}{n}\log{\frac{n}{n-m}}
+\]
+
+En términos prácticos, la entropía de orden cero tiene el siguiente significado: si se intenta comprimir la secuencia \textit{B} usando códigos fijos $C_1$ para los 1s y $C_0$ para los 0s, entonces el tamaño total no puede ser menos que $n \mathcal{H}_0 $ bits.
+
+\subsection{Entropía de orden \textit{n}}
+La entropía de orden \textit{n}, $\mathcal{H}_n$, considera las dependencias entre los símbolos de una secuencia, hasta el orden n. Mide la incertidumbre promedio de un símbolo si se conocen los \textit{n} símbolos anteriores:
+\[
+\mathcal{H}_{n} = - \sum_{x_{1}, \ldots x_{n+1}} P(x_1, \ldots x_n) \log(P(x_n | x_1, \ldots x_n))
+\]
+Donde $P(x_1, \ldots x_n)$ es la probabilidad de ver la secuencia $x_1 \ldots x_n$, y $P(x_n | x_1, \ldots x_n)$ es la probabilidad de ver el símbolo $x_n$ si se acabad de ver la secuencia mencionada. 
+
+En general, la entropía de mayor orden es menor o igual a la de menor orden, ya que se tienen en cuenta las dependencias que reducen la incertidumbre de la secuencia. Por ejemplo, en el lenguaje español, si se tiene la secuencia \textit{ció} es muy probable que la siguiente letra es \textit{n}.  En aplicaciones de compresión de datos, esto implica que se puede obtener una mayor compresión en lenguajes donde hay secuencias muy repetitivas (como lo son textos reales).
+
+\section{Gramáticas}
+En el contexto de la computación, una gramática es un conjunto de reglas que describen 
+la estructura de un lenguaje. Una gramática formal $G$ se define como un cuádruplo $(N, \Sigma, P, S)$, donde:
+\begin{itemize}
+    \item $N$: Es un conjunto de símbolos no terminales.
+    \item $\Sigma$: Es un conjunto de símbolos terminales.
+    \item $P$: Es un conjunto de producciones o reglas de reescritura.
+    \item $S$: Es el símbolo inicial.
+\end{itemize}
+
+En el trabajo presente, se trabajó con gramáticas "binarias", esto es, gramáticas donde las reglas de $P$ son de la forma:
+\[
+A_i \rightarrow B_i C_i
+\]
+Donde $A_i$ es un símbolo no terminal y $B_i$ y $C_i$ pueden ser terminales o no terminales. $B_i$ es referido como la expansión izquierda de $A_i$ y $C_i$ la expansión derecha.
+
+\section{Memoización}
+La memoización es una técnica de optimización utilizada para acelerar algoritmos 
+mediante el almacenamiento de los resultados de cálculos costosos y su reutilización 
+cuando sea necesario. Se emplea frecuentemente en problemas de programación dinámica, 
+donde los subproblemas se resuelven de manera repetitiva. Al reducir el número de 
+recomputaciones, la memoización mejora significativamente la eficiencia temporal, a cambio de utilizar espacio extra.
+
+\section{Notación $\mathcal{O}$ Grande}
+La notación $\mathcal{O}$ grande es una herramienta utilizada para describir la complejidad 
+asintótica de algoritmos. Representa el peor caso del tiempo de ejecución o el uso 
+de recursos como una función del tamaño de entrada $n$. Formalmente, un algoritmo tiene 
+complejidad $\mathcal{O}(f(n))$ si existen constantes positivas $c$ y $n_0$ tales que:
+\[
+T(n) \leq c \cdot f(n), \quad \forall n \geq n_0.
+\]
+Esto permite comparar el comportamiento relativo de diferentes algoritmos independientemente 
+de los detalles específicos de implementación o las constantes multiplicativas.
+
+\section{Búsqueda Lineal}
+La búsqueda lineal es un algoritmo simple para localizar un elemento en una lista. Consiste 
+en recorrer secuencialmente la lista desde el principio hasta el final, comparando cada 
+elemento con el valor buscado. Si el elemento se encuentra, el algoritmo retorna su posición; 
+en caso contrario, indica que no está presente. La complejidad temporal de este método 
+cuando se busca un único elemento  en un conjunto de elementos es $O(n)$, donde $n$ es el número de elementos en la lista. Para el caso de búsqueda de un patrón de largo \textit{m} en una secuencia de largo \textit{n}, la complejidad es $O(nm)$ en el peor caso.
+
+\section{Compresión Basada en Gramáticas}
+La compresión basada en gramáticas es una técnica para reducir el tamaño de datos 
+generando una representación compacta en forma de gramática. En lugar de almacenar 
+explícitamente los datos, se almacena un conjunto de reglas que permiten reconstruirlos. 
+Esto es particularmente útil para datos con patrones repetitivos, ya que la gramática 
+compacta captura dichas repeticiones de manera eficiente.
+
+\chapter{Estado del Arte}
+
+\section{Representación de texto como gramática}
+
+En su artículo \textit{Grammar-Based Codes: A New Class of Universal Lossless Source Codes} John C. Kieffer y En-hui Yang estudiaron el código basado en gramática\cite{841160}, un tipo de codificación sin pérdida de información, el cual, en respuesta a cualquier cadena de datos de entrada $x$ sobre un alfabeto finito fijo, selecciona una gramática libre de contexto $G_x$ que representa a $x$ en el sentido de que $x$ es la única cadena o \textit{string} generada por $G_x$. La compresión sin perdida de $x$ corresponde, indirectamente, a la compresión de estas reglas de gramática. Demostraron que, bajo ciertas restricciones, un código basado en gramática es un código universal, esto es, logra comprimir independiente de la fuente finita de generación de información a algo cercano a la compresión óptima, sobre un alfabeto finito. 
+
+Encontrar la gramática más pequeña que representa a un texto cualquiera $x$ es un problema NP-completo \cite{Charikar2005}\cite{Rytter2003}, y además esta gramática nunca es más pequeña que una codificación con LZ77\cite{LZ77} (con una ventana ilimitada) lo que motiva y justifica encontrar y utilizar heurísticas como \textit{Re-Pair}\cite{Larsson2000} y Sequitur\cite{NevillManning1997} que en la práctica compriman el texto a una cantidad de reglas cercanas al óptimo de forma rápida. A pesar de ser estrictamente inferior a LZ77, una de estas heurísticas, \textit{Re-Pair}, se comporta bien en la práctica, tanto en textos clásicos como repetitivos.
+
+\subsection{Sequitur}
+
+El algoritmo \textit{Sequitur}\cite{NevillManning1997} funciona escaneando la secuencia de símbolos, agregando cada nuevo símbolo a una regla gramatical S y generando una lista con todos los pares que ha leído. Cuando un par es leído por segunda vez, se genera un símbolo no terminal, esto es, una regla que genera el par en la gramática, para reemplazar ambas ocurrencias en regla S y en todas la reglas donde aparezca. En otras palabras, se debe cumplir que cada par aparece solo una vez en S. El proceso se repite hasta que no hayan más pares repetidos. Si al finalizar el proceso, existen símbolos no terminales que sólo aparecen una vez a la derecha de la gramática, entonces deben ser reemplazados por los símbolos que generan. Esto ayuda a reducir la cantidad de reglas.
+
+Por ejemplo, sea la secuencia \textit{abracabracabra}. Se avanza linealmente por esta secuencia agregando cada símbolo a la regla generadora S:
+
+\begin{minipage}[t]{0.5\textwidth}
+\centering
+\begin{tabular}{|l|l|}
+\hline
+Gramática &  \\
+\hline
+S $\rightarrow$ a &  \\
+\hline
+S $\rightarrow$ ab &\\
+\hline
+S $\rightarrow$ abr &\\
+\hline
+S $\rightarrow$ abra &\\
+\hline
+S $\rightarrow$ abrac &\\
+\hline
+S $\rightarrow$ abraca &\\
+\hline
+S $\rightarrow$ abracab & Se repite el par ab !! \\
+\hline
+S $\rightarrow$ AracA  & \\
+A $\rightarrow$ ab & \\
+\hline
+S $\rightarrow$ AracAr  & \\
+A $\rightarrow$ ab & \\
+\hline
+S $\rightarrow$ AracAra  & Se repite el par ra !! \\
+A $\rightarrow$ ab & \\
+\hline
+S $\rightarrow$ ABcAB  & Se repite el par AB !! \\
+A $\rightarrow$ ab & \\
+B $\rightarrow$ ra & \\
+\hline
+S $\rightarrow$ CcC  &  \\
+A $\rightarrow$ ab & \\
+B $\rightarrow$ ra & \\
+C $\rightarrow$ AB & \\
+\hline
+S $\rightarrow$ CcCc  & Se repite el par Cc !! \\ 
+A $\rightarrow$ ab & \\
+B $\rightarrow$ ra & \\
+C $\rightarrow$ AB & \\
+\hline
+S $\rightarrow$ DD  & \\ 
+A $\rightarrow$ ab & \\
+B $\rightarrow$ ra & \\
+C $\rightarrow$ AB & \\
+D $\rightarrow$ Cc & \\
+\hline
+S $\rightarrow$ DDa  & \\ 
+A $\rightarrow$ ab & \\
+B $\rightarrow$ ra & \\
+C $\rightarrow$ AB & \\
+D $\rightarrow$ Cc & \\
+\hline
+\end{tabular}
+
+\end{minipage}%
+\begin{minipage}[t]{0.5\textwidth}
+
+\begin{tabular}{|l|l|}
+\hline
+Gramática &  \\
+\hline
+S $\rightarrow$ DDab  & Se repite el par ab !! \\ 
+A $\rightarrow$ ab & \\
+B $\rightarrow$ ra & \\
+C $\rightarrow$ AB & \\
+D $\rightarrow$ Cc & \\
+\hline
+S $\rightarrow$ DDA  & \\ 
+A $\rightarrow$ ab & \\
+B $\rightarrow$ ra & \\
+C $\rightarrow$ AB & \\
+D $\rightarrow$ Cc & \\
+\hline
+S $\rightarrow$ DDAr  & \\ 
+A $\rightarrow$ ab & \\
+B $\rightarrow$ ra & \\
+C $\rightarrow$ AB & \\
+D $\rightarrow$ Cc & \\
+\hline
+S $\rightarrow$ DDAra  & Se repite el par ra !! \\ 
+A $\rightarrow$ ab & \\
+B $\rightarrow$ ra & \\
+C $\rightarrow$ AB & \\
+D $\rightarrow$ Cc & \\
+\hline
+S $\rightarrow$ DDAB  &  Se repite el par AB !! \\ 
+A $\rightarrow$ ab & \\
+B $\rightarrow$ ra & \\
+C $\rightarrow$ AB & \\
+D $\rightarrow$ Cc & \\
+\hline
+S $\rightarrow$ DDC  &  A y B aparecen solo una \\ 
+A $\rightarrow$ ab &  vez a la derecha de  \\
+B $\rightarrow$ ra & las reglas, por lo tanto \\
+C $\rightarrow$ AB & se eliminan \\
+D $\rightarrow$ Cc & \\
+\hline
+S $\rightarrow$ DDC  &  Gramática final\\
+C $\rightarrow$ abra & \\
+D $\rightarrow$ Cc & \\
+\hline
+\end{tabular}
+\end{minipage}
+
+\subsection{Re-Pair}
+
+El algoritmo \textit{Re-Pair}\cite{Larsson2000} (\textit{Recursive Pairing}) es una heurística de construcción de gramáticas a partir de un texto. Es utilizado en el trabajo presente para comprimir la secuencia de entrada de caracteres basado en los patrones repetitivos que aparecen en esta. La idea básica detrás del algoritmo \textit{Re-Pair} es encontrar pares de \textit{substrings} repetidos en el texto y reemplazarlas con símbolos no terminales. Al aplicar este proceso de manera iterativa, se genera una representación gramatical comprimida que se puede utilizar para reconstruir el texto original. El método para comprimir consiste en recorrer el texto reemplazando los dos caracteres más comunes por un símbolo no terminal, generando una regla de gramática, remplazar los caracteres por el nuevo símbolo en la secuencia y repetir este proceso, hasta obtener un texto comprimido y una serie de reglas.
+
+\textit{Re-Pair} logra construir una gramática razonablemente óptima en tiempo $\mathcal{O}$(n), siendo \textit{n} el largo se la secuencia.
+
+\section{Compresión de gramática}
+
+El trabajo presentado consiste en la implementación una estructura basada en una representación sucinta de grilla para comprimir la gramática que genera el texto de entrada. En la siguiente sección se profundiza la representación de la gramática utilizando estructuras de árboles.
+
+\subsection{Dos árboles \textit{LOUDS}}
+
+Dada una gramática R (obtenida, en este ejemplo, con \textit{Re-Pair}) que genera un texto T, se tiene la regla S $\rightarrow$ C, donde C es el texto T luego de haberse hecho los remplazos por símbolos por \textit{Re-Pair}. Para saber exactamente qué porción de C se debe expandir para obtener un T [i .. j] es útil guardar un vector de bits disperso que indica en qué posición de T aparece cada símbolo de C. Este vector solo necesita soportar la operación Rank en tiempo constante. Ya sabidos qué símbolos se deben expandir, lo único que se necesita es saber a qué expande cada símbolo no terminal (los símbolos terminales aparecen en C).
+
+Tabei, Takabatake y Sakamoto introdujeron compresión de una gramática utilizando estructuras de árboles\cite{Tabei2013}. La idea es representar el grafo dirigido acíclico generado por la gramática donde cada regla A $\rightarrow$ BC induce una arista ''izquierda'' desde A a B y otra ''derecha'' de A a C. Tomando solo las aristas izquierdas, se puede interpretar una arista A $\rightarrow$ B como si B fuese el padre de A, obteniendo así un conjunto de árboles, ya que cada nodo puede tener a lo más un padre (símbolos terminales no tienen reglas y cada no terminal A tiene exactamente una regla con un término izquierdo B). Se añade una raíz como padre de todos los nodos sin padres, y se llama al árbol resultante $T_L$. Similarmente, se forma un árbol $T_R$ con las aristas derechas. Así, dada una no terminal A $\rightarrow$ BC, B es el padre de A en $T_L$ y C es el padre de A en $T_R$.
+
+Como son necesarias solo las operaciones de arboles \textit{parent, root, childrank, nodemap}, y \textit{nodeselect}, una estructura de árbol LOUDS es ideal. 
+
+El árbol \textit{Level-Order Unary Degree Sequence} (LOUDS) es una estructura que codifica los nodos del árbol en orden nivel, es decir, se recorren los nodos que están a la misma profundidad primero de izquierda a derecha antes de seguir al siguiente nivel. Cada nodo se describe en una secuencia de bits con un código unario $1^{c}0$ donde $c$ es la cantidad de hijos. Las distintas operaciones requeridas son combinaciones de operaciones \textit{Rank, Select} y \textit{Predecessor Zero} sobre la secuencia de bits.
+
+\subsection{Índice comprimido basado en gramática}
+
+Claude, Navarro y Pacheco\cite{claude2020} implementaron una estructura que permite almacenar y consultar texto de manera eficiente, especialmente en colecciones de texto altamente repetitivas. Esta estructura permite tanto la extracción de subcadenas como la búsqueda de patrones directamente sobre una representación comprimida del texto. El texto es representado como la gramática libre de contexto que genera al texto, y esta gramática es a su vez representada como un árbol.
+
+Las búsquedas de patrones de texto corresponde a ocurrencias primarias en el árbol (vistas como múltiples nodos en el árbol gramatical) y ocurrencias secundarias en las hojas. 
+
+La estructura utiliza $G \log n + o(G \log G)$ bits de espacio y la búsqueda de patrones toma tiempo  $\mathcal{O}((m^2 + occ) \log G )$, donde \textit{G} es el tamaño de la gramática definido como la suma de las longitudes del lado derecho de las reglas. 
+
+\subsection{Grilla con árboles \textit{Wavelet}}
+
+En el trabajo presente, las \textit{r} reglas de la gramática son representadas en una grilla de \textit{r} $\times$ \textit{r}, de forma que cada regla A $\rightarrow$ BC corresponde a un punto en la grilla en la posición C,B (columna correspondiente a C, fila correspondiente a B). La idea es que las columnas de la grilla corresponden a la parte C de cada regla, ordenadas según el valor lexicográfico del \textit{string} al que se expande C, mientras que las filas corresponden a B, ordenadas por el valor lexicográfico del \textit{string} invertido al que expande B. La grilla se representa utilizando árboles \textit{Wavelet}\cite[Capítulo 10.1]{Navarro}.
+
+La idea es que todas las operaciones que se necesitan sobre esta grilla para la gramática son equivalentes a operaciones sobre otra grilla donde por cada punto de $X_i,Y_i$ de la primera, hay un punto $i, Y_i$ en la segunda. Esto cerciora que solo haya un punto por columna, con lo cual la grilla se puede representar con una secuencia de los $Y_i$s. Esta secuencia es a su vez representada usando un árbol \textit{Wavelet}.
+
+La representación con árbol \textit{Wavelet} consiste en lo siguiente: dado una secuencia $S_{[1,\sigma]}$ de símbolos sobre el alfabeto $\Sigma = [1,\sigma]$, se crea un nodo que corresponde a una secuencia de bits $B_{[1,\sigma]}$ de largo igual a la secuencia $S_{[1,\sigma]}$ donde por cada carácter de la secuencia original se coloca un 0 en la secuencia de bits si el carácter corresponde a un símbolo en $[1, \lceil  \sigma / 2 \rceil]$ o 1 si pertenece a $[\lceil  \sigma / 2 \rceil + 1, \sigma]$. 
+
+El nodo de $S_{[1,\sigma]}$, esto es, la secuencia de bits correspondiente a $S_{[1,\sigma]}$ obtenida del paso anterior, indica en qué mitad del alfabeto de la secuencia  $S_{[1,\sigma]}$  se encuentra cada carácter de esta. Esto particiona virtualmente la secuencia original en dos partes: la secuencia $S_{[1,\lceil  \sigma / 2 \rceil]}$ de los caracteres de $S_{[1,\sigma]}$ que pertenecen a la primera mitad del alfabeto, y la secuencia $S_{[ \lceil \sigma / 2 \rceil + 1, \sigma]}$ de los caracteres que pertenecen a la segunda mitad. Para estas dos secuencias, se crean nodos de la misma forma en que se hizo para la secuencia original. El nodo resultante correspondiente a la secuencia $S_{[1,\lceil  \sigma / 2 \rceil]}$ se agrega como hijo izquierdo del nodo de $S_{[1,\sigma]}$, y el nodo correspondiente a $S_{[ \lceil \sigma / 2 \rceil + 1, \sigma]}$ como hijo derecho.
+
+El proceso de seguir dividiendo el alfabeto en dos se repite hasta llegar a secuencias mono-simbólicas. Las operaciones de \textit{Rank} y \textit{Select} sobre la secuencia original corresponden a recorrer el árbol haciendo operaciones \textit{Rank} y \textit{Select }sobre las secuencias de bits.
+
+
+\section{Implementaciones existentes}
+
+\subsection{SDSL - \textit{Succinct Data Structure Library}}
+
+La librería SDSL para C++ escrita por Simon Gog\cite{gbmp2014sea} es la más completa y profesional de las librerías dedicadas a estructuras de datos sucintas. La librería implementa estructuras sucintas relevantes para el trabajo realizado como lo son vectores de enteros, vectores de bits y soporte para operaciones \textit{Access}, \textit{Rank} y \textit{Select} sobre ellos.
+
+Implementaciones de arboles \textit{wavelet} de distintas formas (balanceados, formas de Huffman, etc.) están presentes en la librería, pero la estructura en particular usada en propuesta del capítulo 10\cite{Navarro} utiliza matrices \textit{wavelet}, que debieron ser implementadas como parte del trabajo realizado.
+
+\subsubsection{Otras librerías}
+La implementación original de Re-Pair en C\cite{re-pair} por R. Wan en C está basada en la propuesta del artículo original\cite{Larsson2000} y es la implementación usada en el trabajo presente. Otras implementaciones existen, incluyendo una hecha por G. Navarro\cite{re-pair-navarro}. 

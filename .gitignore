@@ -89,3 +89,9 @@ out.txt
 myenv/
 myvenv/
 grammar-self-index/
+grammar-self-index
+myvenv/bin/python
+myvenv/bin/python3
+myvenv/bin/python3.12
+myvenv/lib64
+textfile/gsi-results

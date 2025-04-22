@@ -25,7 +25,7 @@ Clone this repository to your local machine:
 
 ```bash
 git clone https://github.com/solzhen/SimpleTextIndexingBasedOnGrammar.git
-cd trabajoadelantado
+cd SimpleTextIndexingBasedOnGrammar
 ```
 
 ---

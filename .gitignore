@@ -54,6 +54,7 @@ test.*
 /repairs/repairnavarro/repair
 /repairs/repairnavarro/toint
 /repairs/repairnavarro/repair.tgz
+/repairs/despair_repair_reader
 
 
 .vscode/*

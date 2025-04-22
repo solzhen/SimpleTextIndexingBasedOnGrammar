@@ -12,7 +12,7 @@
 #include <chrono>
 #include <cxxopts.hpp>
 #include <sys/stat.h>
-#include "patterns.hpp"
+#include "npatterns.hpp"
 
 using namespace sdsl;
 using namespace std;
@@ -85,7 +85,7 @@ int main(int argc, char* argv[]) {
     u_int txt_len, num_rules;
 
     auto t1 = high_resolution_clock::now();    
-    PatternSearcher PS(input_filename, &txt_len, &num_rules, &bit_s);
+    nPatternSearcher PS(input_filename, &txt_len, &num_rules, &bit_s);
     auto t2 = high_resolution_clock::now();
     if (TIME) {
         duration<double, std::milli> ms_double = t2 - t1;

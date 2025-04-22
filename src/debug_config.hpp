@@ -8,6 +8,7 @@ extern bool DEBUG;
 #define TESTCONFIG_H
 
 extern bool TEST;
+extern bool SKIP;
 
 #endif
 

@@ -13,7 +13,6 @@ extern "C" { // C implementation of repair and encoder
     #include "../repairs/repair110811/encoder.h"
 }
 
-extern bool SKIP;
 
 template <typename T>
 struct Generator {

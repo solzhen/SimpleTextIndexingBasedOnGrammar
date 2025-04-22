@@ -1,8 +1,10 @@
 #include <chrono>
 #include <catch2/catch_test_macros.hpp>
-#include "patterns.hpp"
 #include "globals.h"
 #include <bits/this_thread_sleep.h>
+//#include "patterns.hpp"
+#include "npatterns.hpp"
+#define PatternSearcher nPatternSearcher
 
 #define REDIRECT_STDOUT \
     FILE* originalStdout = stdout; \

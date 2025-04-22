@@ -43,7 +43,7 @@ string expandRule(Tpair *R, int i, unordered_map<int, string> &memo, int alph, c
 
 typedef struct {
     string pattern;
-    int occurences;
+    int occurrences;
     vector<int> positions;
     double time;
 } PatternResult;
@@ -124,16 +124,16 @@ int main(int argc, char* argv[]) {
         file.close();
         for (const auto& pattern : patterns) {
             std::cout << "Searching for pattern: \"" << pattern << "\"" << std::endl;
-            std::vector<int> occurences;
+            std::vector<int> occurrences;
             auto t3 = high_resolution_clock::now();
-            PS.search(&occurences, pattern);
+            PS.search(&occurrences, pattern);
             auto t4 = high_resolution_clock::now();
             std::cout << "Occurences Found: \t";
-            sort(occurences.begin(), occurences.end());
-            for (u_int i = 0; i < occurences.size(); i++) {
-                std::cout << occurences[i] << " ";
+            sort(occurrences.begin(), occurrences.end());
+            for (u_int i = 0; i < occurrences.size(); i++) {
+                std::cout << occurrences[i] << " ";
             } std::cout << std::endl;
-            results.push_back({pattern, (int)occurences.size(), occurences, 
+            results.push_back({pattern, (int)occurrences.size(), occurrences, 
                 std::chrono::duration<double, std::milli>(t4 - t3).count()});
             if (TIME) {
                 duration<double, std::milli> ms_double = t4 - t3;
@@ -153,16 +153,16 @@ int main(int argc, char* argv[]) {
             break;
         } 
         cout << "Searching for pattern: \"" << pattern << "\"" << endl;
-        vector<int> occurences;
+        vector<int> occurrences;
         auto t3 = high_resolution_clock::now();
-        PS.search(&occurences, pattern);
+        PS.search(&occurrences, pattern);
         auto t4 = high_resolution_clock::now();
         cout << "Occurences Found: \t";
-        sort(occurences.begin(), occurences.end());
-        for (u_int i = 0; i < occurences.size(); i++) {
-            cout << occurences[i] << " ";
+        sort(occurrences.begin(), occurrences.end());
+        for (u_int i = 0; i < occurrences.size(); i++) {
+            cout << occurrences[i] << " ";
         } cout << endl;
-        results.push_back({pattern, (int)occurences.size(), occurences, 
+        results.push_back({pattern, (int)occurrences.size(), occurrences, 
             std::chrono::duration<double, std::milli>(t4 - t3).count()});
         if (TIME) {
             duration<double, std::milli> ms_double = t4 - t3;
@@ -183,9 +183,9 @@ int main(int argc, char* argv[]) {
         std::cerr << "Error opening output file: " << output_filename << std::endl;
         return 1;
     }
-    out << "pattern occurences time(ms) positions" << std::endl;
+    out << "pattern occurrences time(ms) positions" << std::endl;
     for (const auto& result : results) {
-        out << result.pattern << " " << result.occurences << " " << result.time;
+        out << result.pattern << " " << result.occurrences << " " << result.time;
         for (const auto& pos : result.positions) {
             out << " " << pos;
         }
@@ -203,9 +203,9 @@ int main(int argc, char* argv[]) {
     for (string pattern : patterns) {        
         double times;
         for (int i = 0; i < 50; i++) {
-            vector<int> occurences;
+            vector<int> occurrences;
             auto t3 = high_resolution_clock::now();
-            PS.search(&occurences, pattern);
+            PS.search(&occurrences, pattern);
             auto t4 = high_resolution_clock::now();
             duration<double, std::milli> ms_double = t4 - t3;
             times += ms_double.count();
@@ -234,13 +234,13 @@ int main(int argc, char* argv[]) {
         double times = 0;
         int occs;
         for (int i = 0; i < 50; i++) {
-            vector<int> occurences;
+            vector<int> occurrences;
             auto t3 = high_resolution_clock::now();
-            PS.search(&occurences, pattern);
+            PS.search(&occurrences, pattern);
             auto t4 = high_resolution_clock::now();
             duration<double, std::milli> ms_double = t4 - t3;
             cout << ms_double.count() << " ";
-            occs = occurences.size();
+            occs = occurrences.size();
             times += ms_double.count();
         }
         cout << endl;

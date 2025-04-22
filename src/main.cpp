@@ -41,6 +41,13 @@ string expandRule(Tpair *R, int i, unordered_map<int, string> &memo, int alph, c
     return result;
 }
 
+typedef struct {
+    string pattern;
+    int occurences;
+    vector<int> positions;
+    double time;
+} PatternResult;
+
 int main(int argc, char* argv[]) {
     std::string input_filename;
     cxxopts::Options options("Pattern Searcher", "Search for text patterns in a text file");
@@ -49,7 +56,9 @@ int main(int argc, char* argv[]) {
         ("d,debug", "Enable debugging mode")
         ("t,time", "Print execution time")
         ("h,help", "Print usage")
-        ("s,skip", "Skip the sorting of the rules");
+        ("s,skip", "Skip the sorting of the rules")
+        ("p,patterns", "File with patterns to search", cxxopts::value<std::string>())
+        ("o,output", "Output file name", cxxopts::value<std::string>());
         
     auto result = options.parse(argc, argv);
     if (result.count("help")) {
@@ -97,11 +106,52 @@ int main(int argc, char* argv[]) {
     long long rbs = PS.bitsize();
     cout << "Bitsize:" << rbs << endl;
     cout << "bps: " << (float) rbs / txt_len << endl;
-    
-    while (true) {
-        cout << "Enter the pattern to search: ";
+
+    vector<PatternResult> results;
+
+    if (result.count("pattern_file")) {
+        std::string pattern_file = result["pattern_file"].as<std::string>();
+        std::ifstream file(pattern_file);
+        if (!file) {
+            std::cerr << "Error opening file: " << pattern_file << std::endl;
+            return 1;
+        }
+        std::string pattern;
+        std::vector<std::string> patterns;
+        while (std::getline(file, pattern)) {
+            patterns.push_back(pattern);
+        }
+        file.close();
+        for (const auto& pattern : patterns) {
+            std::cout << "Searching for pattern: \"" << pattern << "\"" << std::endl;
+            std::vector<int> occurences;
+            auto t3 = high_resolution_clock::now();
+            PS.search(&occurences, pattern);
+            auto t4 = high_resolution_clock::now();
+            std::cout << "Occurences Found: \t";
+            sort(occurences.begin(), occurences.end());
+            for (u_int i = 0; i < occurences.size(); i++) {
+                std::cout << occurences[i] << " ";
+            } std::cout << std::endl;
+            results.push_back({pattern, (int)occurences.size(), occurences, 
+                std::chrono::duration<double, std::milli>(t4 - t3).count()});
+            if (TIME) {
+                duration<double, std::milli> ms_double = t4 - t3;
+                std::cout << "Time taken to search for the pattern: " << ms_double.count() << " ms" << std::endl;
+            }
+        }
+        return 0;
+    }    
+
+    bool input_mode = true;
+    while ( input_mode ) {
         string pattern;
-        getline(cin, pattern);
+        cout << "Enter the pattern to search (or leave empty and press ENTER): ";
+        std::getline(std::cin, pattern);
+        if (pattern.empty()) {
+            cout << "Exiting." << endl;
+            break;
+        } 
         cout << "Searching for pattern: \"" << pattern << "\"" << endl;
         vector<int> occurences;
         auto t3 = high_resolution_clock::now();
@@ -112,11 +162,36 @@ int main(int argc, char* argv[]) {
         for (u_int i = 0; i < occurences.size(); i++) {
             cout << occurences[i] << " ";
         } cout << endl;
+        results.push_back({pattern, (int)occurences.size(), occurences, 
+            std::chrono::duration<double, std::milli>(t4 - t3).count()});
         if (TIME) {
             duration<double, std::milli> ms_double = t4 - t3;
             std::cout << "Time taken to search for the pattern: " << ms_double.count() << " ms" << std::endl;
         }
     }
+
+    std::string output_filename;
+    if (result.count("output")) {
+        output_filename = result["output"].as<std::string>();
+        std::cout << "Output file: " << output_filename << std::endl;
+    } else {
+        std::cout << "Enter the output filename: ";
+        std::cin >> output_filename;
+    }
+    std::ofstream out(output_filename);
+    if (!out) {
+        std::cerr << "Error opening output file: " << output_filename << std::endl;
+        return 1;
+    }
+    out << "pattern occurences time(ms) positions" << std::endl;
+    for (const auto& result : results) {
+        out << result.pattern << " " << result.occurences << " " << result.time;
+        for (const auto& pos : result.positions) {
+            out << " " << pos;
+        }
+        out << std::endl;
+    }
+    out.close();
 
     return 0;
 }

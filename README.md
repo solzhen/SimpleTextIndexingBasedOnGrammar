@@ -1,19 +1,23 @@
 # SimpleTextIndexingBasedOnGrammar
 
-Implementation of a Simplified Compressed Structure for Text Indexing Based on Grammars
+Implementation of a Simplified Compressed Structure for Text Indexing Based on Grammars.
+
 
 
 ---
 
 ## Requirements
 
+Program is designed to run on Linux.
 Ensure the following dependencies are installed:
 
-1. **[SDSL](https://github.com/simongog/sdsl-lite)**
+1. **C++20**
+
+2. **[SDSL](https://github.com/simongog/sdsl-lite)**
    
    A library for succinct data structures.
 
-2. **[Catch2](https://github.com/catchorg/Catch2)**
+23. **[Catch2](https://github.com/catchorg/Catch2)**
    
    A lightweight, header-only unit testing framework for C++.
 

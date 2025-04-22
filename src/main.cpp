@@ -128,7 +128,7 @@ int main(int argc, char* argv[]) {
             auto t3 = high_resolution_clock::now();
             PS.search(&occurrences, pattern);
             auto t4 = high_resolution_clock::now();
-            std::cout << "Occurences Found: \t";
+            std::cout << "Occurrences Found: \t";
             sort(occurrences.begin(), occurrences.end());
             for (u_int i = 0; i < occurrences.size(); i++) {
                 std::cout << occurrences[i] << " ";
@@ -157,7 +157,7 @@ int main(int argc, char* argv[]) {
         auto t3 = high_resolution_clock::now();
         PS.search(&occurrences, pattern);
         auto t4 = high_resolution_clock::now();
-        cout << "Occurences Found: \t";
+        cout << "Occurrences Found: \t";
         sort(occurrences.begin(), occurrences.end());
         for (u_int i = 0; i < occurrences.size(); i++) {
             cout << occurrences[i] << " ";

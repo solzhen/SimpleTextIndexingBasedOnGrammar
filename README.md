@@ -30,7 +30,21 @@ cd trabajoadelantado
 
 ---
 
+## Clone external repository cxxopts
+```bash
+cd external
+git clone https://github.com/jarro2783/cxxopts.git
+```
+
+---
+
 ## Compile
+
+Compile the re-pair program:
+```bash
+cd repairs/repairnavarro
+make
+```
 
 Build the project using CMake:
 
